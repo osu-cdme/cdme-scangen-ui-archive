@@ -32,7 +32,6 @@ for (const key in optionsData) {
             if ('options' in optionsData[key][key2]) {
                 const select = document.createElement('select')
                 optionsData[key][key2].options.forEach(option => {
-                    console.log(option)
                     const optionElement = document.createElement('option')
                     optionElement.value = option
                     optionElement.textContent = option
@@ -83,3 +82,16 @@ for (const key in optionsData) {
     }
 }
 
+// Launch the application when they hit the button
+const spawn = require("child_process").spawn
+const PYTHONPATH = "C:/Program Files/Python39/python.exe" // TODO: Probably just bundle an interpreter with the application rather than hardcode this
+document.getElementById("start").addEventListener("click", () => {
+    const olProcess = spawn(PYTHONPATH, [
+        "-u", // Don't buffer output, we want that live
+        "../cdme-scangen/main.py"], { cwd: "../cdme-scangen/" }) // Python interpreter needs run from the other directory b/c relative paths
+    olProcess.stdout.on("data", (chunk) => { console.log("stdout: " + chunk) })
+    olProcess.stderr.on("data", (chunk) => { console.log("stderr: " + chunk) })
+    olProcess.on("close", (code) => {
+        console.log("Child process exited with code " + code + ".")
+    })
+})
