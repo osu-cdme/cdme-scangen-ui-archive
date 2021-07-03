@@ -45,6 +45,7 @@ nav > .bottom {
 
 .submitButtonDiv > #start {
     padding: 15px;
+    margin: 15px 0;
     color: white;
     font-size: 1.5rem;
     border: 0;
@@ -69,4 +70,16 @@ nav > .bottom {
 .field > input, .field > select {
     margin-left: 10px;
     padding: 5px;
+}
+
+.desc {
+    display: block;
+    font-size: .8rem;
+    color: rgb(200, 200, 200);
+    margin-top: 3px;
+}
+
+.units {
+    margin-left: 5px;
+    font-size: .8rem;
 }

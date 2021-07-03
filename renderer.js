@@ -77,6 +77,18 @@ for (const key in optionsData) {
             div.appendChild(input)
         }
 
+        if ("units" in optionsData[key][key2]) {
+            const units = document.createElement("p")
+            units.classList.toggle("units")
+            units.textContent = "(" + optionsData[key][key2].units + ")"
+            div.appendChild(units)
+        }
+
+        const desc = document.createElement("p")
+        desc.classList.toggle("desc")
+        desc.textContent = optionsData[key][key2].desc
+        div.appendChild(desc)
+
         // Overall append
         optionsDiv.appendChild(div)
     }
