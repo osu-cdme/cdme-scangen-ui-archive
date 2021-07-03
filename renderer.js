@@ -21,9 +21,9 @@ for (const key in optionsData) {
         div.classList.toggle('field') // Inline formatting and other misc. stuff
 
         // Title
-        const p = document.createElement('p')
-        p.textContent = optionsData[key][key2].name
-        div.append(p)
+        const label = document.createElement('label')
+        label.textContent = optionsData[key][key2].name
+        div.append(label)
 
         // Behavior from here depends on type
         if (optionsData[key][key2].type === 'string') {
@@ -31,6 +31,7 @@ for (const key in optionsData) {
             // Multi-Select
             if ('options' in optionsData[key][key2]) {
                 const select = document.createElement('select')
+                select.name = optionsData[key][key2].name
                 optionsData[key][key2].options.forEach(option => {
                     const optionElement = document.createElement('option')
                     optionElement.value = option
@@ -45,6 +46,8 @@ for (const key in optionsData) {
             else {
                 const input = document.createElement('input')
                 input.value = optionsData[key][key2].default
+                input.name = optionsData[key][key2].name
+                input.type = "text"
                 div.appendChild(input)
             }
         }
@@ -52,6 +55,7 @@ for (const key in optionsData) {
         // Boolean, meaning we should give them a selection menu representing True/False
         else if (optionsData[key][key2].type === 'bool') {
             const select = document.createElement('select')
+            select.name = optionsData[key][key2].name
             const option1 = document.createElement('option')
             option1.value = option1.textContent = 'Yes'
             select.appendChild(option1)
@@ -63,17 +67,11 @@ for (const key in optionsData) {
         }
 
         // For floats, just give them an input
-        else if (optionsData[key][key2].type === 'float') {
+        else if (optionsData[key][key2].type === 'float' || optionsData[key][key2].type === 'int') {
             const input = document.createElement('input')
             input.value = optionsData[key][key2].default
-            div.appendChild(input)
-        }
-
-        // For ints, just give them an input
-        // TODO: Input validation (i.e. no decimals here)
-        else if (optionsData[key][key2].type === 'int') {
-            const input = document.createElement('input')
-            input.value = optionsData[key][key2].default
+            input.name = optionsData[key][key2].name
+            input.type = "text"
             div.appendChild(input)
         }
 
@@ -98,12 +96,22 @@ for (const key in optionsData) {
 const spawn = require("child_process").spawn
 const PYTHONPATH = "C:/Program Files/Python39/python.exe" // TODO: Probably just bundle an interpreter with the application rather than hardcode this
 document.getElementById("start").addEventListener("click", () => {
-    const olProcess = spawn(PYTHONPATH, [
+    const formEl = document.forms.rightPart
+    const formData = new FormData(formEl)
+    const fields = {}
+    for (const key in optionsData) {
+        for (const key2 in optionsData[key]) {
+            fields[optionsData[key][key2].name] = formData.get(optionsData[key][key2].name)
+        }
+    }
+    const process = spawn(PYTHONPATH, [
         "-u", // Don't buffer output, we want that live
-        "../cdme-scangen/main.py"], { cwd: "../cdme-scangen/" }) // Python interpreter needs run from the other directory b/c relative paths
-    olProcess.stdout.on("data", (chunk) => { console.log("stdout: " + chunk) })
-    olProcess.stderr.on("data", (chunk) => { console.log("stderr: " + chunk) })
-    olProcess.on("close", (code) => {
+        "../cdme-scangen/main.py",
+        JSON.stringify(fields)], // Serialize the data and feed it in as a command line argument], 
+    { cwd: "../cdme-scangen/" }) // Python interpreter needs run from the other directory b/c relative paths
+    process.stdout.on("data", (chunk) => { console.log("stdout: " + chunk) })
+    process.stderr.on("data", (chunk) => { console.log("stderr: " + chunk) })
+    process.on("close", (code) => {
         console.log("Child process exited with code " + code + ".")
     })
 })
