@@ -92,10 +92,39 @@ for (const key in optionsData) {
     }
 }
 
+const currentTaskElem = document.getElementById("currentTask")
+const currentProgressElem = document.getElementById("currentProgress")
+currentTaskElem.textContent = "Waiting for user input."
+function parseStderr (chunkBuf) {
+    const chunkStr = chunkBuf.toString("utf8")
+    const regex = /(\d+(\.\d+)?%)/g // Matches a number and a percent
+    console.log("stderr: " + chunkStr)
+    if (chunkStr.includes("Processing Layers")) {
+        const number = regex.exec(chunkStr)[0] // Exec used rather than string.match() b/c exec only returns the first match by default
+        console.log(number)
+        if (number) {
+            currentTaskElem.textContent = "Processing Layers"
+            currentProgressElem.textContent = number
+        }
+    }
+
+    else if (chunkStr.includes("Generating Layer Plots")) {
+        const number = regex.exec(chunkStr)[0]
+        if (number) {
+            currentTaskElem.textContent = "Generating Layer Plots"
+            currentProgressElem.textContent = number
+        }
+        if (number.includes("100")) {
+            currentTaskElem.textContent = "Done."
+        }
+    }
+}
+
 // Launch the application when they hit the button
 const spawn = require("child_process").spawn
 const PYTHONPATH = "C:/Program Files/Python39/python.exe" // TODO: Probably just bundle an interpreter with the application rather than hardcode this
 document.getElementById("start").addEventListener("click", () => {
+    currentTaskElem.textContent = "Spawning child process."
     const formEl = document.forms.rightPart
     const formData = new FormData(formEl)
     const fields = {}
@@ -110,7 +139,7 @@ document.getElementById("start").addEventListener("click", () => {
         JSON.stringify(fields)], // Serialize the data and feed it in as a command line argument], 
     { cwd: "../cdme-scangen/" }) // Python interpreter needs run from the other directory b/c relative paths
     process.stdout.on("data", (chunk) => { console.log("stdout: " + chunk) })
-    process.stderr.on("data", (chunk) => { console.log("stderr: " + chunk) })
+    process.stderr.on("data", parseStderr)
     process.on("close", (code) => {
         console.log("Child process exited with code " + code + ".")
     })

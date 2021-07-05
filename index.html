@@ -12,8 +12,12 @@
 
     <!-- TODO: Better to split this into two columns rather than require lots of scrolling -->
     <nav>
-      <img src="static/logo.jpg" width="300px" />
+      <img src="static/logo.jpg" />
       <h1>CDME Scangen</h1>
+      <div id="progress">
+        <div><p>Current Task: </p><span id="currentTask"></span></div>
+        <div><p>Current Progress: </p><span id="currentProgress"></span></div>
+      </div>
       <div class="bottom">
         Node.js <span id="node-version"></span><br>
         Chromium <span id="chrome-version"></span><br>

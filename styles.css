@@ -10,7 +10,7 @@ body {
 
 nav {
     display: inline-block;
-    width: 300px;
+    width: 350px;
     height: 100%;
 
     background-color: #960000;
@@ -26,11 +26,15 @@ nav > .bottom {
     text-align: left;
 }
 
+nav > img {
+    width: 350px;
+}
+
 #rightPart {
     display: inline-block;
     position: absolute;
-    left: 300px;
-    width: calc(100% - 300px);
+    left: 350px;
+    width: calc(100% - 350px);
     height: 100%;
     background-color: #333333;
     padding: 15px;
@@ -70,6 +74,12 @@ nav > .bottom {
 .field > input, .field > select {
     margin-left: 10px;
     padding: 5px;
+    color: white;
+    background: #222222;
+}
+
+.field > input {
+    border: 1px solid rgb(118, 118, 118); /* Default used for borders */
 }
 
 .desc {
@@ -82,4 +92,14 @@ nav > .bottom {
 .units {
     margin-left: 5px;
     font-size: .8rem;
+}
+
+#progress > div {
+    padding-left: 15px;
+    text-align: left;
+}
+
+#progress p {
+    display: inline;
+    font-weight: bold;
 }

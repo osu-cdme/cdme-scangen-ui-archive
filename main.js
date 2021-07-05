@@ -10,12 +10,14 @@ function createWindow () {
         // websites so it's not a security concern for us
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
-            nodeIntegration: true, 
-            contextIsolation: false
+            nodeIntegration: true,
+            contextIsolation: false,
+            devTools: true
         }
     })
 
     win.loadFile('index.html')
+    win.maximize()
 }
 
 app.on('window-all-closed', function () {
