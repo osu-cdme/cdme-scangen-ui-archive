@@ -4,8 +4,8 @@ An Electron application that offers a more streamlined, user-friendly way to set
 ## Install
 Install instructions can be found on the repo of the main script, [cdme-scangen](https://github.com/osu-cdme/cdme-scangen).
 
-## Packaging
-Packaging is something we are actively figuring out. In order to get something usable by a non-developer, you need to package this application into something like a .exe file. To do this, the most common tool is `electron-builder`. Note: `electron-builder` doesn't support NPM; install yarn before you try and work with this stuff.
+## Building an Executable
+Building is something we are actively figuring out. In order to get something usable by a non-developer, you need to package this application into something like a .exe file. To do this, the most common tool is `electron-builder`. Note: `electron-builder` doesn't support NPM; install yarn before you try and work with this stuff.
 
 Some work on this is already done:
 - The `package.json` file already has most of the config done. It currently outputs a .zip-based executable to the `dist` directory when you run `yarn build`. 
