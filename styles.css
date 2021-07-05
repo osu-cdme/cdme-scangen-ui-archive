@@ -64,7 +64,7 @@ nav > img {
 
 .field {
     display: block;
-    padding: 5px 0;
+    padding-bottom: 5px;
 }
 
 .field > * {
@@ -102,4 +102,9 @@ nav > img {
 #progress p {
     display: inline;
     font-weight: bold;
+}
+
+.rightPartHeader {
+    margin-top: 20px;
+    margin-bottom: 5px;
 }

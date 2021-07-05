@@ -12,6 +12,7 @@ for (const key in optionsData) {
     // Create section header
     const header = document.createElement('h2')
     header.textContent = key
+    header.classList.toggle("rightPartHeader")
     optionsDiv.appendChild(header)
 
     for (const key2 in optionsData[key]) {
