@@ -1,5 +1,23 @@
+// Some small stuff needs changed based on whether we're testing or building; it all switches off of one variable
+const building = true // Set to true if about to build the application; modifies some file paths to work with the new config
+
+// Packaging puts us in a folder inside the resources directory
+// Whereas not packaging leaves us in the current directory
+const path = require("path")
+const pathToResources = building ? path.join(__dirname, "../") : path.join(__dirname, "../cdme-scangen/")
+const pythonPath = building ? path.join(__dirname, "../python/python.exe") : path.join(__dirname, "python/python.exe") // absolute paths needed (for some reason)
+const FOLDERS_TO_ADD_TO_PYTHONPATH = [
+    building ? path.join(__dirname, "../pyslm/") : path.join(__dirname, "../cdme-scangen/pyslm"), // pyslm
+    building ? path.join(__dirname, "../") : path.join(__dirname, "../cdme-scangen/") // src (custom scan paths)
+]
+
+console.log(FOLDERS_TO_ADD_TO_PYTHONPATH)
+console.log("PYTHONPATH: " + pythonPath)
+
+console.log("Current working directory: " + __dirname)
+
 // Load data; requires cdme-scangen repository to be in same folder as cdme-scangen-ui, for now
-const optionsData = require('../cdme-scangen/schema.json')
+const optionsData = require(pathToResources + 'schema.json')
 
 // Remove the placeholder "waiting for data" text
 const optionsDiv = document.getElementById('options')
@@ -123,7 +141,6 @@ function parseStderr (chunkBuf) {
 
 // Launch the application when they hit the button
 const spawn = require("child_process").spawn
-const PYTHONPATH = "C:/Program Files/Python39/python.exe" // TODO: Probably just bundle an interpreter with the application rather than hardcode this
 document.getElementById("start").addEventListener("click", () => {
     currentTaskElem.textContent = "Spawning child process."
     const formEl = document.forms.rightPart
@@ -134,11 +151,15 @@ document.getElementById("start").addEventListener("click", () => {
             fields[optionsData[key][key2].name] = formData.get(optionsData[key][key2].name)
         }
     }
-    const process = spawn(PYTHONPATH, [
+    console.log("pathToResources: " + pathToResources)
+    console.log("Running script " + pathToResources + "main.py using interpreter " + pythonPath)
+
+    const process = spawn(pythonPath, [
         "-u", // Don't buffer output, we want that live
-        "../cdme-scangen/main.py",
-        JSON.stringify(fields)], // Serialize the data and feed it in as a command line argument], 
-    { cwd: "../cdme-scangen/" }) // Python interpreter needs run from the other directory b/c relative paths
+        pathToResources + "main.py",
+        JSON.stringify(fields),
+        JSON.stringify(FOLDERS_TO_ADD_TO_PYTHONPATH)], // Serialize the data and feed it in as a command line argument],
+    { cwd: pathToResources }) // Python interpreter needs run from the other directory b/c relative paths
     process.stdout.on("data", (chunk) => { console.log("stdout: " + chunk) })
     process.stderr.on("data", parseStderr)
     process.on("close", (code) => {

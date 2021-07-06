@@ -4,9 +4,10 @@
   "description": "An Electron application that offers a more streamlined, user-friendly way to set input options to the main `cdme-scangen` script.",
   "main": "main.js",
   "dependencies": {
-    "electron": "^13.1.5"
   },
   "devDependencies": {
+    "electron": "^13.1.5",
+    "electron-builder": "^22.11.7",
     "eslint": "^7.30.0",
     "eslint-config-standard": "^16.0.3",
     "eslint-plugin-import": "^2.23.4",
@@ -15,7 +16,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron ."
+    "start": "electron .", 
+    "build": "electron-builder build"
   },
   "repository": {
     "type": "git",
@@ -26,5 +28,26 @@
   "bugs": {
     "url": "https://github.com/osu-cdme/cdme-scangen-ui/issues"
   },
-  "homepage": "https://github.com/osu-cdme/cdme-scangen-ui#readme"
+  "homepage": "https://github.com/osu-cdme/cdme-scangen-ui#readme", 
+  "build": {
+    "appId": "com.osucdme.scangen-ui",
+    "extraResources": [
+      {
+        "from": "../cdme-scangen/",
+        "to": "./"
+      }, 
+      {
+        "from": "python", 
+        "to": "python"
+      }, 
+      {
+        "from": "../cdme-scangen/pyslm", 
+        "to": "pyslm"
+      }
+    ],
+    "win": {
+      "target": [ "zip" ],
+      "icon": "static/logo.png"
+    }
+  }
 }
