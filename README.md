@@ -18,9 +18,9 @@ Important things about the build system:
 Then, execute `yarn build` from the root directory. This will place the output in the `dist` directory, which will output both a `.zip` and normal folder version of the repository. You should be able to send this `.zip` to someone, they unzip it, then run the .exe file inside, without them needing to download anything else.
 
 ### Getting an Embedded Python Executable
-For convenience, a `python.zip` file is included, which should work fine for the forseeable future. Simply unzip it and make sure it adheres to the above file structure and you should be fine.
+For convenience for CDME workers, a `python.zip` file is included on OneDrive at `CDME Rindler Research Group > Scan Strategy Development > pyslm_embedded_python > python.zip`, which should work fine for the forseeable future. Simply unzip it and make sure it adheres to the above file structure and you should be fine. 
 
-In order to re-build the embedded Python version if something isn't working, follow these instructions: 
+Unfortunately, this file is too large to include via Git due to GitHub's file size limits, and git-lfs is a step we think is unnecessary. If you do not have access to that file or need to build the embedded Python version from scratch for any reason, follow these instructions: 
 - Install an embeddable Python version (one of the Python 3.9 versions is recommended). The below instructions assume you've installed it into this repository such that the path to the Python executable is `cdme-scangen-ui/python/python.exe`.
 - To get `pip` on the embeddable Python version, follow [this guide](https://www.christhoung.com/2018/07/15/embedded-python-windows/). 
 - To install (most of; see below) the required `pyslm` packages, execute `python/python.exe -mpip install -r ../cdme-scangen/requirements.txt` from this directory.
