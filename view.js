@@ -1,22 +1,12 @@
 const path = require("path")
 const building = false
-
-console.log("__dirname" + __dirname);
 const pathToResources = building ? path.join(__dirname, "../") : path.join(__dirname, "../cdme-scangen/")
-console.log("pathToResources: " + pathToResources);
-var natsort = require("natsort");
 
 let parent = document.getElementById("rightPart")
 const fs = require("fs")
-
 let files = fs.readdirSync(path.join(pathToResources, "LayerFiles"))
-console.log("Files: " + files)
 
-// TODO: Why the hell does this not work?
-// console.log(natsort)
-// let filesSorted = files.sort(natsort)
-// console.log("Natsorted: " + filesSorted)
-
+// Puts a picture of each layer on the webpage
 files.forEach(file => {
     
     let text = document.createElement("p")
@@ -32,3 +22,63 @@ files.forEach(file => {
 
     parent.appendChild(container)
 })
+
+// Renders each provided XML file
+fs.readdirSync(path.join(__dirname, "xml")).forEach(file => {
+    fetch(path.join(__dirname, "xml", file))
+    .then(response => response.text())
+    .then(data => {
+        let parser = new DOMParser()
+        doc = parser.parseFromString(data, "text/xml") // XMLDocument (https://developer.mozilla.org/en-US/docs/Web/API/XMLDocument)
+        getTrajectories(doc)
+    })
+})
+
+/* 
+Given a Document object that conforms to the OASIS XML Schema, returns a data object of the following form:
+{
+    "contours": [
+        [start x, start y, end x, end y], ...
+    ], 
+    "hatches": [
+        [start x, start y, end x, end y], ... 
+    ]
+}
+*/
+function getTrajectories(doc) {
+
+    let contours = [], hatches = []
+    let paths = doc.getElementsByTagName("Path")
+    for (let path of paths) {
+
+        // Debug 
+        // console.log("Path: ")
+        // console.log(path)
+
+        // Save a reference to the array that we should append to
+        // (needs saved before we lose a reference to the first child)
+        let appendArr = path.firstChild.textContent === "contour" ? contours : hatches
+
+        // Skip over the overall path parameters to get to the actual geometric numbers
+        // ...don't ask. Can't find a better way to do it.
+        // It seems to treat the textContent itself as a sibling as well
+        let currentNode = path.childNodes.item(9) // Start at <Start> tag; text inside is also counted as tags
+        let x1 = currentNode.firstChild.textContent, y1 = currentNode.lastChild.textContent
+        let x2, y2
+        while (currentNode.nextSibling != null) {
+
+            // Connect current x1/y1 to next x2/y2 and add to list
+            currentNode = currentNode.nextSibling.nextSibling
+            x2 = currentNode.lastChild.firstChild.textContent
+            y2 = currentNode.lastChild.lastChild.textContent 
+            appendArr.push([x1, y1, x2, y2])
+
+            // Cycle second vertex to first vertex; next loop iteration will set second vertex to next value
+            x1 = x2 
+            y1 = y2
+        }
+    }
+
+    console.log("contours: ", contours)
+    console.log("hatches: ", hatches)
+}
