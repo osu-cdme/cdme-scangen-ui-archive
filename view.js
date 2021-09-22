@@ -57,7 +57,7 @@ function getTrajectories(doc) {
 
         // Save a reference to the array that we should append to
         // (needs saved before we lose a reference to the first child)
-        let appendArr = path.firstChild.textContent === "contour" ? contours : hatches
+        let appendArr = path.firstChild.nextSibling.textContent === "contour" ? contours : hatches
 
         // Skip over the overall path parameters to get to the actual geometric numbers
         // ...don't ask. Can't find a better way to do it.
