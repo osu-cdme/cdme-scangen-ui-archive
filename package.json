@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "description": "An Electron application that offers a more streamlined, user-friendly way to set input options to the main `cdme-scangen` script.",
   "main": "main.js",
-  "dependencies": {},
+  "dependencies": {
+    "natsort": "^2.0.3"
+  },
   "devDependencies": {
     "electron": "^13.1.5",
     "electron-builder": "^22.11.7",

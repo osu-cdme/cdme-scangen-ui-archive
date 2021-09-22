@@ -1,0 +1,23 @@
+.rightPart 
+{
+
+}
+
+.layerimage 
+{
+    width: fit-content;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.layerimage > img 
+{
+    width: 200px;
+    display: block;
+    padding: 10px;
+}
+
+.layerimage > p 
+{
+    margin: 0;
+}
