@@ -69,6 +69,10 @@ function renderXMLs() {
         const SVG_HEIGHT = 300;
         const BOUNDS_WIDTH = boundingBox[2] - boundingBox[0];
         const BOUNDS_HEIGHT = boundingBox[3] - boundingBox[1];
+
+        // Very good writeup on how viewBox, etc. works here: https://pandaqitutorials.com/Website/svg-coordinates-viewports
+        // We are essentially setting the origin negative and then widths/heights such that it covers the entire part,
+        // which lets us do everything without needing to manually transform any of our actual points
         const viewboxStr =
           "" +
           (boundingBox[0] - PADDING) +
@@ -78,14 +82,14 @@ function renderXMLs() {
           (BOUNDS_WIDTH + PADDING * 2) +
           " " +
           (BOUNDS_HEIGHT + PADDING * 2);
-        console.log("Viewbox: ", viewboxStr);
+
         const ID = ("svg_" + file).replace(/\W/g, "");
         d3.select("#svgContainer")
           .append("svg")
           .attr("class", "xmlsvg")
           .attr("width", SVG_WIDTH)
           .attr("height", SVG_HEIGHT)
-          .attr("viewbox", viewboxStr) // Basically lets us define our bounds
+          .attr("viewBox", viewboxStr) // Basically lets us define our bounds
           .attr("id", ID); // Strip non-alphanumeric characters, else d3's select() fails to work
 
         outputTrajectories(trajectories, ID);
@@ -130,6 +134,9 @@ function getBoundingBoxForTrajectories(trajectories) {
       output[3] = contour[3];
     }
   });
+
+  // TODO: Compare hatches as well, which theoretically aren't ever the max points, but it's important for theoretical completeness
+
   return output;
 }
 
@@ -149,10 +156,6 @@ function getTrajectories(doc) {
     hatches = [];
   let paths = doc.getElementsByTagName("Path");
   for (let path of paths) {
-    // Debug
-    // console.log("Path: ")
-    // console.log(path)
-
     // Save a reference to the array that we should append to
     // (needs saved before we lose a reference to the first child)
     let appendArr =
@@ -172,10 +175,6 @@ function getTrajectories(doc) {
       currentNode = currentNode.nextSibling.nextSibling;
       x2 = currentNode.lastChild.firstChild.textContent;
       y2 = currentNode.lastChild.lastChild.textContent;
-      //console.log("x1: ", x1);
-      //console.log("y1: ", y1);
-      //console.log("x2: ", x2);
-      //console.log("y2: ", y2);
       appendArr.push([
         parseFloat(x1),
         parseFloat(y1),
@@ -189,9 +188,6 @@ function getTrajectories(doc) {
     }
   }
 
-  // console.log("contours: ", contours);
-  // console.log("hatches: ", hatches);
-
   return {
     contours: contours,
     hatches: hatches,
@@ -202,17 +198,12 @@ function getTrajectories(doc) {
 Displays an interactable picture representing the same data object returned by getTrajectories
 */
 const d3 = require("./d3.min.js");
-// console.log("d3: ", d3)
-// import * as d3 from "d3"
 function outputTrajectories(data, svg_id) {
   data.contours.forEach((line) => {
-    // console.log("line: ", line);
     d3.select("#" + svg_id).attr({
       visualViewport,
     });
 
-    // `size`: <Bounding Box Size> + <Padding, applied once for each side> + <Overall multiplicative constant>
-    // <Original Line Point> + <Shift from [0, 0] being center to [0, 0] being top-left corner> +
     d3.select("#" + svg_id)
       .append("line")
       .attr("x1", line[0])
@@ -220,6 +211,8 @@ function outputTrajectories(data, svg_id) {
       .attr("x2", line[2])
       .attr("y2", line[3])
       .attr("stroke", "#000000")
-      .attr("stroke-width", 2);
+      .attr("stroke-width", 0.1);
   });
+
+  // TODO: Plot hatches as well
 }
