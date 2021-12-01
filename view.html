@@ -1,16 +1,23 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
-    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+    <!-- 
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <meta
+      http-equiv="X-Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    -->
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="view.css" />
     <title>Hello World!</title>
   </head>
   <body>
-
     <!-- TODO: Better to split this into two columns rather than require lots of scrolling -->
     <nav>
       <img src="static/logo.jpg" />
@@ -22,13 +29,15 @@
       </ul>
       <h1>CDME Scangen</h1>
       <div class="bottom">
-        Node.js <span id="node-version"></span><br>
-        Chromium <span id="chrome-version"></span><br>
+        Node.js <span id="node-version"></span><br />
+        Chromium <span id="chrome-version"></span><br />
         Electron <span id="electron-version"></span>
       </div>
     </nav>
-    <div id="rightPart"></div>
+    <div id="rightPart">
+      <div id="svgContainer"></div>
+    </div>
+    <!-- <script src="https://d3js.org/d3.v7.min.js"></script> -->
     <script src="view.js"></script>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
   </body>
 </html>
