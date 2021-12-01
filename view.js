@@ -30,8 +30,7 @@ fs.readdirSync(path.join(__dirname, "xml")).forEach(file => {
     .then(data => {
         let parser = new DOMParser()
         doc = parser.parseFromString(data, "text/xml") // XMLDocument (https://developer.mozilla.org/en-US/docs/Web/API/XMLDocument)
-        let data = getTrajectories(doc)
-        outputTrajectories(data)
+        outputTrajectories(getTrajectories(doc))
     })
 })
 
@@ -80,13 +79,18 @@ function getTrajectories(doc) {
         }
     }
 
-    console.log("contours: ", contours)
-    console.log("hatches: ", hatches)
+    return {
+        "contours": contours, 
+        "hatches": hatches
+    }
+
+    // console.log("contours: ", contours)
+    // console.log("hatches: ", hatches)
 }
 
 /* 
 Displays an interactable picture representing the same data object returned by getTrajectories
 */
 function outputTrajectories(data) {
-    
+    console.log("outputTrajectories fed data object ", data)
 }
