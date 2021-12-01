@@ -91,6 +91,7 @@ function getTrajectories(doc) {
 /* 
 Displays an interactable picture representing the same data object returned by getTrajectories
 */
+const d3 = require("./d3.min.js")
 function outputTrajectories(data) {
     console.log("outputTrajectories fed data object ", data)
 }
