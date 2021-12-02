@@ -1,22 +1,52 @@
-.rightPart {
-}
-
-.layerimage {
-  width: fit-content;
-  text-align: center;
-  margin-bottom: 10px;
-}
-
-.layerimage > img {
-  width: 200px;
-  display: block;
-  padding: 10px;
-}
-
-.layerimage > p {
+#rightPart {
+  padding: 0;
   margin: 0;
+  /* border: 1px solid white; */
+  /* margin-bottom: -15px; */
+}
+
+#svgContainer {
+  /* 150px for layer list, 2px for side borders, 5px for I HAVE NO CLUE, BUT IT WORKS */
+  width: calc(100% - 150px - 2px - 5px);
+  display: inline-block;
+  vertical-align: top;
+  text-align: center;
+  /* border: 1px blue solid; */
+}
+
+#svgContainer > svg {
+  margin-top: calc(50% - 300px); /* 150px is half our svg sizing of 300px; */
+}
+
+#layerList {
+  display: inline-block;
+  vertical-align: top;
+  width: 150px;
+  height: 100%;
+  list-style-type: none;
+  margin-top: 0px;
+  max-height: 100%;
+  margin-bottom: 0;
+  background-color: #8c0000;
+  overflow-y: scroll;
+  border-left: 1px black solid;
+  border-right: 1px black solid;
+  padding-left: 0;
+}
+
+#layerList > li {
+  height: 50px;
+  line-height: 50px;
+  border-bottom: 1px black solid;
+  padding: 0 20px;
+  margin-left: 0;
+}
+
+svg {
+  fill: white;
+  background-color: white;
 }
 
 .xmlsvg {
-  border: 1px red solid;
+  border: 10px black solid;
 }

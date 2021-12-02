@@ -1,3 +1,4 @@
+const d3 = require("./d3.min.js");
 const path = require("path");
 const building = false;
 const pathToResources = building
@@ -11,7 +12,28 @@ const fs = require("fs");
 main();
 function main() {
   // renderPNGs();
-  renderXMLs();
+  // renderXMLs();
+  populateLayerList();
+
+  // Show the bottom layer by default
+  let layer1Path = path.join(
+    __dirname,
+    "xml",
+    fs.readdirSync(path.join(__dirname, "xml"))[0]
+  );
+  renderXML(layer1Path);
+}
+
+function populateLayerList() {
+  fs.readdirSync(path.join(__dirname, "xml")).forEach((file) => {
+    d3.select("#layerList")
+      .append("li")
+      .text("Layer " + file.match(/(\d+)/)[0]) // Extract only the number from the file name
+      .on("click", (e) => {
+        e.preventDefault();
+        renderXML(path.join(__dirname, "xml", file));
+      });
+  });
 }
 
 // Renders the .PNG files that `pyslm` outputs.
@@ -33,7 +55,65 @@ function renderPNGs() {
   });
 }
 
-// Renders layer XML files, which are assumed to be in the `xml` directory.
+function renderXML(pathToXML) {
+  // Wipe the old one
+  d3.select("svg").selectAll("*").remove();
+
+  // Render the new one
+  console.log("Rendering .XML of this: ", pathToXML);
+
+  fetch(pathToXML)
+    .then((response) => response.text())
+    .then((data) => {
+      let parser = new DOMParser();
+      doc = parser.parseFromString(data, "text/xml"); // XMLDocument (https://developer.mozilla.org/en-US/docs/Web/API/XMLDocument)
+
+      // Get a { contours = [], hatches = [] } object
+      let trajectories = getTrajectories(doc);
+      console.debug("Read trajectories: ", trajectories);
+
+      // Figure out a bounding box for this layer so that we know how to scale the .svg
+      let boundingBox = getBoundingBoxForTrajectories(trajectories);
+      console.debug("Calculated bounding box for part. BB: ", boundingBox);
+
+      // Space from part boundary added to the edges of the graphic
+      const PADDING = 2;
+
+      // <Bounding Box Size> + <Padding, applied once for each side> + <Overall multiplicative constant>
+      const SVG_WIDTH = 300;
+      const SVG_HEIGHT = 300;
+      const BOUNDS_WIDTH = boundingBox[2] - boundingBox[0];
+      const BOUNDS_HEIGHT = boundingBox[3] - boundingBox[1];
+
+      // Very good writeup on how viewBox, etc. works here: https://pandaqitutorials.com/Website/svg-coordinates-viewports
+      // We are essentially setting the origin negative and then widths/heights such that it covers the entire part,
+      // which lets us do everything without needing to manually transform any of our actual points
+      const viewboxStr =
+        "" +
+        (boundingBox[0] - PADDING) +
+        " " +
+        (boundingBox[1] - PADDING) +
+        " " +
+        (BOUNDS_WIDTH + PADDING * 2) +
+        " " +
+        (BOUNDS_HEIGHT + PADDING * 2);
+
+      const ID = "svg";
+      console.log(d3.select("svg"));
+      d3.select("svg")
+        .attr("class", "xmlsvg")
+        .attr("width", SVG_WIDTH)
+        .attr("height", SVG_HEIGHT)
+        .attr("fill", "#FFFFFF")
+        .attr("viewBox", viewboxStr) // Basically lets us define our bounds
+        .attr("id", ID); // Strip non-alphanumeric characters, else d3's select() fails to work
+
+      outputTrajectories(trajectories, ID);
+      console.debug("Displayed trajectories.");
+    });
+}
+
+// Renders all layer XML files, which are assumed to be in the `xml` directory.
 function renderXMLs() {
   console.log("Loading .XML files.");
   fs.readdirSync(path.join(__dirname, "xml")).forEach((file) => {
@@ -84,11 +164,11 @@ function renderXMLs() {
           (BOUNDS_HEIGHT + PADDING * 2);
 
         const ID = ("svg_" + file).replace(/\W/g, "");
-        d3.select("#svgContainer")
-          .append("svg")
+        d3.select("svg")
           .attr("class", "xmlsvg")
           .attr("width", SVG_WIDTH)
           .attr("height", SVG_HEIGHT)
+          .attr("fill", "#FFFFFF")
           .attr("viewBox", viewboxStr) // Basically lets us define our bounds
           .attr("id", ID); // Strip non-alphanumeric characters, else d3's select() fails to work
 
@@ -101,42 +181,73 @@ function renderXMLs() {
 // Returns a [min x, min y, max x, max y] bounding box corresponding to the passed-in trajectories
 function getBoundingBoxForTrajectories(trajectories) {
   let output = [0, 0, 0, 0];
-  trajectories.contours.forEach((contour) => {
+  trajectories.contours.forEach((line) => {
     // Min X Check
-    if (contour[0] < output[0]) {
-      output[0] = contour[0];
+    if (line[0] < output[0]) {
+      output[0] = line[0];
     }
-    if (contour[2] < output[0]) {
-      output[0] = contour[2];
+    if (line[2] < output[0]) {
+      output[0] = line[2];
     }
 
     // Max X Check
-    if (contour[0] > output[2]) {
-      output[2] = contour[0];
+    if (line[0] > output[2]) {
+      output[2] = line[0];
     }
-    if (contour[2] > output[2]) {
-      output[2] = contour[2];
+    if (line[2] > output[2]) {
+      output[2] = line[2];
     }
 
     // Min Y Check
-    if (contour[1] < output[1]) {
-      output[1] = contour[1];
+    if (line[1] < output[1]) {
+      output[1] = line[1];
     }
-    if (contour[3] < output[1]) {
-      output[1] = contour[3];
+    if (line[3] < output[1]) {
+      output[1] = line[3];
     }
 
     // Max Y Check
-    if (contour[1] > output[3]) {
-      output[3] = contour[1];
+    if (line[1] > output[3]) {
+      output[3] = line[1];
     }
-    if (contour[3] > output[3]) {
-      output[3] = contour[3];
+    if (line[3] > output[3]) {
+      output[3] = line[3];
     }
   });
 
-  // TODO: Compare hatches as well, which theoretically aren't ever the max points, but it's important for theoretical completeness
+  trajectories.hatches.forEach((line) => {
+    // Min X Check
+    if (line[0] < output[0]) {
+      output[0] = line[0];
+    }
+    if (line[2] < output[0]) {
+      output[0] = line[2];
+    }
 
+    // Max X Check
+    if (line[0] > output[2]) {
+      output[2] = line[0];
+    }
+    if (line[2] > output[2]) {
+      output[2] = line[2];
+    }
+
+    // Min Y Check
+    if (line[1] < output[1]) {
+      output[1] = line[1];
+    }
+    if (line[3] < output[1]) {
+      output[1] = line[3];
+    }
+
+    // Max Y Check
+    if (line[1] > output[3]) {
+      output[3] = line[1];
+    }
+    if (line[3] > output[3]) {
+      output[3] = line[3];
+    }
+  });
   return output;
 }
 
@@ -197,9 +308,23 @@ function getTrajectories(doc) {
 /* 
 Displays an interactable picture representing the same data object returned by getTrajectories
 */
-const d3 = require("./d3.min.js");
 function outputTrajectories(data, svg_id) {
   data.contours.forEach((line) => {
+    d3.select("#" + svg_id).attr({
+      visualViewport,
+    });
+
+    d3.select("#" + svg_id)
+      .append("line")
+      .attr("x1", line[0])
+      .attr("y1", line[1])
+      .attr("x2", line[2])
+      .attr("y2", line[3])
+      .attr("stroke", "#000000")
+      .attr("stroke-width", 0.1);
+  });
+
+  data.hatches.forEach((line) => {
     d3.select("#" + svg_id).attr({
       visualViewport,
     });
