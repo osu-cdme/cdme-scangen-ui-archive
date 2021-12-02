@@ -89,7 +89,6 @@ async function animateXML(pathToXML) {
         .attr("id", ID); // Strip non-alphanumeric characters, else d3's select() fails to work
 
       // Draw the lines one by one
-      console.log("trajectories: ", trajectories);
       if (trajectories.contours.length !== 0)
         await animateContours(trajectories);
       else if (trajectories.hatches.length !== 0)
@@ -102,8 +101,6 @@ async function animateContours(trajectories) {
   let list = trajectories.contours;
   nextLineDraw = await drawLine(0); // Start it on the first line, it automatically recurses on the next after a second
   async function drawLine(idx) {
-    console.log("Drawing line at index " + idx);
-    console.log("list.length - 1 " + (list.length - 1));
     d3.select("svg")
       .append("line")
       .attr("x1", list[idx][0])
@@ -115,11 +112,10 @@ async function animateContours(trajectories) {
 
     // If this is last, return from function, meaning the original call can return
     if (idx === list.length - 1) {
-      console.log("Last contour/hatch.");
       if (trajectories.hatches.length !== 0) animateHatches(trajectories);
     } else {
       // Otherwise, recurse and draw next line in a second
-      const MS_DELAY = 10;
+      const MS_DELAY = 5;
       nextLineDraw = setTimeout(drawLine, MS_DELAY, idx + 1); // Third parameter onward is parameters
     }
   }
@@ -131,8 +127,6 @@ async function animateHatches(trajectories) {
   let list = trajectories.hatches;
   nextLineDraw = await drawLine(0); // Start it on the first line, it automatically recurses on the next after a second
   async function drawLine(idx) {
-    console.log("Drawing line at index " + idx);
-    console.log("list.length - 1 " + (list.length - 1));
     d3.select("svg")
       .append("line")
       .attr("x1", list[idx][0])
@@ -144,7 +138,6 @@ async function animateHatches(trajectories) {
 
     // If this is last, return from function, meaning the original call can return
     if (idx === list.length - 1) {
-      console.log("Last contour/hatch.");
       animateHatches(trajectories);
     } else {
       // Otherwise, recurse and draw next line in a second
