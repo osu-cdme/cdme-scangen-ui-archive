@@ -8,20 +8,125 @@ const pathToResources = building
 let parent = document.getElementById("rightPart");
 const fs = require("fs");
 
-// Not really "necessary" to have a main for js, but helps organizationally and to easily enable/disable functionality
-main();
-function main() {
-  // renderPNGs();
-  // renderXMLs();
-  populateLayerList();
+// "Display" button event listener
+// Only theoretically clicked on when the player wants to skip an animation and go all the way to the end
+// We simply save the last render we did and default to that here
+d3.select("#display").on("click", (e) => {
+  e.preventDefault();
+  renderXML(currentPath);
+});
 
-  // Show the bottom layer by default
-  let layer1Path = path.join(
-    __dirname,
-    "xml",
-    fs.readdirSync(path.join(__dirname, "xml"))[0]
-  );
-  renderXML(layer1Path);
+// "Animate" button event listener
+d3.select("#animate").on("click", (e) => {
+  e.preventDefault();
+  animateXML(currentPath);
+});
+
+// Convenient function call to wite whatever's currently in the SVG
+function wipeSVG() {
+  d3.select("svg").selectAll("*").remove();
+}
+
+// If there's currently another animation going, end that one before we start this one
+let nextLineDraw = null; // We assign every setTimeout we do to this variable
+function stopDrawing() {
+  if (nextLineDraw !== null) {
+    clearTimeout(nextLineDraw);
+  }
+}
+
+// Draws contours, then hatches, at a specified interval between them
+// TODO: Add a text field where the player can input the speed they want to go at
+// TODO: Lots of repeated code here with drawing from an XML; probably best to further functionalize it
+async function animateXML(pathToXML) {
+  console.debug("Animating .XML at path " + pathToXML);
+  stopDrawing();
+  wipeSVG();
+  fetch(pathToXML)
+    .then((response) => response.text())
+    .then(async (data) => {
+      let parser = new DOMParser();
+      doc = parser.parseFromString(data, "text/xml"); // XMLDocument (https://developer.mozilla.org/en-US/docs/Web/API/XMLDocument)
+
+      // Get a { contours = [], hatches = [] } object
+      let trajectories = getTrajectories(doc);
+      console.debug("Read trajectories: ", trajectories);
+
+      // Figure out a bounding box for this layer so that we know how to scale the .svg
+      let boundingBox = getBoundingBoxForTrajectories(trajectories);
+      console.debug("Calculated bounding box for part. BB: ", boundingBox);
+
+      // Space from part boundary added to the edges of the graphic
+      const PADDING = 2;
+
+      // <Bounding Box Size> + <Padding, applied once for each side> + <Overall multiplicative constant>
+      const SVG_WIDTH = 300;
+      const SVG_HEIGHT = 300;
+      const BOUNDS_WIDTH = boundingBox[2] - boundingBox[0];
+      const BOUNDS_HEIGHT = boundingBox[3] - boundingBox[1];
+
+      // Very good writeup on how viewBox, etc. works here: https://pandaqitutorials.com/Website/svg-coordinates-viewports
+      // We are essentially setting the origin negative and then widths/heights such that it covers the entire part,
+      // which lets us do everything without needing to manually transform any of our actual points
+      const viewboxStr =
+        "" +
+        (boundingBox[0] - PADDING) +
+        " " +
+        (boundingBox[1] - PADDING) +
+        " " +
+        (BOUNDS_WIDTH + PADDING * 2) +
+        " " +
+        (BOUNDS_HEIGHT + PADDING * 2);
+
+      const ID = "svg";
+      d3.select("svg")
+        .attr("class", "xmlsvg")
+        .attr("width", SVG_WIDTH)
+        .attr("height", SVG_HEIGHT)
+        .attr("fill", "#FFFFFF")
+        .attr("viewBox", viewboxStr) // Basically lets us define our bounds
+        .attr("id", ID); // Strip non-alphanumeric characters, else d3's select() fails to work
+
+      // Draw the lines one by one
+      if (trajectories.contours.length !== 0) {
+        console.log("Animating contour drawing.");
+        await animateLineList(trajectories.contours);
+      }
+
+      if (trajectories.hatches.length !== 0) {
+        console.log("Animating hatch drawing.");
+        await animateLineList(trajectories.hatches);
+      }
+    });
+}
+
+// Print the list of [min x, min y, max x, max y] objects presented in a non-blocking manner
+async function animateLineList(list) {
+  console.log("Drawing this list of contours/hatches: ", list);
+  nextLineDraw = await drawLine(0); // Start it on the first line, it automatically recurses on the next after a second
+  console.log("Drew that list of contours/hatches.");
+  async function drawLine(idx) {
+    console.log("Drawing line at index " + idx);
+    console.log("list.length - 1 " + (list.length - 1));
+    d3.select("svg")
+      .append("line")
+      .attr("x1", list[idx][0])
+      .attr("y1", list[idx][1])
+      .attr("x2", list[idx][2])
+      .attr("y2", list[idx][3])
+      .attr("stroke", "#000000")
+      .attr("stroke-width", 0.1);
+
+    // If this is last, return from function, meaning the original call can return
+    if (idx === list.length - 1) {
+      console.log("Last contour/hatch.");
+    } else {
+      // Otherwise, recurse and draw next line in a second
+      nextLineDraw = setTimeout(drawLine, 10, idx + 1); // Third parameter onward is parameters
+    }
+
+    return;
+  }
 }
 
 function populateLayerList() {
@@ -38,6 +143,7 @@ function populateLayerList() {
 
 // Renders the .PNG files that `pyslm` outputs.
 function renderPNGs() {
+  console.debug("Rendering .PNG output from `pyslm`.");
   let files = fs.readdirSync(path.join(pathToResources, "LayerFiles"));
   files.forEach((file) => {
     let text = document.createElement("p");
@@ -56,12 +162,12 @@ function renderPNGs() {
 }
 
 function renderXML(pathToXML) {
-  // Wipe the old one
-  d3.select("svg").selectAll("*").remove();
-
+  stopDrawing();
+  wipeSVG();
   // Render the new one
-  console.log("Rendering .XML of this: ", pathToXML);
+  console.log("Rendering .XML at path ", pathToXML);
 
+  currentPath = pathToXML;
   fetch(pathToXML)
     .then((response) => response.text())
     .then((data) => {
@@ -310,10 +416,6 @@ Displays an interactable picture representing the same data object returned by g
 */
 function outputTrajectories(data, svg_id) {
   data.contours.forEach((line) => {
-    d3.select("#" + svg_id).attr({
-      visualViewport,
-    });
-
     d3.select("#" + svg_id)
       .append("line")
       .attr("x1", line[0])
@@ -325,10 +427,6 @@ function outputTrajectories(data, svg_id) {
   });
 
   data.hatches.forEach((line) => {
-    d3.select("#" + svg_id).attr({
-      visualViewport,
-    });
-
     d3.select("#" + svg_id)
       .append("line")
       .attr("x1", line[0])
@@ -338,6 +436,22 @@ function outputTrajectories(data, svg_id) {
       .attr("stroke", "#000000")
       .attr("stroke-width", 0.1);
   });
+}
 
-  // TODO: Plot hatches as well
+// Not really "necessary" to have a main for js, but helps organizationally and to easily enable/disable functionality
+// Leave this at the end; messes with the order of defining things otherwise
+let currentPath = "";
+main();
+function main() {
+  // renderPNGs();
+  // renderXMLs();
+  populateLayerList();
+
+  // Show the bottom layer by default
+  let layer1Path = path.join(
+    __dirname,
+    "xml",
+    fs.readdirSync(path.join(__dirname, "xml"))[0]
+  );
+  renderXML(layer1Path);
 }

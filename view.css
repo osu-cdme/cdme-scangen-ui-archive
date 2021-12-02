@@ -50,3 +50,19 @@ svg {
 .xmlsvg {
   border: 10px black solid;
 }
+
+#controlsPanel {
+  margin-top: 20px;
+}
+
+#controlsPanel > button {
+  background-color: #3b3b3b;
+  color: white;
+  padding: 10px;
+  font-size: 18px;
+  border: 1px black solid;
+}
+
+#controlsPanel > button:hover {
+  background-color: #5d5d5d;
+}
