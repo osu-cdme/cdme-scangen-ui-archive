@@ -10,7 +10,7 @@ body {
 
 nav {
     display: inline-block;
-    width: 350px;
+    width: 250px;
     height: 100%;
 
     background-color: #960000;
@@ -27,14 +27,14 @@ nav > .bottom {
 }
 
 nav > img {
-    width: 350px;
+    width: 250px;
 }
 
 #rightPart {
     display: inline-block;
     position: absolute;
-    left: 350px;
-    width: calc(100% - 350px);
+    left: 250px;
+    width: calc(100% - 250px);
     height: 100%;
     background-color: #333333;
     padding: 15px;
@@ -107,4 +107,24 @@ nav > img {
 .rightPartHeader {
     margin-top: 20px;
     margin-bottom: 5px;
+}
+
+#pageList {
+    list-style-type: none;
+    margin-top: 0;
+    padding-left: 0;
+}
+
+#pageList > li {
+    height: 50px;
+    line-height: 50px;
+    border-bottom: 1px black solid;
+    padding: 0;
+}
+
+#pageList > li > a {
+    color: white;
+    text-decoration: none;
+    display: block;
+    /* padding: 20px; */
 }

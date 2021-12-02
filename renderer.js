@@ -1,5 +1,5 @@
 // Some small stuff needs changed based on whether we're testing or building; it all switches off of one variable
-const building = true // Set to true if about to build the application; modifies some file paths to work with the new config
+const building = false // Set to true if about to build the application; modifies some file paths to work with the new config
 
 // Packaging puts us in a folder inside the resources directory
 // Whereas not packaging leaves us in the current directory
