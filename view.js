@@ -7,6 +7,7 @@ const pathToResources = building
 
 let parent = document.getElementById("rightPart");
 const fs = require("fs");
+const { resolve } = require("path");
 
 // "Display" button event listener
 // Only theoretically clicked on when the player wants to skip an animation and go all the way to the end
@@ -88,23 +89,18 @@ async function animateXML(pathToXML) {
         .attr("id", ID); // Strip non-alphanumeric characters, else d3's select() fails to work
 
       // Draw the lines one by one
-      if (trajectories.contours.length !== 0) {
-        console.log("Animating contour drawing.");
-        await animateLineList(trajectories.contours);
-      }
-
-      if (trajectories.hatches.length !== 0) {
-        console.log("Animating hatch drawing.");
-        await animateLineList(trajectories.hatches);
-      }
+      console.log("trajectories: ", trajectories);
+      if (trajectories.contours.length !== 0)
+        await animateContours(trajectories);
+      else if (trajectories.hatches.length !== 0)
+        await animateHatches(trajectories);
     });
 }
 
 // Print the list of [min x, min y, max x, max y] objects presented in a non-blocking manner
-async function animateLineList(list) {
-  console.log("Drawing this list of contours/hatches: ", list);
+async function animateContours(trajectories) {
+  let list = trajectories.contours;
   nextLineDraw = await drawLine(0); // Start it on the first line, it automatically recurses on the next after a second
-  console.log("Drew that list of contours/hatches.");
   async function drawLine(idx) {
     console.log("Drawing line at index " + idx);
     console.log("list.length - 1 " + (list.length - 1));
@@ -120,12 +116,41 @@ async function animateLineList(list) {
     // If this is last, return from function, meaning the original call can return
     if (idx === list.length - 1) {
       console.log("Last contour/hatch.");
+      if (trajectories.hatches.length !== 0) animateHatches(trajectories);
     } else {
       // Otherwise, recurse and draw next line in a second
-      nextLineDraw = setTimeout(drawLine, 10, idx + 1); // Third parameter onward is parameters
+      const MS_DELAY = 10;
+      nextLineDraw = setTimeout(drawLine, MS_DELAY, idx + 1); // Third parameter onward is parameters
     }
+  }
+}
 
-    return;
+// Print the list of [min x, min y, max x, max y] objects presented in a non-blocking manner
+// TODO: It's pretty messy to essentially have to copy this code twice, but I can't figure out an alternative that works properly with JavaScript's async system
+async function animateHatches(trajectories) {
+  let list = trajectories.hatches;
+  nextLineDraw = await drawLine(0); // Start it on the first line, it automatically recurses on the next after a second
+  async function drawLine(idx) {
+    console.log("Drawing line at index " + idx);
+    console.log("list.length - 1 " + (list.length - 1));
+    d3.select("svg")
+      .append("line")
+      .attr("x1", list[idx][0])
+      .attr("y1", list[idx][1])
+      .attr("x2", list[idx][2])
+      .attr("y2", list[idx][3])
+      .attr("stroke", "#000000")
+      .attr("stroke-width", 0.1);
+
+    // If this is last, return from function, meaning the original call can return
+    if (idx === list.length - 1) {
+      console.log("Last contour/hatch.");
+      animateHatches(trajectories);
+    } else {
+      // Otherwise, recurse and draw next line in a second
+      const MS_DELAY = 10;
+      nextLineDraw = setTimeout(drawLine, MS_DELAY, idx + 1); // Third parameter onward is parameters
+    }
   }
 }
 
