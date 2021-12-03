@@ -25,7 +25,7 @@ d3.select("#animate").on("click", (e) => {
 
 // Convenient function call to wite whatever's currently in the SVG
 function wipeSVG() {
-  d3.select("svg").selectAll("*").remove();
+  d3.select("#mainsvg").selectAll("*").remove();
 }
 
 // If there's currently another animation going, end that one before we start this one
@@ -79,8 +79,8 @@ async function animateXML(pathToXML) {
         " " +
         (BOUNDS_HEIGHT + PADDING * 2);
 
-      const ID = "svg";
-      d3.select("svg")
+      const ID = "mainsvg";
+      d3.select("#" + ID)
         .attr("class", "xmlsvg")
         .attr("width", SVG_WIDTH)
         .attr("height", SVG_HEIGHT)
@@ -101,7 +101,7 @@ async function animateContours(trajectories) {
   let list = trajectories.contours;
   nextLineDraw = await drawLine(0); // Start it on the first line, it automatically recurses on the next after a second
   async function drawLine(idx) {
-    d3.select("svg")
+    d3.select("#mainsvg")
       .append("line")
       .attr("x1", list[idx][0])
       .attr("y1", list[idx][1])
@@ -127,7 +127,7 @@ async function animateHatches(trajectories) {
   let list = trajectories.hatches;
   nextLineDraw = await drawLine(0); // Start it on the first line, it automatically recurses on the next after a second
   async function drawLine(idx) {
-    d3.select("svg")
+    d3.select("#mainsvg")
       .append("line")
       .attr("x1", list[idx][0])
       .attr("y1", list[idx][1])
@@ -149,12 +149,23 @@ async function animateHatches(trajectories) {
 
 function populateLayerList() {
   fs.readdirSync(path.join(__dirname, "xml")).forEach((file) => {
-    d3.select("#layerList")
-      .append("li")
-      .text("Layer " + file.match(/(\d+)/)[0]) // Extract only the number from the file name
+    let layerNum = parseInt(file.match(/(\d+)/)[0]); // First part finds the number, second part trims zeroes
+
+    let li = d3.select("#layerList").append("li");
+
+    li.append("svg")
+      .attr("id", "svg_" + layerNum)
+      .attr("width", 50)
+      .attr("height", 50);
+
+    // Thumbnails can take a while and aren't high priority; setTimeout(func, 0) makes the function run after all other synchronous code
+    renderXML(path.join(__dirname, "xml", file), "svg_" + layerNum, false);
+
+    li.append("p")
+      .text("Layer " + layerNum) // Extract only the number from the file name
       .on("click", (e) => {
         e.preventDefault();
-        renderXML(path.join(__dirname, "xml", file));
+        renderXML(path.join(__dirname, "xml", file), "mainsvg", true);
       });
   });
 }
@@ -179,7 +190,7 @@ function renderPNGs() {
   });
 }
 
-function renderXML(pathToXML) {
+function renderXML(pathToXML, svgID, output_hatches) {
   stopDrawing();
   wipeSVG();
   // Render the new one
@@ -204,8 +215,6 @@ function renderXML(pathToXML) {
       const PADDING = 2;
 
       // <Bounding Box Size> + <Padding, applied once for each side> + <Overall multiplicative constant>
-      const SVG_WIDTH = 300;
-      const SVG_HEIGHT = 300;
       const BOUNDS_WIDTH = boundingBox[2] - boundingBox[0];
       const BOUNDS_HEIGHT = boundingBox[3] - boundingBox[1];
 
@@ -222,84 +231,14 @@ function renderXML(pathToXML) {
         " " +
         (BOUNDS_HEIGHT + PADDING * 2);
 
-      const ID = "svg";
-      console.log(d3.select("svg"));
-      d3.select("svg")
+      d3.select("#" + svgID)
         .attr("class", "xmlsvg")
-        .attr("width", SVG_WIDTH)
-        .attr("height", SVG_HEIGHT)
-        .attr("fill", "#FFFFFF")
         .attr("viewBox", viewboxStr) // Basically lets us define our bounds
-        .attr("id", ID); // Strip non-alphanumeric characters, else d3's select() fails to work
+        .attr("id", svgID); // Strip non-alphanumeric characters, else d3's select() fails to work
 
-      outputTrajectories(trajectories, ID);
+      outputTrajectories(trajectories, svgID, output_hatches);
       console.debug("Displayed trajectories.");
     });
-}
-
-// Renders all layer XML files, which are assumed to be in the `xml` directory.
-function renderXMLs() {
-  console.log("Loading .XML files.");
-  fs.readdirSync(path.join(__dirname, "xml")).forEach((file) => {
-    fetch(path.join(__dirname, "xml", file))
-      .then((response) => response.text())
-      .then((data) => {
-        let parser = new DOMParser();
-        doc = parser.parseFromString(data, "text/xml"); // XMLDocument (https://developer.mozilla.org/en-US/docs/Web/API/XMLDocument)
-
-        // Get trajectories before defining SVG, as we define the SVG's size based on part bounds
-
-        /* 
-        let svg = document.createElement("svg"); // Create .svg to hold this layer
-        svg.setAttribute("viewBox", "0 0 100 100");
-        svg.classList.toggle("xmlsvg"); // Class has all the styling we need in `view.css`
-        svg.id = ("svg_" + file).replace(/\W/g, ""); 
-        document.getElementById("svgContainer").appendChild(svg);
-        */
-
-        // Get a { contours = [], hatches = [] } object
-        let trajectories = getTrajectories(doc);
-        console.debug("Read trajectories: ", trajectories);
-
-        // Figure out a bounding box for this layer so that we know how to scale the .svg
-        let boundingBox = getBoundingBoxForTrajectories(trajectories);
-        console.debug("Calculated bounding box for part. BB: ", boundingBox);
-
-        // Space from part boundary added to the edges of the graphic
-        const PADDING = 2;
-
-        // <Bounding Box Size> + <Padding, applied once for each side> + <Overall multiplicative constant>
-        const SVG_WIDTH = 300;
-        const SVG_HEIGHT = 300;
-        const BOUNDS_WIDTH = boundingBox[2] - boundingBox[0];
-        const BOUNDS_HEIGHT = boundingBox[3] - boundingBox[1];
-
-        // Very good writeup on how viewBox, etc. works here: https://pandaqitutorials.com/Website/svg-coordinates-viewports
-        // We are essentially setting the origin negative and then widths/heights such that it covers the entire part,
-        // which lets us do everything without needing to manually transform any of our actual points
-        const viewboxStr =
-          "" +
-          (boundingBox[0] - PADDING) +
-          " " +
-          (boundingBox[1] - PADDING) +
-          " " +
-          (BOUNDS_WIDTH + PADDING * 2) +
-          " " +
-          (BOUNDS_HEIGHT + PADDING * 2);
-
-        const ID = ("svg_" + file).replace(/\W/g, "");
-        d3.select("svg")
-          .attr("class", "xmlsvg")
-          .attr("width", SVG_WIDTH)
-          .attr("height", SVG_HEIGHT)
-          .attr("fill", "#FFFFFF")
-          .attr("viewBox", viewboxStr) // Basically lets us define our bounds
-          .attr("id", ID); // Strip non-alphanumeric characters, else d3's select() fails to work
-
-        outputTrajectories(trajectories, ID);
-        console.debug("Displayed trajectories.");
-      });
-  });
 }
 
 // Returns a [min x, min y, max x, max y] bounding box corresponding to the passed-in trajectories
@@ -432,7 +371,7 @@ function getTrajectories(doc) {
 /* 
 Displays an interactable picture representing the same data object returned by getTrajectories
 */
-function outputTrajectories(data, svg_id) {
+function outputTrajectories(data, svg_id, output_hatches) {
   data.contours.forEach((line) => {
     d3.select("#" + svg_id)
       .append("line")
@@ -444,16 +383,18 @@ function outputTrajectories(data, svg_id) {
       .attr("stroke-width", 0.1);
   });
 
-  data.hatches.forEach((line) => {
-    d3.select("#" + svg_id)
-      .append("line")
-      .attr("x1", line[0])
-      .attr("y1", line[1])
-      .attr("x2", line[2])
-      .attr("y2", line[3])
-      .attr("stroke", "#000000")
-      .attr("stroke-width", 0.1);
-  });
+  if (output_hatches) {
+    data.hatches.forEach((line) => {
+      d3.select("#" + svg_id)
+        .append("line")
+        .attr("x1", line[0])
+        .attr("y1", line[1])
+        .attr("x2", line[2])
+        .attr("y2", line[3])
+        .attr("stroke", "#000000")
+        .attr("stroke-width", 0.1);
+    });
+  }
 }
 
 // Not really "necessary" to have a main for js, but helps organizationally and to easily enable/disable functionality
@@ -471,5 +412,5 @@ function main() {
     "xml",
     fs.readdirSync(path.join(__dirname, "xml"))[0]
   );
-  renderXML(layer1Path);
+  renderXML(layer1Path, "mainsvg", true);
 }
