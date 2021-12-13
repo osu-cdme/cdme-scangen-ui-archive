@@ -6,6 +6,7 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
     <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'">
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="importexport.css" />
     <title>Hello World!</title>
   </head>
   <body>
@@ -27,6 +28,16 @@
       </div>
     </nav>
     <div id="rightPart">
+      <div class="half">
+        <h1>Import</h1>
+        <button id="stlImport">STL</button>
+        <button id="scnImport">SCN</button>
+      </div>
+      <div class="half">
+        <h1>Export</h1>
+        <button id="scnExport">SCN</button>
+      </div>
     </div>
+    <script src="importexport.js"></script>
   </body>
 </html>
