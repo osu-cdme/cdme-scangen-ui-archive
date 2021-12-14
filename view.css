@@ -1,27 +1,27 @@
-#rightPart {
-  padding: 0;
+body {
+  box-sizing: border-box;
   margin: 0;
-  /* border: 1px solid white; */
-  /* margin-bottom: -15px; */
+  padding: 0;
+}
+
+#rightPart {
+  margin: 0;
+  padding: 0;
 }
 
 #svgContainer {
-  /* 150px for layer list, 2px for side borders, 5px for I HAVE NO CLUE, BUT IT WORKS */
-  width: calc(100% - 150px - 2px - 5px);
+  /* 200px for layer list, 2px for side borders, 5px for I HAVE NO CLUE, BUT IT WORKS */
+  width: calc(100% - 200px - 2px - 5px);
   display: inline-block;
   vertical-align: top;
   text-align: center;
   /* border: 1px blue solid; */
 }
 
-#svgContainer > svg {
-  margin-top: calc(50% - 300px); /* 150px is half our svg sizing of 300px; */
-}
-
 #layerList {
   display: inline-block;
   vertical-align: top;
-  width: 150px;
+  width: 200px;
   height: 100%;
   list-style-type: none;
   margin-top: 0px;
@@ -35,18 +35,53 @@
 }
 
 #layerList > li {
+  text-align: left;
+  width: 180px; /* 50px for thumbnail, 150px for layer name, 20px for scrollbar */
   height: 50px;
-  line-height: 50px;
   border-bottom: 1px black solid;
-  padding: 0 20px;
   margin-left: 0;
 }
 
+#layerList > li > p {
+  display: inline-block;
+  line-height: 50px;
+  width: 130px; /* Scroll bar is 20px */
+  box-sizing: border-box;
+  vertical-align: top;
+  padding: 0 20px;
+  margin: 0;
+}
+
+#layerList > li > img {
+  width: 50px;
+  height: 100%;
+  display: inline-block;
+  margin: 0;
+}
+
 svg {
-  fill: white;
   background-color: white;
 }
 
-.xmlsvg {
+#mainsvg {
+  margin-top: calc(50% - 300px); /* 150px is half our svg sizing of 300px; */
   border: 10px black solid;
+  width: 300px;
+  height: 300px;
+}
+
+#controlsPanel {
+  margin-top: 20px;
+}
+
+#controlsPanel > button {
+  background-color: #3b3b3b;
+  color: white;
+  padding: 10px;
+  font-size: 18px;
+  border: 1px black solid;
+}
+
+#controlsPanel > button:hover {
+  background-color: #5d5d5d;
 }

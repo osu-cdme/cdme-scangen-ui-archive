@@ -8,7 +8,8 @@ const pathToResources = building ? path.join(__dirname, "../") : path.join(__dir
 const pythonPath = building ? path.join(__dirname, "../python/python.exe") : path.join(__dirname, "python/python.exe") // absolute paths needed (for some reason)
 const FOLDERS_TO_ADD_TO_PYTHONPATH = [
     building ? path.join(__dirname, "../pyslm/") : path.join(__dirname, "../cdme-scangen/pyslm"), // pyslm
-    building ? path.join(__dirname, "../") : path.join(__dirname, "../cdme-scangen/") // src (custom scan paths)
+    building ? path.join(__dirname, "../") : path.join(__dirname, "../cdme-scangen/"), // src (custom scan paths)
+    building ? path.join(__dirname, "../pyslm/pyslm") : path.join(__dirname, "../cdme-scangen/pyslm/pyslm")
 ]
 
 console.log(FOLDERS_TO_ADD_TO_PYTHONPATH)
