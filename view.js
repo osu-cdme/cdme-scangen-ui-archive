@@ -15,7 +15,7 @@ const { randomBytes } = require("crypto");
 // We simply save the last render we did and default to that here
 d3.select("#display").on("click", (e) => {
     e.preventDefault();
-    renderXML(currentPath);
+    renderXML(currentPath, "mainsvg", true);
 });
 
 // "Animate" button event listener
@@ -168,9 +168,6 @@ function populateLayerList() {
                 e.preventDefault();
                 renderXML(path.join(__dirname, "xml", file), "mainsvg", true);
             });
-
-        // Thumbnails can take a while and aren't high priority; setTimeout(func, 0) makes the function run after all other synchronous code
-        renderXML(path.join(__dirname, "xml", file), "svg_" + layerNum, false);
     });
 }
 
@@ -194,59 +191,83 @@ function renderPNGs() {
     });
 }
 
+let thumbnailsDrawn = false;
 async function renderXML(pathToXML, svgID, output_hatches) {
-    stopDrawing();
-    wipeSVG();
-    // Render the new one
-    console.log("Rendering .XML at path ", pathToXML);
+    console.log(`Rendering .XML at path ${pathToXML} in svg frame ID ${svgID}`);
 
+    // Specifically for the main svg, we want to prioritize and do everything synchronously
     currentPath = pathToXML;
-    fetch(pathToXML)
-        .then((response) => response.text())
-        .then((data) => {
-            let parser = new DOMParser();
-            doc = parser.parseFromString(data, "text/xml"); // XMLDocument (https://developer.mozilla.org/en-US/docs/Web/API/XMLDocument)
+    if (svgID === "mainsvg") {
+        stopDrawing(); // Terminate any setTimeout() animation loop currently occurring
+        wipeSVG(); // Get rid of any elements already in the main <svg> element (i.e. from the currently drawn layer we're replacing)
+        console.log("Main one!");
+        let data = await (await fetch(pathToXML)).text();
+        drawData(data, svgID);
+        console.log("Rendered the main one.");
 
-            // Get a { contours = [], hatches = [] } object
-            let trajectories = getTrajectories(doc);
-            console.debug("Read trajectories: ", trajectories);
+        // If thumbnails aren't drawn yet, draw them
+        if (!thumbnailsDrawn) {
+            fs.readdirSync(path.join(__dirname, "xml")).forEach((file) => {
+                let layerNum = parseInt(file.match(/(\d+)/)[0]); // First part finds the number, second part trims zeroes
+                renderXML(
+                    path.join(__dirname, "xml", file),
+                    "svg_" + layerNum,
+                    false
+                );
+            });
+        }
+        thumbnailsDrawn = true;
+    }
 
-            // Figure out a bounding box for this layer so that we know how to scale the .svg
-            let boundingBox = getBoundingBoxForTrajectories(trajectories);
-            console.debug(
-                "Calculated bounding box for part. BB: ",
-                boundingBox
-            );
+    // Otherwise, do them async
+    else {
+        console.log("Thumbnail!");
+        fetch(pathToXML)
+            .then((response) => response.text())
+            .then((data) => drawData(data, svgID));
+    }
 
-            // Space from part boundary added to the edges of the graphic
-            const PADDING = 2;
+    // The synchronous part that actually draws the svg on the screen
+    function drawData(data, svgID) {
+        let parser = new DOMParser();
+        doc = parser.parseFromString(data, "text/xml"); // XMLDocument (https://developer.mozilla.org/en-US/docs/Web/API/XMLDocument)
 
-            // <Bounding Box Size> + <Padding, applied once for each side> + <Overall multiplicative constant>
-            const BOUNDS_WIDTH = boundingBox[2] - boundingBox[0];
-            const BOUNDS_HEIGHT = boundingBox[3] - boundingBox[1];
+        // Get a { contours = [], hatches = [] } object
+        let trajectories = getTrajectories(doc);
+        console.debug("Read trajectories: ", trajectories);
 
-            // Very good writeup on how viewBox, etc. works here: https://pandaqitutorials.com/Website/svg-coordinates-viewports
-            // We are essentially setting the origin negative and then widths/heights such that it covers the entire part,
-            // which lets us do everything without needing to manually transform any of our actual points
-            const viewboxStr =
-                "" +
-                (boundingBox[0] - PADDING) +
-                " " +
-                (boundingBox[1] - PADDING) +
-                " " +
-                (BOUNDS_WIDTH + PADDING * 2) +
-                " " +
-                (BOUNDS_HEIGHT + PADDING * 2);
+        // Figure out a bounding box for this layer so that we know how to scale the .svg
+        let boundingBox = getBoundingBoxForTrajectories(trajectories);
+        console.debug("Calculated bounding box for part. BB: ", boundingBox);
 
-            d3.select("#" + svgID)
-                .attr("class", "xmlsvg")
-                .attr("viewBox", viewboxStr) // Basically lets us define our bounds
-                .attr("id", svgID); // Strip non-alphanumeric characters, else d3's select() fails to work
+        // Space from part boundary added to the edges of the graphic
+        const PADDING = 2;
 
-            outputTrajectories(trajectories, svgID, output_hatches);
-            console.debug("Displayed trajectories.");
-            return Promise.resolve();
-        });
+        // <Bounding Box Size> + <Padding, applied once for each side> + <Overall multiplicative constant>
+        const BOUNDS_WIDTH = boundingBox[2] - boundingBox[0];
+        const BOUNDS_HEIGHT = boundingBox[3] - boundingBox[1];
+
+        // Very good writeup on how viewBox, etc. works here: https://pandaqitutorials.com/Website/svg-coordinates-viewports
+        // We are essentially setting the origin negative and then widths/heights such that it covers the entire part,
+        // which lets us do everything without needing to manually transform any of our actual points
+        const viewboxStr =
+            "" +
+            (boundingBox[0] - PADDING) +
+            " " +
+            (boundingBox[1] - PADDING) +
+            " " +
+            (BOUNDS_WIDTH + PADDING * 2) +
+            " " +
+            (BOUNDS_HEIGHT + PADDING * 2);
+
+        d3.select("#" + svgID)
+            .attr("class", "xmlsvg")
+            .attr("viewBox", viewboxStr) // Basically lets us define our bounds
+            .attr("id", svgID); // Strip non-alphanumeric characters, else d3's select() fails to work
+
+        outputTrajectories(trajectories, svgID, output_hatches);
+        console.debug("Displayed trajectories.");
+    }
 }
 
 // Returns a [min x, min y, max x, max y] bounding box corresponding to the passed-in trajectories
@@ -410,15 +431,14 @@ function outputTrajectories(data, svg_id, output_hatches) {
 let currentPath = "";
 main();
 function main() {
-    // renderPNGs();
-    // renderXMLs();
-    populateLayerList();
-
-    // Show the bottom layer by default
+    // Render the first layer as a default
     let layer1Path = path.join(
         __dirname,
         "xml",
         fs.readdirSync(path.join(__dirname, "xml"))[0]
     );
     renderXML(layer1Path, "mainsvg", true);
+
+    // Populate the list of layers
+    populateLayerList();
 }
