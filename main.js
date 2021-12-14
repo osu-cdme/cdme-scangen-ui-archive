@@ -1,4 +1,8 @@
 const path = require("path");
+const building = false;
+const pathToResources = building
+    ? path.join(__dirname, "../")
+    : path.join(__dirname, "../cdme-scangen/");
 
 /* 
 const { app } = require("electron");
@@ -106,6 +110,40 @@ ipc.on("import-scn", (e) => {
                         });
                     });
                 });
+            });
+        });
+});
+
+ipc.on("import-stl", (e) => {
+    // Import STL file
+    dialog
+        .showOpenDialog({
+            title: "Select .STL File",
+            filters: [{ name: ".STL File", extensions: ["stl"] }],
+        })
+        .then((fileSelection) => {
+            // Verify they didn't cancel
+            if (fileSelection.canceled) return;
+
+            // Read file
+            let filePath = fileSelection.filePaths[0];
+            fs.readFile(filePath, (err, data) => {
+                if (err) console.error("Error: " + err);
+                console.debug("Copying over STL file at path " + filePath);
+
+                // Extract file name from file path
+                let fileName = filePath.split("\\").pop(filePath);
+                console.debug("Extracted file name " + fileName);
+
+                // Copy stl file over to main project
+                console.debug(
+                    "Writing file to " +
+                        path.join(pathToResources, "geometry", fileName)
+                );
+                fs.writeFileSync(
+                    path.join(pathToResources, "geometry", fileName),
+                    data
+                );
             });
         });
 });
