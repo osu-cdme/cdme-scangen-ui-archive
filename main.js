@@ -87,6 +87,14 @@ ipc.on("import-scn", (e) => {
             let filePath = fileSelection.filePaths[0];
             fs.readFile(filePath, (err, data) => {
                 if (err) console.error("Error: " + err);
+
+                // Wipe Directory
+                let files = fs.readdirSync(path.join(__dirname, "xml"));
+                files.forEach((file) => {
+                    fs.unlinkSync(path.join(__dirname, "xml", file));
+                });
+
+                // Load zip (that we already verified existed before wiping)
                 JSZip.loadAsync(data).then((zip) => {
                     let keys = Object.keys(zip.files);
                     keys.forEach((key) => {
@@ -99,24 +107,5 @@ ipc.on("import-scn", (e) => {
                     });
                 });
             });
-
-            /* 
-            // 1: zip up everything in the LayerFiles directory
-            var zip = new JSZip();
-            console.debug("Adding files to .zip.");
-            let files = fs.readdirSync(path.join(__dirname, "xml"));
-            files.forEach((file) => {
-                let data = fs.readFileSync(path.join(__dirname, "xml", file));
-                zip.file(file, data);
-            });
-
-            // 2: Actually save it
-            console.debug("Saving .scn file at ", filePath);
-            zip.generateNodeStream({ type: "nodebuffer", streamFiles: true })
-                .pipe(fs.createWriteStream(filePath))
-                .on("finish", function () {
-                    console.log("SCN file written.");
-                });
-            */
         });
 });
