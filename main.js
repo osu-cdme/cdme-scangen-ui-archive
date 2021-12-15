@@ -74,6 +74,7 @@ ipc.on("export-scn", (e) => {
                 .on("finish", function () {
                     console.log("SCN file written.");
                 });
+            e.reply("alert", "SCN file successfully exported!");
         });
 });
 
@@ -90,7 +91,13 @@ ipc.on("import-scn", (e) => {
             // Unzip, wipe `xml` dir, then copy all files over
             let filePath = fileSelection.filePaths[0];
             fs.readFile(filePath, (err, data) => {
-                if (err) console.error("Error: " + err);
+                if (err) {
+                    e.reply(
+                        "alert",
+                        `Error importing .SCN file from ${filePath}: ${err}`
+                    );
+                    return;
+                }
 
                 // Wipe Directory
                 let files = fs.readdirSync(path.join(__dirname, "xml"));
@@ -110,6 +117,7 @@ ipc.on("import-scn", (e) => {
                         });
                     });
                 });
+                e.reply("alert", "SCN file successfully imported!");
             });
         });
 });
@@ -128,7 +136,13 @@ ipc.on("import-stl", (e) => {
             // Read file
             let filePath = fileSelection.filePaths[0];
             fs.readFile(filePath, (err, data) => {
-                if (err) console.error("Error: " + err);
+                if (err) {
+                    e.reply(
+                        "alert",
+                        `Error reading file at ${filePath}: ${err}`
+                    );
+                    return;
+                }
                 console.debug("Copying over STL file at path " + filePath);
 
                 // Extract file name from file path
@@ -144,6 +158,7 @@ ipc.on("import-stl", (e) => {
                     path.join(pathToResources, "geometry", fileName),
                     data
                 );
+                e.reply("alert", "STL file successfully imported!");
             });
         });
 });

@@ -26,3 +26,8 @@ document.getElementById("scnExport").addEventListener("click", (e) => {
     ipc.send("export-scn");
     console.log("Sent export-scn signal to main process..");
 });
+
+// Generic feedback handler that takes message from `main` process and displays it in the UI
+ipc.on("alert", (e, arg) => {
+    window.alert(arg);
+});
