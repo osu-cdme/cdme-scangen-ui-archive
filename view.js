@@ -1,14 +1,10 @@
 const d3 = require("./d3.min.js");
 const path = require("path");
 const building = false;
-const pathToResources = building
-    ? path.join(__dirname, "../")
-    : path.join(__dirname, "../cdme-scangen/");
+const pathToResources = building ? path.join(__dirname, "../") : path.join(__dirname, "../cdme-scangen/");
 
 let parent = document.getElementById("rightPart");
 const fs = require("fs");
-const { resolve } = require("path");
-const { randomBytes } = require("crypto");
 
 // "Display" button event listener
 // Only theoretically clicked on when the player wants to skip an animation and go all the way to the end
@@ -56,10 +52,7 @@ async function animateXML(pathToXML) {
 
             // Figure out a bounding box for this layer so that we know how to scale the .svg
             let boundingBox = getBoundingBoxForTrajectories(trajectories);
-            console.debug(
-                "Calculated bounding box for part. BB: ",
-                boundingBox
-            );
+            console.debug("Calculated bounding box for part. BB: ", boundingBox);
 
             // Space from part boundary added to the edges of the graphic
             const PADDING = 2;
@@ -93,10 +86,8 @@ async function animateXML(pathToXML) {
                 .attr("id", ID); // Strip non-alphanumeric characters, else d3's select() fails to work
 
             // Draw the lines one by one
-            if (trajectories.contours.length !== 0)
-                await animateContours(trajectories);
-            else if (trajectories.hatches.length !== 0)
-                await animateHatches(trajectories);
+            if (trajectories.contours.length !== 0) await animateContours(trajectories);
+            else if (trajectories.hatches.length !== 0) await animateHatches(trajectories);
         });
 }
 
@@ -192,253 +183,156 @@ function renderPNGs() {
 }
 
 let thumbnailsDrawn = false;
-async function renderXML(pathToXML, svgID, output_hatches) {
-    console.log(`Rendering .XML at path ${pathToXML} in svg frame ID ${svgID}`);
 
-    // Specifically for the main svg, we want to prioritize and do everything synchronously
-    currentPath = pathToXML;
-    if (svgID === "mainsvg") {
-        stopDrawing(); // Terminate any setTimeout() animation loop currently occurring
-        wipeSVG(); // Get rid of any elements already in the main <svg> element (i.e. from the currently drawn layer we're replacing)
-        console.log("Main one!");
-        let data = await (await fetch(pathToXML)).text();
-        drawData(data, svgID);
-        console.log("Rendered the main one.");
+// The synchronous part that actually draws the svg on the screen
+function drawBuild(build, svgID, output_hatches) {
+    // Figure out a bounding box for this layer so that we know how to scale the .svg
+    let boundingBox = GetSvgBoundingBox(build);
+    console.debug("Calculated bounding box for part. BB: ", boundingBox);
 
-        // If thumbnails aren't drawn yet, draw them
-        if (!thumbnailsDrawn) {
-            fs.readdirSync(path.join(__dirname, "xml")).forEach((file) => {
-                let layerNum = parseInt(file.match(/(\d+)/)[0]); // First part finds the number, second part trims zeroes
-                renderXML(
-                    path.join(__dirname, "xml", file),
-                    "svg_" + layerNum,
-                    false
-                );
-            });
-        }
-        thumbnailsDrawn = true;
-    }
+    // Space from part boundary added to the edges of the graphic
+    const PADDING = 2;
 
-    // Otherwise, do them async
-    else {
-        console.log("Thumbnail!");
-        fetch(pathToXML)
-            .then((response) => response.text())
-            .then((data) => drawData(data, svgID));
-    }
+    // <Bounding Box Size> + <Padding, applied once for each side> + <Overall multiplicative constant>
+    const BOUNDS_WIDTH = boundingBox[2] - boundingBox[0];
+    const BOUNDS_HEIGHT = boundingBox[3] - boundingBox[1];
 
-    // The synchronous part that actually draws the svg on the screen
-    function drawData(data, svgID) {
-        let parser = new DOMParser();
-        doc = parser.parseFromString(data, "text/xml"); // XMLDocument (https://developer.mozilla.org/en-US/docs/Web/API/XMLDocument)
+    // Very good writeup on how viewBox, etc. works here: https://pandaqitutorials.com/Website/svg-coordinates-viewports
+    // We are essentially setting the origin negative and then widths/heights such that it covers the entire part,
+    // which lets us do everything without needing to manually transform any of our actual points
+    const viewboxStr =
+        "" + (boundingBox[0] - PADDING) + " " + (boundingBox[1] - PADDING) + " " + (BOUNDS_WIDTH + PADDING * 2) + " " + (BOUNDS_HEIGHT + PADDING * 2);
 
-        // Get a { contours = [], hatches = [] } object
-        let trajectories = getTrajectories(doc);
-        console.debug("Read trajectories: ", trajectories);
+    d3.select("#" + svgID)
+        .attr("class", "xmlsvg")
+        .attr("viewBox", viewboxStr) // Basically lets us define our bounds
+        .attr("id", svgID); // Strip non-alphanumeric characters, else d3's select() fails to work
 
-        // Figure out a bounding box for this layer so that we know how to scale the .svg
-        let boundingBox = getBoundingBoxForTrajectories(trajectories);
-        console.debug("Calculated bounding box for part. BB: ", boundingBox);
-
-        // Space from part boundary added to the edges of the graphic
-        const PADDING = 2;
-
-        // <Bounding Box Size> + <Padding, applied once for each side> + <Overall multiplicative constant>
-        const BOUNDS_WIDTH = boundingBox[2] - boundingBox[0];
-        const BOUNDS_HEIGHT = boundingBox[3] - boundingBox[1];
-
-        // Very good writeup on how viewBox, etc. works here: https://pandaqitutorials.com/Website/svg-coordinates-viewports
-        // We are essentially setting the origin negative and then widths/heights such that it covers the entire part,
-        // which lets us do everything without needing to manually transform any of our actual points
-        const viewboxStr =
-            "" +
-            (boundingBox[0] - PADDING) +
-            " " +
-            (boundingBox[1] - PADDING) +
-            " " +
-            (BOUNDS_WIDTH + PADDING * 2) +
-            " " +
-            (BOUNDS_HEIGHT + PADDING * 2);
-
-        d3.select("#" + svgID)
-            .attr("class", "xmlsvg")
-            .attr("viewBox", viewboxStr) // Basically lets us define our bounds
-            .attr("id", svgID); // Strip non-alphanumeric characters, else d3's select() fails to work
-
-        outputTrajectories(trajectories, svgID, output_hatches);
-        console.debug("Displayed trajectories.");
-    }
+    outputTrajectories(build, svgID, output_hatches);
+    console.debug("Displayed trajectories.");
 }
 
 // Returns a [min x, min y, max x, max y] bounding box corresponding to the passed-in trajectories
-function getBoundingBoxForTrajectories(trajectories) {
+function GetSvgBoundingBox(build) {
     let output = [0, 0, 0, 0];
-    trajectories.contours.forEach((line) => {
-        // Min X Check
-        if (line[0] < output[0]) {
-            output[0] = line[0];
-        }
-        if (line[2] < output[0]) {
-            output[0] = line[2];
-        }
+    console.log("build: ", build);
+    build.trajectories.forEach((trajectory) => {
+        if (trajectory.path === null) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
+        trajectory.path.segments.forEach((segment) => {
+            // Took me a solid hour to figure out each 'segment' is saved as a STRING and this needs cast
+            // But JavaScript is super loose and just let me compare strings and ints without complaining
+            let x1_int = parseInt(segment.x1);
+            let y1_int = parseInt(segment.y1);
+            let x2_int = parseInt(segment.x2);
+            let y2_int = parseInt(segment.y2);
 
-        // Max X Check
-        if (line[0] > output[2]) {
-            output[2] = line[0];
-        }
-        if (line[2] > output[2]) {
-            output[2] = line[2];
-        }
+            if (x1_int < output[0]) {
+                // Min X
+                output[0] = x1_int;
+            }
+            if (x2_int < output[0]) {
+                output[0] = x2_int;
+            }
 
-        // Min Y Check
-        if (line[1] < output[1]) {
-            output[1] = line[1];
-        }
-        if (line[3] < output[1]) {
-            output[1] = line[3];
-        }
+            if (x1_int > output[2]) {
+                // Max X
+                output[2] = x1_int;
+            }
+            if (x2_int > output[2]) {
+                output[2] = x2_int;
+            }
 
-        // Max Y Check
-        if (line[1] > output[3]) {
-            output[3] = line[1];
-        }
-        if (line[3] > output[3]) {
-            output[3] = line[3];
-        }
+            if (y1_int < output[1]) {
+                // Min Y
+                output[1] = y1_int;
+            }
+            if (y2_int < output[1]) {
+                output[1] = y2_int;
+            }
+
+            if (y1_int > output[3]) {
+                // Max Y
+                output[3] = y1_int;
+            }
+            if (y2_int > output[3]) {
+                output[3] = y2_int;
+            }
+        });
     });
 
-    trajectories.hatches.forEach((line) => {
-        // Min X Check
-        if (line[0] < output[0]) {
-            output[0] = line[0];
-        }
-        if (line[2] < output[0]) {
-            output[0] = line[2];
-        }
-
-        // Max X Check
-        if (line[0] > output[2]) {
-            output[2] = line[0];
-        }
-        if (line[2] > output[2]) {
-            output[2] = line[2];
-        }
-
-        // Min Y Check
-        if (line[1] < output[1]) {
-            output[1] = line[1];
-        }
-        if (line[3] < output[1]) {
-            output[1] = line[3];
-        }
-
-        // Max Y Check
-        if (line[1] > output[3]) {
-            output[3] = line[1];
-        }
-        if (line[3] > output[3]) {
-            output[3] = line[3];
-        }
-    });
     return output;
 }
 
-/* 
-Given a Document object that conforms to the OASIS XML Schema, returns a data object of the following form:
-{
-    "contours": [
-        [start x, start y, end x, end y], ...
-    ], 
-    "hatches": [
-        [start x, start y, end x, end y], ... 
-    ]
-}
-*/
-function getTrajectories(doc) {
-    let contours = [],
-        hatches = [];
-    let paths = doc.getElementsByTagName("Path");
-    for (let path of paths) {
-        // Save a reference to the array that we should append to
-        // (needs saved before we lose a reference to the first child)
-        let appendArr =
-            path.firstChild.nextSibling.textContent === "contour"
-                ? contours
-                : hatches;
-
-        // Skip over the overall path parameters to get to the actual geometric numbers
-        // ...don't ask. Can't find a better way to do it.
-        // It seems to treat the textContent itself as a sibling as well
-        let currentNode = path.childNodes.item(9); // Start at <Start> tag; text inside is also counted as tags
-        let x1 = currentNode.firstChild.textContent,
-            y1 = currentNode.lastChild.textContent;
-        let x2, y2;
-        while (currentNode.nextSibling != null) {
-            // Connect current x1/y1 to next x2/y2 and add to list
-            currentNode = currentNode.nextSibling.nextSibling;
-            x2 = currentNode.lastChild.firstChild.textContent;
-            y2 = currentNode.lastChild.lastChild.textContent;
-            appendArr.push([
-                parseFloat(x1),
-                parseFloat(y1),
-                parseFloat(x2),
-                parseFloat(y2),
-            ]);
-
-            // Cycle second vertex to first vertex; next loop iteration will set second vertex to next value
-            x1 = x2;
-            y1 = y2;
+// NOTE: Makes an assumption independent of the schema that contours have 'contour' in their ID and everything else (with a Traveler) is a hatch
+function SegmentIDType(segmentID, build) {
+    for (let segmentStyle of build.segmentStyles) {
+        if (segmentStyle.id === segmentID) {
+            if (segmentStyle.travelers.length === 0) {
+                return "jump";
+            } else if (segmentStyle.id.includes("contour")) {
+                return "contour";
+            } else {
+                // Assume anything else is a hatch
+                return "hatch";
+            }
         }
     }
-
-    return {
-        contours: contours,
-        hatches: hatches,
-    };
+    throw new Error(`Segment Style ID ${segmentID} never found in .XML file!`);
 }
 
 /* 
 Displays an interactable picture representing the same data object returned by getTrajectories
 */
-function outputTrajectories(data, svg_id, output_hatches) {
-    data.contours.forEach((line) => {
-        d3.select("#" + svg_id)
-            .append("line")
-            .attr("x1", line[0])
-            .attr("y1", line[1])
-            .attr("x2", line[2])
-            .attr("y2", line[3])
-            .attr("stroke", "#000000")
-            .attr("stroke-width", 0.1);
-    });
+function outputTrajectories(build, svg_id, output_hatches) {
+    build.trajectories.forEach((trajectory) => {
+        // TODO: Look up whether hatch, contour, jump
+        if (trajectory.path === null) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
+        trajectory.path.segments.forEach((segment) => {
+            let type = SegmentIDType(segment.segStyle, build);
+            let color = null,
+                stripeWidth = null;
+            switch (type) {
+                case "contour":
+                    color = "#000000"; // Black
+                    stripeWidth = 0.2;
+                    break;
+                case "hatch":
+                    color = "#BD0000"; // Red
+                    stripeWidth = 0.04;
+                    break;
+                case "jump":
+                    color = "#0000FF"; // Blue
+                    stripeWidth = 0.025;
+                    break;
+                default:
+                    throw new Error("Unknown segment type: " + type);
+            }
 
-    if (output_hatches) {
-        data.hatches.forEach((line) => {
             d3.select("#" + svg_id)
                 .append("line")
-                .attr("x1", line[0])
-                .attr("y1", line[1])
-                .attr("x2", line[2])
-                .attr("y2", line[3])
-                .attr("stroke", "#000000")
-                .attr("stroke-width", 0.1);
+                .attr("x1", segment.x1)
+                .attr("y1", segment.y1)
+                .attr("x2", segment.x2)
+                .attr("y2", segment.y2)
+                .attr("stroke", color)
+                .attr("stroke-width", stripeWidth);
         });
-    }
+    });
 }
+
+let { LoadXML } = require("../alsam-xml/alsam-xml");
 
 // Not really "necessary" to have a main for js, but helps organizationally and to easily enable/disable functionality
 // Leave this at the end; messes with the order of defining things otherwise
 let currentPath = "";
 main();
-function main() {
-    // Render the first layer as a default
-    let layer1Path = path.join(
-        __dirname,
-        "xml",
-        fs.readdirSync(path.join(__dirname, "xml"))[0]
-    );
-    renderXML(layer1Path, "mainsvg", true);
+async function main() {
+    const response = await fetch(path.join(__dirname, "xml", "scan_135.xml"));
+    const text = await response.text();
+    const build = LoadXML(text);
+    console.log("build", build);
+    drawBuild(build, "mainsvg", true);
 
     // Populate the list of layers
-    populateLayerList();
+    // populateLayerList();
 }

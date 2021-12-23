@@ -1,8 +1,6 @@
 const path = require("path");
 const building = false;
-const pathToResources = building
-    ? path.join(__dirname, "../")
-    : path.join(__dirname, "../cdme-scangen/");
+const pathToResources = building ? path.join(__dirname, "../") : path.join(__dirname, "../cdme-scangen/");
 
 /* 
 const { app } = require("electron");
@@ -29,7 +27,7 @@ function createWindow() {
         },
     });
 
-    win.loadFile("importexport.html");
+    win.loadFile("view.html");
     win.maximize();
     win.webContents.openDevTools();
 }
@@ -92,10 +90,7 @@ ipc.on("import-scn", (e) => {
             let filePath = fileSelection.filePaths[0];
             fs.readFile(filePath, (err, data) => {
                 if (err) {
-                    e.reply(
-                        "alert",
-                        `Error importing .SCN file from ${filePath}: ${err}`
-                    );
+                    e.reply("alert", `Error importing .SCN file from ${filePath}: ${err}`);
                     return;
                 }
 
@@ -110,10 +105,7 @@ ipc.on("import-scn", (e) => {
                     let keys = Object.keys(zip.files);
                     keys.forEach((key) => {
                         zip.files[key].async("string").then((data) => {
-                            fs.writeFileSync(
-                                path.join(__dirname, "xml", key),
-                                data
-                            );
+                            fs.writeFileSync(path.join(__dirname, "xml", key), data);
                         });
                     });
                 });
@@ -137,10 +129,7 @@ ipc.on("import-stl", (e) => {
             let filePath = fileSelection.filePaths[0];
             fs.readFile(filePath, (err, data) => {
                 if (err) {
-                    e.reply(
-                        "alert",
-                        `Error reading file at ${filePath}: ${err}`
-                    );
+                    e.reply("alert", `Error reading file at ${filePath}: ${err}`);
                     return;
                 }
                 console.debug("Copying over STL file at path " + filePath);
@@ -150,14 +139,8 @@ ipc.on("import-stl", (e) => {
                 console.debug("Extracted file name " + fileName);
 
                 // Copy stl file over to main project
-                console.debug(
-                    "Writing file to " +
-                        path.join(pathToResources, "geometry", fileName)
-                );
-                fs.writeFileSync(
-                    path.join(pathToResources, "geometry", fileName),
-                    data
-                );
+                console.debug("Writing file to " + path.join(pathToResources, "geometry", fileName));
+                fs.writeFileSync(path.join(pathToResources, "geometry", fileName), data);
                 e.reply("alert", "STL file successfully imported!");
             });
         });
