@@ -5,22 +5,12 @@ const ipc = require("electron").ipcRenderer;
 // Packaging puts us in a folder inside the resources directory
 // Whereas not packaging leaves us in the current directory
 const path = require("path");
-const pathToResources = building
-    ? path.join(__dirname, "../")
-    : path.join(__dirname, "../cdme-scangen/");
-const pythonPath = building
-    ? path.join(__dirname, "../python/python.exe")
-    : path.join(__dirname, "python/python.exe"); // absolute paths needed (for some reason)
+const pathToResources = building ? path.join(__dirname, "../") : path.join(__dirname, "../cdme-scangen/");
+const pythonPath = building ? path.join(__dirname, "../python/python.exe") : path.join(__dirname, "python/python.exe"); // absolute paths needed (for some reason)
 const FOLDERS_TO_ADD_TO_PYTHONPATH = [
-    building
-        ? path.join(__dirname, "../pyslm/")
-        : path.join(__dirname, "../cdme-scangen/pyslm"), // pyslm
-    building
-        ? path.join(__dirname, "../")
-        : path.join(__dirname, "../cdme-scangen/"), // src (custom scan paths)
-    building
-        ? path.join(__dirname, "../pyslm/pyslm")
-        : path.join(__dirname, "../cdme-scangen/pyslm/pyslm"),
+    building ? path.join(__dirname, "../pyslm/") : path.join(__dirname, "../cdme-scangen/pyslm"), // pyslm
+    building ? path.join(__dirname, "../") : path.join(__dirname, "../cdme-scangen/"), // src (custom scan paths)
+    building ? path.join(__dirname, "../pyslm/pyslm") : path.join(__dirname, "../cdme-scangen/pyslm/pyslm"),
 ];
 
 console.log(FOLDERS_TO_ADD_TO_PYTHONPATH);
@@ -95,10 +85,7 @@ for (const key in optionsData) {
         }
 
         // For floats, just give them an input
-        else if (
-            optionsData[key][key2].type === "float" ||
-            optionsData[key][key2].type === "int"
-        ) {
+        else if (optionsData[key][key2].type === "float" || optionsData[key][key2].type === "int") {
             const input = document.createElement("input");
             input.value = optionsData[key][key2].default;
             input.name = optionsData[key][key2].name;
@@ -158,18 +145,11 @@ document.getElementById("start").addEventListener("click", () => {
     const fields = {};
     for (const key in optionsData) {
         for (const key2 in optionsData[key]) {
-            fields[optionsData[key][key2].name] = formData.get(
-                optionsData[key][key2].name
-            );
+            fields[optionsData[key][key2].name] = formData.get(optionsData[key][key2].name);
         }
     }
     console.log("pathToResources: " + pathToResources);
-    console.log(
-        "Running script " +
-            pathToResources +
-            "main.py using interpreter " +
-            pythonPath
-    );
+    console.log("Running script " + pathToResources + "main.py using interpreter " + pythonPath);
 
     const process = spawn(
         pythonPath,
@@ -188,6 +168,22 @@ document.getElementById("start").addEventListener("click", () => {
         parseStderr(chunk);
     });
     process.on("close", (code) => {
-        alert("Build complete!");
+        console.log("child process exited with code " + code);
+
+        // Wipe all files currently in 'xml' directory, getting rid of whatever build was previously in there (if any)
+        const fs = require("fs");
+        const path = require("path");
+        const xmlFiles = fs.readdirSync(path.join(__dirname, "xml"));
+        xmlFiles.forEach((file) => {
+            fs.unlinkSync(path.join(__dirname, "xml", file));
+        });
+
+        // Copy over the XML files produced by `cdme-scangen` to the directory read from by `cdme-scangen-ui`
+
+        const files = fs.readdirSync(path.join(pathToResources, "XMLOutput"));
+        files.forEach((file) => {
+            fs.copyFileSync(path.join(pathToResources, "XMLOutput", file), path.join(__dirname, "xml", file));
+        });
+        alert('Build complete! Files can now be viewed under the "View Vectors" tab.');
     });
 });
