@@ -27,7 +27,7 @@ function createWindow() {
         },
     });
 
-    win.loadFile("view.html");
+    win.loadFile("generate.html");
     win.maximize();
     win.webContents.openDevTools();
 }

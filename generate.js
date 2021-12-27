@@ -46,7 +46,6 @@ for (const key in optionsData) {
 
         // Behavior from here depends on type
         if (optionsData[key][key2].type === "string") {
-            // Multi-Select
             if ("options" in optionsData[key][key2]) {
                 const select = document.createElement("select");
                 select.name = optionsData[key][key2].name;
@@ -187,3 +186,14 @@ document.getElementById("start").addEventListener("click", () => {
         alert('Build complete! Files can now be viewed under the "View Vectors" tab.');
     });
 });
+
+// Make the contents of the select menu the contents of the 'xml' directory
+const fs = require("fs");
+let files = fs.readdirSync(path.join(pathToResources, "geometry"));
+for (let file of files) {
+    console.log("Adding file " + file);
+    let option = document.createElement("option");
+    option.textContent = file;
+    option.value = file;
+    document.getElementsByName("Part File Name")[0].appendChild(option);
+}
