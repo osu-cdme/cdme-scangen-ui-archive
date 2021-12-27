@@ -1,43 +1,42 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
-    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'">
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="importexport.css" />
-    <title>Hello World!</title>
-  </head>
-  <body>
-
-    <!-- TODO: Better to split this into two columns rather than require lots of scrolling -->
-    <nav>
-      <img src="static/logo.jpg" />
-      <ul id="pageList">
-        <li><a href="index.html">Generate Vectors</a></li>
-        <li><a href="view.html">View Vectors</a></li>
-        <li><a href="alter.html">Alter Vectors</a></li>
-        <li><a href="importexport.html">Import/Export</a></li>
-      </ul>
-      <h1>CDME Scangen</h1>
-      <div class="bottom">
-        Node.js <span id="node-version"></span><br>
-        Chromium <span id="chrome-version"></span><br>
-        Electron <span id="electron-version"></span>
-      </div>
-    </nav>
-    <div id="rightPart">
-      <div class="half">
-        <h1>Import</h1>
-        <button id="stlImport">STL</button>
-        <button id="scnImport">SCN</button>
-      </div>
-      <div class="half">
-        <h1>Export</h1>
-        <button id="scnExport">SCN</button>
-      </div>
-    </div>
-    <script src="importexport.js"></script>
-  </body>
+    <head>
+        <meta charset="UTF-8" />
+        <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+        <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+        <link rel="stylesheet" href="styles.css" />
+        <link rel="stylesheet" href="importexport.css" />
+        <title>Hello World!</title>
+    </head>
+    <body>
+        <!-- TODO: Better to split this into two columns rather than require lots of scrolling -->
+        <nav>
+            <img src="static/logo.jpg" />
+            <ul id="pageList">
+                <li><a href="generate.html">Generate Vectors</a></li>
+                <li id="ToViewVectorsScreen"><a href="view.html">View Vectors</a></li>
+                <li><a href="importexport.html">Import/Export</a></li>
+            </ul>
+            <h1>CDME Scangen</h1>
+            <div class="bottom">
+                Node.js <span id="node-version"></span><br />
+                Chromium <span id="chrome-version"></span><br />
+                Electron <span id="electron-version"></span>
+            </div>
+        </nav>
+        <div id="rightPart">
+            <div class="half">
+                <h1>Import</h1>
+                <button id="stlImport">STL</button>
+                <button id="scnImport">SCN</button>
+            </div>
+            <div class="half">
+                <h1>Export</h1>
+                <button id="scnExport">SCN</button>
+            </div>
+        </div>
+        <script src="importexport.js"></script>
+        <script src="navbar.js"></script>
+    </body>
 </html>

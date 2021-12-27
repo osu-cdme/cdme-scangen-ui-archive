@@ -191,7 +191,6 @@ document.getElementById("start").addEventListener("click", () => {
 const fs = require("fs");
 let files = fs.readdirSync(path.join(pathToResources, "geometry"));
 for (let file of files) {
-    console.log("Adding file " + file);
     let option = document.createElement("option");
     option.textContent = file;
     option.value = file;
