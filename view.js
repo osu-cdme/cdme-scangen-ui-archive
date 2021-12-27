@@ -428,16 +428,18 @@ function outputTrajectories(data, svg_id, output_hatches) {
 
 // Not really "necessary" to have a main for js, but helps organizationally and to easily enable/disable functionality
 // Leave this at the end; messes with the order of defining things otherwise
-let currentPath = "";
+let { ExportXML } = require("../alsam-xml/alsam-xml");
+let currentBuild = null;
 main();
-function main() {
-    // Render the first layer as a default
-    let layer1Path = path.join(
-        __dirname,
-        "xml",
-        fs.readdirSync(path.join(__dirname, "xml"))[0]
+async function main() {
+    // Get the first filename in the folder
+    let firstFile = fs.readdirSync(path.join(__dirname, "xml"))[0];
+    const build = await getBuildFromFilePath(
+        path.join(__dirname, "xml", firstFile)
     );
-    renderXML(layer1Path, "mainsvg", true);
+    currentBuild = build;
+    console.log("build: ", build);
+    await drawBuild(build, "mainsvg", true);
 
     // Populate the list of layers
     populateLayerList();
