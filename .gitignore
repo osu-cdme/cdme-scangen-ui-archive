@@ -41,3 +41,6 @@ tsconfig.tsbuildinfo
 
 # C:\Program Files\Python39
 python/
+
+# .XML files are just input and output and shouldn't be added to Git
+xml/*.xml
