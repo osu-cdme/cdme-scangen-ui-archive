@@ -53,18 +53,20 @@ function animateBuild(build) {
 }
 
 function populateLayerList() {
-    fs.readdirSync(path.join(__dirname, "xml")).forEach(async (file) => {
+    let files = fs.readdirSync(path.join(__dirname, "xml"));
+    numThumbnailsTotal = files.length;
+    files.forEach(async (file) => {
         let filePath = path.join(__dirname, "xml", file);
         let layerNum = parseInt(file.match(/(\d+)/)[0]); // First part finds the number, second part trims zeroes
 
         let li = d3.select("#layerList").append("li");
 
-        li.append("svg")
-            .attr("id", "svg_" + layerNum)
+        li.append("canvas")
+            .attr("id", "canvas_" + layerNum)
             .attr("width", 50)
             .attr("height", 50);
         const build = await getBuildFromFilePath(filePath);
-        drawBuild(build, "svg_" + layerNum);
+        drawBuild_canvas(build, "canvas_" + layerNum);
 
         li.append("p")
             .text("Layer " + layerNum) // Extract only the number from the file name
@@ -72,6 +74,7 @@ function populateLayerList() {
                 e.preventDefault();
                 const build = await getBuildFromFilePath(filePath);
                 currentBuild = build;
+                currentPath = filePath;
                 drawBuild(build, "mainsvg");
             });
     });
@@ -97,9 +100,103 @@ function renderPNGs() {
     });
 }
 
+// Canvas is less flexible for zooming and such, but is generally more performant, so we use it for thumbnails
+let numThumbnailsDrawn = 0,
+    numThumbnailsTotal;
+function drawBuild_canvas(build, canvas_id) {
+    let canvas_ctx = document.getElementById(canvas_id).getContext("2d");
+
+    // We have to transform coordinates, as 'Canvas' doesn't use a cartesian coordinate system
+    let minX = null,
+        minY = null,
+        maxX = null,
+        maxY = null;
+
+    // Calculate bounds
+    build.trajectories.forEach((trajectory) => {
+        if (trajectory.path === null) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
+        if (trajectory.path.type !== "contour") return; // Only factor contours in, as we will only draw contours
+        trajectory.path.segments.forEach((segment) => {
+            if (minX === null) minX = segment.x1;
+            if (minY === null) minY = segment.y1;
+            if (maxX === null) maxX = segment.x1;
+            if (maxY === null) maxY = segment.y1;
+            minX = Math.min(minX, segment.x1, segment.x2);
+            minY = Math.min(minY, segment.y1, segment.y2);
+            maxX = Math.max(maxX, segment.x1, segment.x2);
+            maxY = Math.max(maxY, segment.y1, segment.y2);
+        });
+    });
+
+    // Calculate percentage between a and b that c is
+    function percentage(a, b, c) {
+        return (c - a) / (b - a);
+    }
+
+    // Actually draw
+    canvas_ctx.fillStyle = "white";
+    canvas_ctx.lineWidth = 0.25;
+    canvas_ctx.fillRect(0, 0, 50, 50);
+    build.trajectories.forEach((trajectory) => {
+        if (trajectory.path === null) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
+        if (trajectory.path.type !== "contour") return; // Only draw contours
+        if (trajectory.path.segments.length === 0) return; // Likely never true, but worth checking
+        canvas_ctx.beginPath();
+        let x1 = percentage(minX, maxX, trajectory.path.segments[0].x1) * 50; // Need to essentially convert from IRL coords to Canvas coords
+        let y1 = percentage(minY, maxY, trajectory.path.segments[0].y1) * 50;
+        canvas_ctx.moveTo(x1, y1);
+        trajectory.path.segments.forEach((segment) => {
+            let x2 = percentage(minX, maxX, segment.x2) * 50;
+            let y2 = percentage(minY, maxY, segment.y2) * 50;
+            canvas_ctx.lineTo(x2, y2);
+        });
+        canvas_ctx.stroke();
+    });
+    numThumbnailsDrawn++;
+    let progress = Math.floor((numThumbnailsDrawn / numThumbnailsTotal) * 100);
+    document.getElementById("loading").textContent = `Loading. Please wait a sec... (Progress: ${progress}%)`;
+    if (numThumbnailsDrawn >= numThumbnailsTotal) {
+        document.getElementById("loading").style.display = "none";
+    }
+}
+
+function reset() {
+    let svg = document.getElementById("mainsvg");
+    while (svg.firstChild) {
+        svg.removeChild(svg.firstChild);
+    }
+    linesQueued.forEach((timeout) => {
+        clearTimeout(timeout);
+    });
+    linesQueued = [];
+}
+
+function outputSegment(segment, svg_id) {
+    let svg = document.getElementById(svg_id);
+
+    // We have to transform coordinates, as 'Canvas' doesn't use a cartesian coordinate system
+    let x1 = segment.x1 - minX,
+        y1 = -segment.y1 + minY,
+        x2 = segment.x2 - minX,
+        y2 = -segment.y2 + minY;
+
+    // Convert cartesian coordinates to canvas coordinates
+
+    console.log("Original x1: " + segment.x1 + ", x2: " + segment.x2 + ", y1: " + segment.y1 + ", y2: " + segment.y2);
+    console.log("Converted x1: " + x1 + ", y1: " + y1 + ", x2: " + x2 + ", y2: " + y2);
+    let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", x1);
+    line.setAttribute("y1", y1);
+    line.setAttribute("x2", x2);
+    line.setAttribute("y2", y2);
+    line.setAttribute("stroke", "black");
+    line.setAttribute("stroke-width", "2");
+    svg.appendChild(line);
+}
+
 // The synchronous part that actually draws the svg on the screen
-function drawBuild(build, svgID) {
-    if (svgID === "mainsvg") reset();
+function drawBuild(build, svg_id) {
+    if (svg_id === "mainsvg") reset();
 
     // We need to recalculate and re-set the viewbox for each layer, as they have different bounds
     // Very good writeup on how viewBox, etc. works here: https://pandaqitutorials.com/Website/svg-coordinates-viewports
@@ -110,10 +207,10 @@ function drawBuild(build, svgID) {
     const PADDING = 2;
     const viewboxStr =
         "" + (boundingBox[0] - PADDING) + " " + (boundingBox[1] - PADDING) + " " + (BOUNDS_WIDTH + PADDING * 2) + " " + (BOUNDS_HEIGHT + PADDING * 2);
-    d3.select("#" + svgID).attr("viewBox", viewboxStr); // Basically lets us define our bounds
+    d3.select("#" + svg_id).attr("viewBox", viewboxStr); // Basically lets us define our bounds
 
     // Actually output
-    outputTrajectories(build, svgID);
+    outputTrajectories(build, svg_id);
     console.debug("Displayed trajectories.");
 }
 
@@ -218,25 +315,36 @@ function outputSegment(segment, svg_id) {
 /* 
 Displays an interactable picture representing the same data object returned by getTrajectories
 */
-function outputTrajectories(build, svg_id) {
+function outputTrajectories(build, elementID) {
     build.trajectories.forEach((trajectory) => {
         if (trajectory.path === null) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
         trajectory.path.segments.forEach((segment) => {
-            outputSegment(segment, svg_id);
+            outputSegment(segment, elementID);
         });
     });
 }
 
+let { ExportXML } = require("../alsam-xml/alsam-xml");
+function SaveChangesToLayer() {
+    let text = ExportXML(currentBuild);
+    fs.writeFile(currentPath, text, (err) => {
+        if (err) throw new Error("Error writing file: " + err);
+        alert("Successfully saved changes to layer!");
+    });
+}
+document.getElementById("save").addEventListener("click", SaveChangesToLayer);
+
 // Not really "necessary" to have a main for js, but helps organizationally and to easily enable/disable functionality
 // Leave this at the end; messes with the order of defining things otherwise
-let { ExportXML } = require("../alsam-xml/alsam-xml");
 let currentBuild = null;
+let currentPath = null;
 main();
 async function main() {
     // Get the first filename in the folder
     let firstFile = fs.readdirSync(path.join(__dirname, "xml"))[0];
     const build = await getBuildFromFilePath(path.join(__dirname, "xml", firstFile));
     currentBuild = build;
+    currentPath = path.join(__dirname, "xml", firstFile);
     console.log("build: ", build);
     await drawBuild(build, "mainsvg", true);
 
