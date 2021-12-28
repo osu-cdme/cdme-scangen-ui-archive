@@ -53,7 +53,9 @@ function animateBuild(build) {
 }
 
 function populateLayerList() {
-    fs.readdirSync(path.join(__dirname, "xml")).forEach(async (file) => {
+    let files = fs.readdirSync(path.join(__dirname, "xml"));
+    numThumbnailsTotal = files.length;
+    files.forEach(async (file) => {
         let filePath = path.join(__dirname, "xml", file);
         let layerNum = parseInt(file.match(/(\d+)/)[0]); // First part finds the number, second part trims zeroes
 
@@ -99,6 +101,8 @@ function renderPNGs() {
 }
 
 // Canvas is less flexible for zooming and such, but is generally more performant, so we use it for thumbnails
+let numThumbnailsDrawn = 0,
+    numThumbnailsTotal;
 function drawBuild_canvas(build, canvas_id) {
     let canvas_ctx = document.getElementById(canvas_id).getContext("2d");
 
@@ -148,6 +152,12 @@ function drawBuild_canvas(build, canvas_id) {
         });
         canvas_ctx.stroke();
     });
+    numThumbnailsDrawn++;
+    let progress = Math.floor((numThumbnailsDrawn / numThumbnailsTotal) * 100);
+    document.getElementById("loading").textContent = `Loading. Please wait a sec... (Progress: ${progress}%)`;
+    if (numThumbnailsDrawn >= numThumbnailsTotal) {
+        document.getElementById("loading").style.display = "none";
+    }
 }
 
 function reset() {
