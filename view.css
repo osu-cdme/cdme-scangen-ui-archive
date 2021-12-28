@@ -12,10 +12,15 @@ body {
 #svgContainer {
     /* 200px for layer list, 2px for side borders, 5px for I HAVE NO CLUE, BUT IT WORKS */
     width: calc(100% - 200px - 2px - 5px);
+    max-height: calc(100% - 200px);
     display: inline-block;
     vertical-align: top;
     text-align: center;
     /* border: 1px blue solid; */
+}
+
+#mainsvg {
+    max-height: 100%;
 }
 
 #layerList {
