@@ -72,6 +72,7 @@ function populateLayerList() {
                 e.preventDefault();
                 const build = await getBuildFromFilePath(filePath);
                 currentBuild = build;
+                currentPath = filePath;
                 drawBuild(build, "mainsvg");
             });
     });
@@ -227,16 +228,27 @@ function outputTrajectories(build, svg_id) {
     });
 }
 
+let { ExportXML } = require("../alsam-xml/alsam-xml");
+function SaveChangesToLayer() {
+    let text = ExportXML(currentBuild);
+    fs.writeFile(currentPath, text, (err) => {
+        if (err) throw new Error("Error writing file: " + err);
+        alert("Successfully saved changes to layer!");
+    });
+}
+document.getElementById("save").addEventListener("click", SaveChangesToLayer);
+
 // Not really "necessary" to have a main for js, but helps organizationally and to easily enable/disable functionality
 // Leave this at the end; messes with the order of defining things otherwise
-let { ExportXML } = require("../alsam-xml/alsam-xml");
 let currentBuild = null;
+let currentPath = null;
 main();
 async function main() {
     // Get the first filename in the folder
     let firstFile = fs.readdirSync(path.join(__dirname, "xml"))[0];
     const build = await getBuildFromFilePath(path.join(__dirname, "xml", firstFile));
     currentBuild = build;
+    currentPath = path.join(__dirname, "xml", firstFile);
     console.log("build: ", build);
     await drawBuild(build, "mainsvg", true);
 
