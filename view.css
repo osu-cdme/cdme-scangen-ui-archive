@@ -106,3 +106,7 @@ svg {
     line-height: 100vh;
     background: rgb(64, 64, 64);
 }
+
+.selected {
+    stroke: green;
+}

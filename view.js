@@ -33,6 +33,13 @@ async function getBuildFromFilePath(filePath) {
     const response = await fetch(filePath);
     const text = await response.text();
     const build = LoadXML(text);
+    build.trajectories.forEach((trajectory) => {
+        if (trajectory.path === null) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
+        trajectory.path.segments.forEach((segment) => {
+            segment.number = currentSegmentCount;
+            currentSegmentCount++;
+        });
+    });
     return build;
 }
 
@@ -156,7 +163,7 @@ function drawBuild_canvas(build, canvas_id) {
     let progress = Math.floor((numThumbnailsDrawn / numThumbnailsTotal) * 100);
     document.getElementById("loading").textContent = `Loading. Please wait a sec... (Progress: ${progress}%)`;
     if (numThumbnailsDrawn >= numThumbnailsTotal) {
-        document.getElementById("loading").style.display = "none";
+        toggleLoading();
     }
 }
 
@@ -171,27 +178,13 @@ function reset() {
     linesQueued = [];
 }
 
-function outputSegment(segment, svg_id) {
-    let svg = document.getElementById(svg_id);
-
-    // We have to transform coordinates, as 'Canvas' doesn't use a cartesian coordinate system
-    let x1 = segment.x1 - minX,
-        y1 = -segment.y1 + minY,
-        x2 = segment.x2 - minX,
-        y2 = -segment.y2 + minY;
-
-    // Convert cartesian coordinates to canvas coordinates
-
-    console.log("Original x1: " + segment.x1 + ", x2: " + segment.x2 + ", y1: " + segment.y1 + ", y2: " + segment.y2);
-    console.log("Converted x1: " + x1 + ", y1: " + y1 + ", x2: " + x2 + ", y2: " + y2);
-    let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    line.setAttribute("x1", x1);
-    line.setAttribute("y1", y1);
-    line.setAttribute("x2", x2);
-    line.setAttribute("y2", y2);
-    line.setAttribute("stroke", "black");
-    line.setAttribute("stroke-width", "2");
-    svg.appendChild(line);
+function toggleLoading() {
+    let loading = document.getElementById("loading");
+    if (loading.style.display === "none") {
+        loading.style.display = "absolute";
+    } else {
+        loading.style.display = "none";
+    }
 }
 
 // The synchronous part that actually draws the svg on the screen
@@ -281,10 +274,12 @@ function SegmentIDType(segmentID) {
     throw new Error(`Segment Style ID ${segmentID} never found in .XML file!`);
 }
 
+let currentSegmentCount = 0;
 function outputSegment(segment, svg_id) {
     let type = SegmentIDType(segment.segStyle);
     let color = null,
-        stripeWidth = null;
+        stripeWidth = null,
+        dash = "";
     switch (type) {
         case "contour":
             color = "#000000"; // Black
@@ -296,7 +291,8 @@ function outputSegment(segment, svg_id) {
             break;
         case "jump":
             color = "#0000FF"; // Blue
-            stripeWidth = 0.025;
+            stripeWidth = 0.03;
+            dash = ".3,.3";
             break;
         default:
             throw new Error("Unknown segment type: " + type);
@@ -308,6 +304,8 @@ function outputSegment(segment, svg_id) {
         .attr("y1", segment.y1)
         .attr("x2", segment.x2)
         .attr("y2", segment.y2)
+        .attr("id", "segment-" + segment.number) // Used as a lookup number for vector querying
+        .attr("stroke-dasharray", dash)
         .attr("stroke", color)
         .attr("stroke-width", stripeWidth);
 }
@@ -334,6 +332,31 @@ function SaveChangesToLayer() {
 }
 document.getElementById("save").addEventListener("click", SaveChangesToLayer);
 
+// Get click coordinates on svg
+const svg = document.getElementById("mainsvg");
+const { getClosestSegment, getHTMLSegmentFromNumber, toggleSegment } = require("./vectorquerying.js");
+var pt = svg.createSVGPoint(); // Created once for document
+svg.addEventListener("click", (e) => {
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+
+    // Get cursor position
+    var cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
+    // console.log("Cursor Pos: (" + cursorpt.x + ", " + cursorpt.y + ")");
+
+    // Get closest segment to that one
+    let closestSegment = getClosestSegment(cursorpt.x, cursorpt.y, currentBuild);
+    // console.log("Closest segment: ", closestSegment);
+
+    // Backtrack from the same JSON backend to the HTML frontend segment
+    let closestSegmentHTML = getHTMLSegmentFromNumber(closestSegment.number);
+    // console.log("Closest segment HTML: ", closestSegmentHTML);
+
+    // Toggle it!
+    toggleSegment(closestSegmentHTML);
+    // console.log("Toggled closest segment!");
+});
+
 // Not really "necessary" to have a main for js, but helps organizationally and to easily enable/disable functionality
 // Leave this at the end; messes with the order of defining things otherwise
 let currentBuild = null;
@@ -348,6 +371,10 @@ async function main() {
     console.log("build: ", build);
     await drawBuild(build, "mainsvg", true);
 
-    // Populate the list of layers
-    populateLayerList();
+    const DRAW_THUMBNAILS = false;
+    if (DRAW_THUMBNAILS) {
+        populateLayerList();
+    } else {
+        toggleLoading();
+    }
 }
