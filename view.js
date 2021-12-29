@@ -334,7 +334,7 @@ document.getElementById("save").addEventListener("click", SaveChangesToLayer);
 
 // Get click coordinates on svg
 const svg = document.getElementById("mainsvg");
-const { getClosestSegment, getHTMLSegmentFromNumber, toggleSegment } = require("./vectorquerying.js");
+const { getClosestSegment, getHTMLSegmentFromNumber, toggleSegment, RenderSegmentInfo } = require("./vectorquerying.js");
 var pt = svg.createSVGPoint(); // Created once for document
 svg.addEventListener("click", (e) => {
     pt.x = e.clientX;
@@ -346,11 +346,12 @@ svg.addEventListener("click", (e) => {
 
     // Get closest segment to that one
     let closestSegment = getClosestSegment(cursorpt.x, cursorpt.y, currentBuild);
-    // console.log("Closest segment: ", closestSegment);
+    RenderSegmentInfo(closestSegment, currentBuild);
+    console.log("Closest segment: ", closestSegment);
 
     // Backtrack from the same JSON backend to the HTML frontend segment
     let closestSegmentHTML = getHTMLSegmentFromNumber(closestSegment.number);
-    // console.log("Closest segment HTML: ", closestSegmentHTML);
+    console.log("Closest segment HTML: ", closestSegmentHTML);
 
     // Toggle it!
     toggleSegment(closestSegmentHTML);
@@ -371,7 +372,8 @@ async function main() {
     console.log("build: ", build);
     await drawBuild(build, "mainsvg", true);
 
-    const DRAW_THUMBNAILS = false;
+    // Set this to false to remove the load step; useful for quick debugging stuff
+    const DRAW_THUMBNAILS = true;
     if (DRAW_THUMBNAILS) {
         populateLayerList();
     } else {
