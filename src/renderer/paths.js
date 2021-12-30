@@ -1,4 +1,4 @@
-// Getting file paths quickly gets complicated, so we source all the info from the main backend Electron process then have files use IPC to get paths
+// Renderer functions that grab path values from the UI; makes building and such dramatically easier
 const ipc = require("electron").ipcRenderer;
 module.exports.GetUIPath = () => {
     return ipc.sendSync("get-ui-path");

@@ -8,7 +8,7 @@ const FOLDERS_TO_ADD_TO_PYTHONPATH = [
 ];
 
 // Load data; requires cdme-scangen repository to be in same folder as cdme-scangen-ui, for now
-const optionsData = require(paths.GetBackendPath() + "schema.json");
+const optionsData = require(path.join(paths.GetBackendPath(), "schema.json"));
 
 // Remove the placeholder "waiting for data" text
 const optionsDiv = document.getElementById("options");
@@ -171,6 +171,8 @@ function VelocityProfileToHTML(velocityProfile) {
     return div;
 }
 
+let velocityProfileCount = 1;
+let segmentStyleCount = 1;
 function NewVelocityProfile() {
     const velocityProfile = {
         id: "",
@@ -182,7 +184,9 @@ function NewVelocityProfile() {
         markDelay: "",
         polygonDelay: "",
     };
+    document.getElementById("VelocityProfiles").append(createElementWithText("h3", "Velocity Profile #" + (velocityProfileCount + 1)));
     document.getElementById("VelocityProfiles").append(VelocityProfileToHTML(velocityProfile));
+    velocityProfileCount++;
     return velocityProfile;
 }
 

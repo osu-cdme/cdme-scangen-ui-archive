@@ -1,5 +1,7 @@
 // This file handles backend file i/o
-
+const fs = require("fs");
+const path = require("path");
+const paths = require("./paths");
 const ipc = require("electron").ipcMain;
 const dialog = require("electron").dialog;
 
@@ -32,7 +34,7 @@ function SetupSCNImport() {
                     }
 
                     // Wipe Directory
-                    let files = fs.readdirSync(path.join(__dirname, "xml"));
+                    let files = fs.readdirSync(path.join(files.GetUIPath(), "xml"));
                     files.forEach((file) => {
                         fs.unlinkSync(path.join(__dirname, "xml", file));
                     });

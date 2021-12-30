@@ -39,14 +39,13 @@ app.whenReady().then(() => {
 });
 
 const ipc = require("electron").ipcMain;
-const building = false;
-const pathToResources = building ? path.join(__dirname, "../") : path.join(__dirname, "../cdme-scangen/");
+const paths = require("./src/main/paths.js");
 ipc.on("get-ui-path", (event) => {
-    event.returnValue = __dirname;
+    event.returnValue = paths.GetUIPath();
 });
 
 ipc.on("get-backend-path", (event) => {
-    event.returnValue = pathToResources;
+    event.returnValue = paths.GetBackendPath();
 });
 
 // Implements IPC signals and functionality for Imports/Exports
