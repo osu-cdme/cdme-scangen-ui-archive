@@ -1,10 +1,5 @@
 const ipc = require("electron").ipcRenderer;
 
-// Project file path access
-const path = require("path");
-const building = false;
-const pathToResources = building ? path.join(__dirname, "../") : path.join(__dirname, "../cdme-scangen/");
-
 // Imports
 document.getElementById("stlImport").addEventListener("click", (e) => {
     e.preventDefault();

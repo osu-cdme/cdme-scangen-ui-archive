@@ -1,7 +1,6 @@
-const d3 = require("./d3.min.js");
 const path = require("path");
-const building = false;
-const pathToResources = building ? path.join(__dirname, "../") : path.join(__dirname, "../cdme-scangen/");
+const paths = require("./paths");
+const d3 = require(path.join(paths.GetUIPath(), "static", "d3.min.js"));
 
 let parent = document.getElementById("rightPart");
 const fs = require("fs");
@@ -28,7 +27,7 @@ function reset() {
     d3.select("#mainsvg").selectAll("*").remove();
 }
 
-let { LoadXML } = require("../alsam-xml/alsam-xml");
+let { LoadXML } = require(path.join(paths.GetUIPath(), "../", "alsam-xml", "alsam-xml.js"));
 async function getBuildFromFilePath(filePath) {
     const response = await fetch(filePath);
     const text = await response.text();
@@ -90,13 +89,13 @@ function populateLayerList() {
 // Renders the .PNG files that `pyslm` outputs.
 function renderPNGs() {
     console.debug("Rendering .PNG output from `pyslm`.");
-    let files = fs.readdirSync(path.join(pathToResources, "LayerFiles"));
+    let files = fs.readdirSync(path.join(paths.GetBackendPath(), "LayerFiles"));
     files.forEach((file) => {
         let text = document.createElement("p");
         text.textContent = file;
 
         let img = document.createElement("img");
-        img.src = path.join(pathToResources, "LayerFiles", file);
+        img.src = path.join(paths.GetBackendPath(), "LayerFiles", file);
 
         let container = document.createElement("div");
         container.classList.toggle("layerimage");
@@ -322,7 +321,7 @@ function outputTrajectories(build, elementID) {
     });
 }
 
-let { ExportXML } = require("../alsam-xml/alsam-xml");
+let { ExportXML } = require(path.join(paths.GetUIPath(), "../", "alsam-xml", "alsam-xml.js"));
 function SaveChangesToLayer() {
     let text = ExportXML(currentBuild);
     fs.writeFile(currentPath, text, (err) => {
@@ -365,15 +364,15 @@ let currentPath = null;
 main();
 async function main() {
     // Get the first filename in the folder
-    let firstFile = fs.readdirSync(path.join(__dirname, "xml"))[0];
-    const build = await getBuildFromFilePath(path.join(__dirname, "xml", firstFile));
+    let firstFile = fs.readdirSync(path.join(paths.GetUIPath(), "xml"))[0];
+    const build = await getBuildFromFilePath(path.join(paths.GetUIPath(), "xml", firstFile));
     currentBuild = build;
-    currentPath = path.join(__dirname, "xml", firstFile);
+    currentPath = path.join(paths.GetUIPath(), "xml", firstFile);
     console.log("build: ", build);
-    await drawBuild(build, "mainsvg", true);
+    drawBuild(build, "mainsvg", true);
 
     // Set this to false to remove the load step; useful for quick debugging stuff
-    const DRAW_THUMBNAILS = true;
+    const DRAW_THUMBNAILS = false;
     if (DRAW_THUMBNAILS) {
         populateLayerList();
     } else {

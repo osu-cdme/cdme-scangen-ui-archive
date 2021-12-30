@@ -7,7 +7,7 @@ if (typeof fs === "undefined") {
 }
 
 document.getElementById("ToViewVectorsScreen").addEventListener("click", (e) => {
-    if (fs.readdirSync(path.join(__dirname, "xml")).length === 0) {
+    if (fs.readdirSync(path.join(paths.GetUIPath(), "xml")).length === 0) {
         e.preventDefault();
         alert("No XML files to view! Generate some via the 'Generate Vectors' tab.");
     }
