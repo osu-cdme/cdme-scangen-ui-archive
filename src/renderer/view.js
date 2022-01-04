@@ -59,10 +59,10 @@ function animateBuild(build) {
 }
 
 function populateLayerList() {
-    let files = fs.readdirSync(path.join(__dirname, "xml"));
+    let files = fs.readdirSync(path.join(paths.GetUIPath(), "xml"));
     numThumbnailsTotal = files.length;
     files.forEach(async (file) => {
-        let filePath = path.join(__dirname, "xml", file);
+        let filePath = path.join(paths.GetUIPath(), "xml", file);
         let layerNum = parseInt(file.match(/(\d+)/)[0]); // First part finds the number, second part trims zeroes
 
         let li = d3.select("#layerList").append("li");
@@ -372,7 +372,7 @@ async function main() {
     drawBuild(build, "mainsvg", true);
 
     // Set this to false to remove the load step; useful for quick debugging stuff
-    const DRAW_THUMBNAILS = false;
+    const DRAW_THUMBNAILS = true;
     if (DRAW_THUMBNAILS) {
         populateLayerList();
     } else {

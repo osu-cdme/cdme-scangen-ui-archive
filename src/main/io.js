@@ -15,6 +15,8 @@ module.exports.Setup = () => {
 };
 
 function SetupSCNImport() {
+    var JSZip = require("jszip");
+    var fs = require("fs");
     ipc.on("import-scn", (e) => {
         dialog
             .showOpenDialog({
@@ -34,9 +36,10 @@ function SetupSCNImport() {
                     }
 
                     // Wipe Directory
-                    let files = fs.readdirSync(path.join(files.GetUIPath(), "xml"));
+                    console.log("Reading directory " + path.join(paths.GetUIPath(), "xml"));
+                    let files = fs.readdirSync(path.join(paths.GetUIPath(), "xml"));
                     files.forEach((file) => {
-                        fs.unlinkSync(path.join(__dirname, "xml", file));
+                        fs.unlinkSync(path.join(paths.GetUIPath(), "xml", file));
                     });
 
                     // Load zip (that we already verified existed before wiping)
@@ -44,7 +47,7 @@ function SetupSCNImport() {
                         let keys = Object.keys(zip.files);
                         keys.forEach((key) => {
                             zip.files[key].async("string").then((data) => {
-                                fs.writeFileSync(path.join(__dirname, "xml", key), data);
+                                fs.writeFileSync(path.join(paths.GetUIPath(), "xml", key), data);
                             });
                         });
                     });
@@ -79,8 +82,8 @@ function SetupSTLImport() {
                     console.debug("Extracted file name " + fileName);
 
                     // Copy stl file over to main project
-                    console.debug("Writing file to " + path.join(pathToResources, "geometry", fileName));
-                    fs.writeFileSync(path.join(pathToResources, "geometry", fileName), data);
+                    console.debug("Writing file to " + path.join(paths.GetBackendPath(), "geometry", fileName));
+                    fs.writeFileSync(path.join(paths.GetBackendPath(), "geometry", fileName), data);
                     e.reply("alert", "STL file successfully imported!");
                 });
             });
@@ -103,9 +106,9 @@ function SetupSCNExport() {
                 // 1: zip up everything in the LayerFiles directory
                 var zip = new JSZip();
                 console.debug("Adding files to .zip.");
-                let files = fs.readdirSync(path.join(__dirname, "xml"));
+                let files = fs.readdirSync(path.join(paths.GetUIPath(), "xml"));
                 files.forEach((file) => {
-                    let data = fs.readFileSync(path.join(__dirname, "xml", file));
+                    let data = fs.readFileSync(path.join(paths.GetUIPath(), "xml", file));
                     zip.file(file, data);
                 });
 
