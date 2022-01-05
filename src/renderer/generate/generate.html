@@ -11,11 +11,11 @@
     <body>
         <!-- TODO: Better to split this into two columns rather than require lots of scrolling -->
         <nav>
-            <img src="../../static/logo.jpg" />
+            <img src="../../../static/logo.jpg" />
             <ul id="pageList">
                 <li><a href="generate.html">Generate Vectors</a></li>
-                <li id="ToViewVectorsScreen"><a href="view.html">View Vectors</a></li>
-                <li><a href="importexport.html">Import/Export</a></li>
+                <li id="ToViewVectorsScreen"><a href="../view/view.html">View Vectors</a></li>
+                <li><a href="../importexport/importexport.html">Import/Export</a></li>
             </ul>
             <h1>CDME Scangen</h1>
             <div id="progress">
@@ -38,14 +38,25 @@
         <form id="rightPart">
             <h1>Options</h1>
             <div id="options">
-                <p>Loading Options. Please wait a moment.</p>
+                <h2>Segment Styles</h2>
+                <div id="segmentStyles"></div>
+                <div>
+                    <button id="addSegmentStyleButton">New Segment Style</button>
+                    <button id="deleteSegmentStyleButton">Delete Segment Style</button>
+                </div>
+                <h2>Velocity Profiles</h2>
+                <div id="velocityProfiles"></div>
+                <div>
+                    <button id="addVelocityProfileButton">New Velocity Profile</button>
+                    <button id="deleteVelocityProfileButton">Delete Velocity Profile</button>
+                </div>
             </div>
             <div class="submitButtonDiv"><button type="button" id="start">Start Scanning</button></div>
-            <!-- TODO: Progress bar, or something -->
         </form>
 
         <!-- Browser-side JS we want -->
         <script src="generate.js"></script>
-        <script src="navbar.js"></script>
+        <script src="../navbar.js"></script>
+        <script src="spawning.js"></script>
     </body>
 </html>

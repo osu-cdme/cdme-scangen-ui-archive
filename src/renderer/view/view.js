@@ -1,5 +1,5 @@
 const path = require("path");
-const paths = require("./paths");
+const paths = require("../paths");
 const d3 = require(path.join(paths.GetUIPath(), "static", "d3.min.js"));
 
 let parent = document.getElementById("rightPart");
