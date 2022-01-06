@@ -50,7 +50,7 @@ class SegmentStyles {
         }
 
         for (let i = 0; i < this.styles.length; i++) {
-            document.getElementById("segmentStyles").append(createElementWithText("h3", "Segment Style #" + (i + 1)));
+            document.getElementById("segmentStyles").append(createElementWithText("h4", "Segment Style #" + (i + 1)));
             document.getElementById("segmentStyles").append(this.StyleToHTML(i));
         }
 
@@ -64,7 +64,6 @@ class SegmentStyles {
         });
         document.getElementById("segmentStyles").append(button);
     }
-    // TODO: Implement
     StyleToHTML(i) {
         let style = this.styles[i];
         const div = document.createElement("div");
@@ -76,34 +75,36 @@ class SegmentStyles {
         for (let j = 0; j < style.travelers.length; j++) {
             let traveler = style.travelers[j];
             let travelerDiv = document.createElement("div");
+            travelerDiv.classList.toggle("traveler");
 
             // TODO: Check the constraints on these
-            travelerDiv.append(createElementWithText("h4", "Traveler #" + (j + 1)));
+            travelerDiv.append(createElementWithText("h5", "Traveler #" + (j + 1)));
             travelerDiv.append(createInputWithLabel("ID: ", traveler.id, ""));
             travelerDiv.append(createInputWithLabel("syncDelay: ", traveler.syncDelay, "(Any Number)"));
             travelerDiv.append(createInputWithLabel("power: ", traveler.power, "(Any Number)"));
             travelerDiv.append(createInputWithLabel("Spot Size: ", traveler.spotSize, "(Any Number)"));
             if (traveler.wobble) {
                 let wobbleDiv = document.createElement("div");
-                wobbleDiv.append(createElementWithText("h5", "Wobble Information"));
+                wobbleDiv.classList.toggle("wobble");
+                wobbleDiv.append(createElementWithText("h5", "Wobble"));
                 wobbleDiv.append(createInputWithLabel("On: ", traveler.wobble.on, "(Any Number)"));
                 wobbleDiv.append(createInputWithLabel("Freq: ", traveler.wobble.freq, "(Any Number)"));
                 wobbleDiv.append(createInputWithLabel("Shape: ", traveler.wobble.shape, "(Any Number)"));
                 wobbleDiv.append(createInputWithLabel("Trans Amp: ", traveler.wobble.transAmp, "(Any Number)"));
                 wobbleDiv.append(createInputWithLabel("Long Amp: ", traveler.wobble.longAmp, "(Any Number)"));
-                travelerDiv.appendChild(wobbleDiv);
 
                 let button = document.createElement("button");
-                button.textContent = "Remove Wobble";
+                button.textContent = "Disable Wobble";
                 button.onclick = (e) => {
                     e.preventDefault();
                     traveler.wobble = null;
                     this.Refresh();
                 };
-                travelerDiv.appendChild(button);
+                wobbleDiv.appendChild(button);
+                travelerDiv.appendChild(wobbleDiv);
             } else {
                 let button = document.createElement("button");
-                button.textContent = "Add Wobble";
+                button.textContent = "Enable Wobble";
                 button.onclick = (e) => {
                     e.preventDefault();
                     traveler.wobble = new Wobble({
