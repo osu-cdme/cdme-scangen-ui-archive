@@ -8,11 +8,16 @@ const { createInputWithLabel, createElementWithText } = require("./utility.js");
 class SegmentStyles {
     constructor() {
         this.styles = [];
+        this.defaultHatchSegmentStyleID = "default";
+        this.defaultContourSegmentStyleID = "default";
         this.New();
     }
     Get() {
         // Used during form input to super easily handle these
         return this.styles;
+    }
+    GetDefaults() {
+        return { hatchID: this.defaultHatchSegmentStyleID, contourID: this.defaultContourSegmentStyleID };
     }
     Add(style) {
         this.styles.push(style);
@@ -52,6 +57,18 @@ class SegmentStyles {
         while (document.getElementById("segmentStyles").firstChild) {
             document.getElementById("segmentStyles").removeChild(document.getElementById("segmentStyles").firstChild);
         }
+
+        let hatchDefaultInput = createInputWithLabel("Default Segment Style ID for Hatches: ", "", "");
+        hatchDefaultInput.onchange = (e) => {
+            this.defaultHatchSegmentStyleID = e.target.value;
+        };
+        document.getElementById("segmentStyles").append(hatchDefaultInput);
+
+        let contourDefaultInput = createInputWithLabel("Default Segment Style ID for Contours: ", "", "");
+        contourDefaultInput.onchange = (e) => {
+            this.defaultContourSegmentStyleID = e.target.value;
+        };
+        document.getElementById("segmentStyles").append(contourDefaultInput);
 
         for (let i = 0; i < this.styles.length; i++) {
             document.getElementById("segmentStyles").append(createElementWithText("h4", "Segment Style #" + (i + 1)));
@@ -190,7 +207,7 @@ class SegmentStyles {
             deleteButton.textContent = "Delete Traveler";
             deleteButton.onclick = (e) => {
                 e.preventDefault();
-                style.travelers.splice(i, 1);
+                style.travelers.splice(j, 1);
                 this.Refresh();
             };
             travelerDiv.appendChild(deleteButton);

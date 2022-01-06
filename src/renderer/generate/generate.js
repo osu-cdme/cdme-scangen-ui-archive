@@ -126,5 +126,5 @@ for (let file of files) {
 
 // const { spawnProcess } = require("./spawning.js");
 document.getElementById("start").addEventListener("click", () => {
-    spawnProcess(styles.Get(), profiles.Get());
+    spawnProcess(styles.Get(), profiles.Get(), styles.GetDefaults());
 });

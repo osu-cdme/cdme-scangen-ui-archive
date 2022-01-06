@@ -34,7 +34,9 @@ function parseStderr(chunkBuf) {
 
 // Launch the application when they hit the button
 const spawn = require("child_process").spawn;
-function spawnProcess(styles, profiles) {
+function spawnProcess(styles, profiles, defaults) {
+    console.log("styles: ", styles);
+    console.log("profiles: ", profiles);
     currentTaskElem.textContent = "Spawning child process.";
     const formEl = document.forms.rightPart;
     const formData = new FormData(formEl);
@@ -45,6 +47,8 @@ function spawnProcess(styles, profiles) {
             fields[optionsData[key][key2].name] = formData.get(optionsData[key][key2].name);
         }
     }
+    fields["Hatch Default ID"] = defaults.hatchID;
+    fields["Contour Default ID"] = defaults.contourID;
     fields.styles = styles;
     fields.profiles = profiles;
     console.log("paths.GetBackendPath(): " + paths.GetBackendPath());
