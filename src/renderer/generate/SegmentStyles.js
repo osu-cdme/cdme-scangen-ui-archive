@@ -10,6 +10,10 @@ class SegmentStyles {
         this.styles = [];
         this.New();
     }
+    Get() {
+        // Used during form input to super easily handle these
+        return this.styles;
+    }
     Add(style) {
         this.styles.push(style);
         this.Refresh();
@@ -69,29 +73,91 @@ class SegmentStyles {
         const div = document.createElement("div");
         div.classList.toggle("segmentStyle"); // Used to accurately grab the inputs during form submission
         div.classList.toggle("style"); // Used for styling common between Velocity Profiles / Segment Styles
-        div.append(createInputWithLabel("ID: ", style.id, ""));
-        div.append(createInputWithLabel("Velocity Profile ID: ", style.velocityProfileID, "(any text)"));
-        div.append(createInputWithLabel("Laser Mode: ", style.laserMode, "Either 'Independent' or 'Follow Me'"));
+
+        let idInput = createInputWithLabel("ID: ", style.id, "");
+        idInput.onchange = (e) => {
+            style.id = e.target.value;
+        };
+        div.append(idInput);
+
+        let velocityProfileIDInput = createInputWithLabel("Velocity Profile ID: ", style.velocityProfileID, "");
+        velocityProfileIDInput.onchange = (e) => {
+            style.velocityProfileID = e.target.value;
+        };
+        div.append(velocityProfileIDInput);
+
+        let laserModeInput = createInputWithLabel("Laser Mode: ", style.laserMode, "");
+        laserModeInput.onchange = (e) => {
+            style.laserMode = e.target.value;
+        };
+        div.append(laserModeInput);
+
         for (let j = 0; j < style.travelers.length; j++) {
             let traveler = style.travelers[j];
             let travelerDiv = document.createElement("div");
             travelerDiv.classList.toggle("traveler");
 
-            // TODO: Check the constraints on these
             travelerDiv.append(createElementWithText("h5", "Traveler #" + (j + 1)));
-            travelerDiv.append(createInputWithLabel("ID: ", traveler.id, ""));
-            travelerDiv.append(createInputWithLabel("syncDelay: ", traveler.syncDelay, "(Any Number)"));
-            travelerDiv.append(createInputWithLabel("power: ", traveler.power, "(Any Number)"));
-            travelerDiv.append(createInputWithLabel("Spot Size: ", traveler.spotSize, "(Any Number)"));
+
+            // TODO: Check the constraints on these
+            let travelerIDInput = createInputWithLabel("ID: ", traveler.id, "");
+            travelerIDInput.onchange = (e) => {
+                traveler.id = e.target.value;
+            };
+            travelerDiv.append(travelerIDInput);
+
+            let syncDelayInput = createInputWithLabel("Sync Delay: ", traveler.syncDelay, "");
+            syncDelayInput.onchange = (e) => {
+                traveler.syncDelay = e.target.value;
+            };
+            travelerDiv.append(syncDelayInput);
+
+            let powerInput = createInputWithLabel("Power: ", traveler.power, "");
+            powerInput.onchange = (e) => {
+                traveler.power = e.target.value;
+            };
+            travelerDiv.append(powerInput);
+
+            let spotSizeInput = createInputWithLabel("Spot Size: ", traveler.spotSize, "");
+            spotSizeInput.onchange = (e) => {
+                traveler.spotSize = e.target.value;
+            };
+            travelerDiv.append(spotSizeInput);
+
             if (traveler.wobble) {
                 let wobbleDiv = document.createElement("div");
                 wobbleDiv.classList.toggle("wobble");
                 wobbleDiv.append(createElementWithText("h5", "Wobble"));
-                wobbleDiv.append(createInputWithLabel("On: ", traveler.wobble.on, "(Any Number)"));
-                wobbleDiv.append(createInputWithLabel("Freq: ", traveler.wobble.freq, "(Any Number)"));
-                wobbleDiv.append(createInputWithLabel("Shape: ", traveler.wobble.shape, "(Any Number)"));
-                wobbleDiv.append(createInputWithLabel("Trans Amp: ", traveler.wobble.transAmp, "(Any Number)"));
-                wobbleDiv.append(createInputWithLabel("Long Amp: ", traveler.wobble.longAmp, "(Any Number)"));
+
+                let onInput = createInputWithLabel("On: ", traveler.wobble.on, "");
+                onInput.onchange = (e) => {
+                    traveler.wobble.on = e.target.value;
+                };
+                wobbleDiv.append(onInput);
+
+                let freqInput = createInputWithLabel("Frequency: ", traveler.wobble.freq, "");
+                freqInput.onchange = (e) => {
+                    traveler.wobble.freq = e.target.value;
+                };
+                wobbleDiv.append(freqInput);
+
+                let shapeInput = createInputWithLabel("Shape: ", traveler.wobble.shape, "");
+                shapeInput.onchange = (e) => {
+                    traveler.wobble.shape = e.target.value;
+                };
+                wobbleDiv.append(shapeInput);
+
+                let transAmpInput = createInputWithLabel("Transient Amplitude: ", traveler.wobble.transAmp, "");
+                transAmpInput.onchange = (e) => {
+                    traveler.wobble.transAmp = e.target.value;
+                };
+                wobbleDiv.append(transAmpInput);
+
+                let longAmpInput = createInputWithLabel("Longitudinal Amplitude: ", traveler.wobble.longAmp, "");
+                longAmpInput.onchange = (e) => {
+                    traveler.wobble.longAmp = e.target.value;
+                };
+                wobbleDiv.append(longAmpInput);
 
                 let button = document.createElement("button");
                 button.textContent = "Disable Wobble";

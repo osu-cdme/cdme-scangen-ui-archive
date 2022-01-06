@@ -34,17 +34,19 @@ function parseStderr(chunkBuf) {
 
 // Launch the application when they hit the button
 const spawn = require("child_process").spawn;
-document.getElementById("start").addEventListener("click", () => {
+function spawnProcess(styles, profiles) {
     currentTaskElem.textContent = "Spawning child process.";
     const formEl = document.forms.rightPart;
     const formData = new FormData(formEl);
-    console.log("formData", formData);
+    console.log("formData: ", formData);
     const fields = {};
     for (const key in optionsData) {
         for (const key2 in optionsData[key]) {
             fields[optionsData[key][key2].name] = formData.get(optionsData[key][key2].name);
         }
     }
+    fields.styles = styles;
+    fields.profiles = profiles;
     console.log("paths.GetBackendPath(): " + paths.GetBackendPath());
     console.log("Running script " + paths.GetBackendPath() + "main.py using interpreter " + pythonPath);
 
@@ -83,4 +85,4 @@ document.getElementById("start").addEventListener("click", () => {
         });
         alert('Build complete! Files can now be viewed under the "View Vectors" tab.');
     });
-});
+}

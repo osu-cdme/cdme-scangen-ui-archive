@@ -123,3 +123,8 @@ for (let file of files) {
     option.value = file;
     document.getElementsByName("Part File Name")[0].appendChild(option);
 }
+
+// const { spawnProcess } = require("./spawning.js");
+document.getElementById("start").addEventListener("click", () => {
+    spawnProcess(styles.Get(), profiles.Get());
+});
