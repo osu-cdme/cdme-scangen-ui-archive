@@ -22,7 +22,7 @@ nav > .bottom {
     position: absolute;
     left: 10px;
     bottom: 10px;
-    font-size: .8rem;
+    font-size: 0.8rem;
     text-align: left;
 }
 
@@ -38,7 +38,7 @@ nav > img {
     height: 100%;
     background-color: #333333;
     padding: 15px;
-    overflow-y: scroll; 
+    overflow-y: scroll;
 }
 
 .submitButtonDiv {
@@ -71,7 +71,8 @@ nav > img {
     display: inline;
 }
 
-.field > input, .field > select {
+.field > input,
+.field > select {
     margin-left: 10px;
     padding: 5px;
     color: white;
@@ -84,14 +85,14 @@ nav > img {
 
 .desc {
     display: block;
-    font-size: .8rem;
+    font-size: 0.8rem;
     color: rgb(200, 200, 200);
     margin-top: 3px;
 }
 
 .units {
     margin-left: 5px;
-    font-size: .8rem;
+    font-size: 0.8rem;
 }
 
 #progress > div {
@@ -127,4 +128,47 @@ nav > img {
     text-decoration: none;
     display: block;
     /* padding: 20px; */
+}
+
+.style > h3 {
+    margin-bottom: 0;
+}
+
+.style > p {
+    margin: 0;
+}
+
+input {
+    background-color: #222222;
+    color: white;
+}
+
+.constraints {
+    font-size: 12px;
+}
+
+.style > p > input {
+    margin-left: 10px;
+}
+
+.style > div {
+    margin: 2px 0;
+}
+
+/* Adds gradual nesting / indentation to segment style subsections */
+.traveler,
+.wobble {
+    padding-left: 20px;
+}
+
+/* Tweak space under the section headings */
+#segmentStyles > h4 {
+    margin-bottom: 5px;
+}
+.traveler {
+    margin: 5px 0;
+}
+.traveler > h5,
+.wobble > h5 {
+    margin-bottom: 0;
 }

@@ -75,6 +75,7 @@ svg {
     border: 10px black solid;
     width: 100%;
     max-width: calc(100% - 20px);
+    max-height: 500px;
 }
 
 #controlsPanel {
@@ -105,4 +106,45 @@ svg {
     vertical-align: middle;
     line-height: 100vh;
     background: rgb(64, 64, 64);
+}
+
+.selected {
+    stroke: green;
+}
+
+#segmentDetails > div > p,
+#segmentDetails > div > h4 {
+    margin: 0;
+    padding: 0;
+    margin: 0 auto;
+    line-height: normal;
+    margin-block-start: 0 !important;
+    margin-block-end: 0 !important;
+}
+
+#segmentDetails > div {
+    background-color: rgb(80, 80, 80);
+    display: inline-block;
+    padding: 10px;
+    margin: 10px;
+    vertical-align: top;
+    text-align: left;
+}
+
+#segmentDetails > div > ul {
+    padding-left: 0;
+    margin: 0;
+}
+
+#segmentDetails > div > ul > li {
+    list-style-type: none;
+}
+
+#segmentDetails > div > ul > li > p,
+#segmentDetails > div > ul > li > h5 {
+    margin: 0;
+}
+
+#segmentDetails > div > ul > li > h5 {
+    margin-top: 5px;
 }
