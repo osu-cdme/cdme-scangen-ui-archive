@@ -357,6 +357,63 @@ svg.addEventListener("click", (e) => {
     // console.log("Toggled closest segment!");
 });
 
+// TODO: Stroke weights in the svg should get lower as you zoom in further
+svg.onwheel = (e) => {
+    e.preventDefault();
+
+    // Get cursor pos relative to svg coords
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    var cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
+    console.log("Cursor Pos: (" + cursorpt.x + ", " + cursorpt.y + ")");
+
+    // Get current viewbox
+    var box = svg.getAttribute("viewBox");
+    box = box.split(/\s+|,/);
+    box[0] = parseFloat(box[0]);
+    box[1] = parseFloat(box[1]);
+    box[2] = parseFloat(box[2]);
+    box[3] = parseFloat(box[3]);
+    console.log("box: ", box);
+
+    let width = box[2],
+        height = box[3];
+    let previousX = box[0] + width / 2,
+        previousY = box[1] + height / 2;
+    console.log("Previous center: (" + previousX + ", " + previousY + ")");
+
+    // Zoom in
+    let newWidth, newHeight;
+    let newX, newY;
+    if (ScrollDirectionIsUp(e)) {
+        console.log("Scrolled In!");
+        newWidth = width * 0.9;
+        newHeight = height * 0.9;
+
+        // Weighted average; move a little towards the new point, but not by much
+        newX = (-newWidth / 2 + 0.9 * previousX + 0.1 * cursorpt.x).toFixed(2);
+        newY = (-newHeight / 2 + 0.9 * previousY + 0.1 * cursorpt.y).toFixed(2);
+    } else {
+        console.log("Scrolled Out!");
+        newWidth = width * 1.1;
+        newHeight = height * 1.1;
+
+        // Don't move the origin when zooming out; it just feels unnatural
+        (newX = -newWidth / 2 + previousX).toFixed(2), (newY = -newHeight / 2 + previousY).toFixed(2);
+    }
+
+    const viewboxStr = "" + newX + " " + newY + " " + newWidth + " " + newHeight;
+    console.log("viewboxStr: ", viewboxStr);
+    svg.setAttribute("viewBox", viewboxStr); // Basically lets us define our bounds
+};
+
+function ScrollDirectionIsUp(event) {
+    if (event.wheelDelta) {
+        return event.wheelDelta > 0;
+    }
+    return event.deltaY < 0;
+}
+
 // Not really "necessary" to have a main for js, but helps organizationally and to easily enable/disable functionality
 // Leave this at the end; messes with the order of defining things otherwise
 let currentBuild = null;
@@ -372,7 +429,7 @@ async function main() {
     drawBuild(build, "mainsvg", true);
 
     // Set this to false to remove the load step; useful for quick debugging stuff
-    const DRAW_THUMBNAILS = true;
+    const DRAW_THUMBNAILS = false;
     if (DRAW_THUMBNAILS) {
         populateLayerList();
     } else {
