@@ -1,27 +1,9 @@
 const path = require("path");
 const paths = require("../paths.js");
+const { createInputWithLabel, createElementWithText } = require("./utility.js");
 
 // Load data; requires cdme-scangen repository to be in parallel folder to cdme-scangen-ui, for now
 const optionsData = require(path.join(paths.GetBackendPath(), "schema.json"));
-
-// Functionality performed on initial page render
-// Handles generating UI inputs for the segment styles
-function generateSegmentStylesDOM() {
-    let div = document.createElement("ul");
-    return div;
-}
-
-// Handles generating UI inputs for the velocity profiles
-function generateVelocityProfilesDOM() {
-    let div = document.createElement("div");
-    console.log("optionsData", optionsData);
-    for (let i = 0; i < optionsData["Velocity Profiles"].length; i++) {
-        let velocityProfile = optionsData["Velocity Profiles"][i];
-        div.append(createElementWithText("h3", "Velocity Profile #" + (i + 1)));
-        div.append(VelocityProfileToHTML(velocityProfile));
-    }
-    return div;
-}
 
 // Handles generating UI inputs for the rest, which is generalizable
 let specialElements = new Set(["Hatch Default ID", "Contour Default ID", "Segment Styles", "Velocity Profiles"]);
@@ -114,91 +96,22 @@ function SectionHeaderDOM(text) {
     return header;
 }
 
-function createInputWithLabel(label, value, constraintsText) {
-    const div = document.createElement("div");
-    const span = document.createElement("span");
-    span.textContent = label;
-    div.append(span);
-    const input = document.createElement("input");
-    input.type = "text";
-    input.id = "input_" + label;
-    input.value = value;
-    div.append(input);
-    const constraints = document.createElement("span");
-    constraints.classList.toggle("constraints");
-    constraints.textContent = constraintsText;
-    div.append(constraints);
+function getDefaultWobbleHTML() {
+    let div = document.createElement("div");
+    div.append(createElementWithText("h5", "Wobble Information"));
+    div.append(createInputWithLabel("On: ", "", "(Any Number)"));
+    div.append(createInputWithLabel("Freq: ", "", "(Any Number)"));
+    div.append(createInputWithLabel("Shape: ", "", "(Any Number)"));
+    div.append(createInputWithLabel("Trans Amp: ", "", "(Any Number)"));
+    div.append(createInputWithLabel("Long Amp: ", "", "(Any Number)"));
     return div;
 }
-
-function createElementWithText(tag, text) {
-    const element = document.createElement(tag);
-    element.textContent = text;
-    return element;
-}
-
-function VelocityProfileToHTML(velocityProfile) {
-    const div = document.createElement("div");
-    div.classList.toggle("velocityProfile"); // Used to accurately grab the inputs during form submission
-    div.classList.toggle("style"); // Used for styling common between Velocity Profiles / Segment Styles
-    div.append(createInputWithLabel("ID: ", velocityProfile.id, ""));
-    div.append(createInputWithLabel("Velocity: ", velocityProfile.velocity, "(Any Number)"));
-    div.append(createInputWithLabel("Mode: ", velocityProfile.mode, "(Any string from set {Delay, Auto}"));
-    div.append(createInputWithLabel("Laser On Delay: ", velocityProfile.laserOnDelay, "(microseconds)"));
-    div.append(createInputWithLabel("Laser Off Delay: ", velocityProfile.laserOffDelay, "(microseconds)"));
-    div.append(createInputWithLabel("Jump Delay: ", velocityProfile.jumpDelay, "(microseconds)"));
-    div.append(createInputWithLabel("Mark Delay: ", velocityProfile.markDelay, "(microseconds)"));
-    div.append(createInputWithLabel("Polygon Delay: ", velocityProfile.polygonDelay, "(microseconds)"));
-    return div;
-}
-
-let velocityProfileCount = 1;
-let segmentStyleCount = 1;
-function NewVelocityProfile() {
-    const velocityProfile = {
-        id: "",
-        velocity: "",
-        mode: "",
-        laserOnDelay: "",
-        laserOffDelay: "",
-        jumpDelay: "",
-        markDelay: "",
-        polygonDelay: "",
-    };
-    document.getElementById("velocityProfiles").append(createElementWithText("h3", "Velocity Profile #" + (velocityProfileCount + 1)));
-    document.getElementById("velocityProfiles").append(VelocityProfileToHTML(velocityProfile));
-    velocityProfileCount++;
-    return velocityProfile;
-}
-
-let segmentStylesHTML = document.getElementById("segmentStyles");
-let velocityProfilesHTML = document.getElementById("velocityProfiles");
-document.getElementById("addSegmentStyleButton").addEventListener("click", (e) => {
-    e.preventDefault();
-    throw new Error("Not implemented");
-});
-document.getElementById("deleteSegmentStyleButton").addEventListener("click", (e) => {
-    e.preventDefault();
-    if (segmentStylesHTML.lastChild) {
-        segmentStylesHTML.removeChild(segmentStylesHTML.lastChild);
-    }
-});
-document.getElementById("addVelocityProfileButton").addEventListener("click", (e) => {
-    e.preventDefault();
-    NewVelocityProfile();
-});
-document.getElementById("deleteVelocityProfileButton").addEventListener("click", (e) => {
-    e.preventDefault();
-    if (velocityProfilesHTML.lastChild) {
-        velocityProfilesHTML.removeChild(velocityProfilesHTML.lastChild); // Remove the actual profiile
-        velocityProfilesHTML.removeChild(velocityProfilesHTML.lastChild); // Remove the "Velocity Profile #" header
-        velocityProfileCount--;
-    }
-});
 
 // Generate and append UI corresponding to the schema
-document.getElementById("segmentStyles").appendChild(generateSegmentStylesDOM());
-document.getElementById("velocityProfiles").appendChild(generateVelocityProfilesDOM());
+let { SegmentStyles } = require("./SegmentStyles.js");
+let { VelocityProfiles } = require("./VelocityProfiles.js");
+styles = new SegmentStyles();
+profiles = new VelocityProfiles();
 document.getElementById("options").appendChild(generateRemainingDOM());
 
 // Make the contents of the select menu the contents of the 'xml' directory

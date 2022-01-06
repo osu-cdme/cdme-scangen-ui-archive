@@ -1,6 +1,4 @@
 // Functionality to spawn the pyslm child process and interface correctly with it
-const path = require("path");
-const paths = require("../paths.js");
 const pythonPath = path.join(paths.GetUIPath(), "python", "python.exe");
 const FOLDERS_TO_ADD_TO_PYTHONPATH = [
     paths.GetBackendPath(),
@@ -40,6 +38,7 @@ document.getElementById("start").addEventListener("click", () => {
     currentTaskElem.textContent = "Spawning child process.";
     const formEl = document.forms.rightPart;
     const formData = new FormData(formEl);
+    console.log("formData", formData);
     const fields = {};
     for (const key in optionsData) {
         for (const key2 in optionsData[key]) {
