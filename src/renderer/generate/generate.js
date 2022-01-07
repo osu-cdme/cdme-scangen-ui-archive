@@ -96,17 +96,6 @@ function SectionHeaderDOM(text) {
     return header;
 }
 
-function getDefaultWobbleHTML() {
-    let div = document.createElement("div");
-    div.append(createElementWithText("h5", "Wobble Information"));
-    div.append(createInputWithLabel("On: ", "", "(Any Number)"));
-    div.append(createInputWithLabel("Freq: ", "", "(Any Number)"));
-    div.append(createInputWithLabel("Shape: ", "", "(Any Number)"));
-    div.append(createInputWithLabel("Trans Amp: ", "", "(Any Number)"));
-    div.append(createInputWithLabel("Long Amp: ", "", "(Any Number)"));
-    return div;
-}
-
 // Generate and append UI corresponding to the schema
 let { SegmentStyles } = require("./SegmentStyles.js");
 let { VelocityProfiles } = require("./VelocityProfiles.js");

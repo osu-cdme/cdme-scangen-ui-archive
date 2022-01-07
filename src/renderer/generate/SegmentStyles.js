@@ -103,7 +103,11 @@ class SegmentStyles {
         };
         div.append(velocityProfileIDInput);
 
-        let laserModeInput = createInputWithLabel("Laser Mode: ", style.laserMode, "");
+        let laserModeInput = createInputWithLabel(
+            "Laser Mode Select: ",
+            style.velocityProfileID,
+            " (either 'Independent' or 'FollowMe'; Case Sensitive)"
+        );
         laserModeInput.onchange = (e) => {
             style.laserMode = e.target.value;
         };
@@ -117,25 +121,25 @@ class SegmentStyles {
             travelerDiv.append(createElementWithText("h5", "Traveler #" + (j + 1)));
 
             // TODO: Check the constraints on these
-            let travelerIDInput = createInputWithLabel("ID: ", traveler.id, "");
+            let travelerIDInput = createInputWithLabel("ID: ", traveler.id, " (integer)");
             travelerIDInput.onchange = (e) => {
                 traveler.id = e.target.value;
             };
             travelerDiv.append(travelerIDInput);
 
-            let syncDelayInput = createInputWithLabel("Sync Delay: ", traveler.syncDelay, "");
+            let syncDelayInput = createInputWithLabel("Sync Delay: ", traveler.syncDelay, " (microseconds)");
             syncDelayInput.onchange = (e) => {
                 traveler.syncDelay = e.target.value;
             };
             travelerDiv.append(syncDelayInput);
 
-            let powerInput = createInputWithLabel("Power: ", traveler.power, "");
+            let powerInput = createInputWithLabel("Power: ", traveler.power, " (watts)");
             powerInput.onchange = (e) => {
                 traveler.power = e.target.value;
             };
             travelerDiv.append(powerInput);
 
-            let spotSizeInput = createInputWithLabel("Spot Size: ", traveler.spotSize, "");
+            let spotSizeInput = createInputWithLabel("Spot Size: ", traveler.spotSize, " (microns)");
             spotSizeInput.onchange = (e) => {
                 traveler.spotSize = e.target.value;
             };
@@ -146,31 +150,31 @@ class SegmentStyles {
                 wobbleDiv.classList.toggle("wobble");
                 wobbleDiv.append(createElementWithText("h5", "Wobble"));
 
-                let onInput = createInputWithLabel("On: ", traveler.wobble.on, "");
+                let onInput = createInputWithLabel("On: ", traveler.wobble.on, "(0 or 1)");
                 onInput.onchange = (e) => {
                     traveler.wobble.on = e.target.value;
                 };
                 wobbleDiv.append(onInput);
 
-                let freqInput = createInputWithLabel("Frequency: ", traveler.wobble.freq, "");
+                let freqInput = createInputWithLabel("Frequency: ", traveler.wobble.freq, " (positive or negative integer, Hz)");
                 freqInput.onchange = (e) => {
                     traveler.wobble.freq = e.target.value;
                 };
                 wobbleDiv.append(freqInput);
 
-                let shapeInput = createInputWithLabel("Shape: ", traveler.wobble.shape, "");
+                let shapeInput = createInputWithLabel("Shape: ", traveler.wobble.shape, " (-1, 0, or 1)");
                 shapeInput.onchange = (e) => {
                     traveler.wobble.shape = e.target.value;
                 };
                 wobbleDiv.append(shapeInput);
 
-                let transAmpInput = createInputWithLabel("Transient Amplitude: ", traveler.wobble.transAmp, "");
+                let transAmpInput = createInputWithLabel("Transient Amplitude: ", traveler.wobble.transAmp, " (mm)");
                 transAmpInput.onchange = (e) => {
                     traveler.wobble.transAmp = e.target.value;
                 };
                 wobbleDiv.append(transAmpInput);
 
-                let longAmpInput = createInputWithLabel("Longitudinal Amplitude: ", traveler.wobble.longAmp, "");
+                let longAmpInput = createInputWithLabel("Longitudinal Amplitude: ", traveler.wobble.longAmp, " (mm)");
                 longAmpInput.onchange = (e) => {
                     traveler.wobble.longAmp = e.target.value;
                 };
