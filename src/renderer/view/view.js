@@ -430,6 +430,7 @@ main();
 async function main() {
     // Get the first filename in the folder
     let firstFile = fs.readdirSync(path.join(paths.GetUIPath(), "xml"))[0];
+    console.log("First file: ", firstFile);
     const build = await getBuildFromFilePath(path.join(paths.GetUIPath(), "xml", firstFile));
     currentBuild = build;
     currentPath = path.join(paths.GetUIPath(), "xml", firstFile);
@@ -437,7 +438,7 @@ async function main() {
     drawBuild(build, "mainsvg", true);
 
     // Set this to false to remove the load step; useful for quick debugging stuff
-    const DRAW_THUMBNAILS = false;
+    const DRAW_THUMBNAILS = true;
     if (DRAW_THUMBNAILS) {
         populateLayerList();
     } else {

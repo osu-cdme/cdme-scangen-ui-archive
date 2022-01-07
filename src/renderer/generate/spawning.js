@@ -49,8 +49,8 @@ function spawnProcess(styles, profiles, defaults) {
     }
     fields["Hatch Default ID"] = defaults.hatchID;
     fields["Contour Default ID"] = defaults.contourID;
-    fields.styles = styles;
-    fields.profiles = profiles;
+    fields["Segment Styles"] = styles;
+    fields["Velocity Profiles"] = profiles;
     console.log("paths.GetBackendPath(): " + paths.GetBackendPath());
     console.log("Running script " + paths.GetBackendPath() + "main.py using interpreter " + pythonPath);
 
@@ -85,7 +85,10 @@ function spawnProcess(styles, profiles, defaults) {
 
         const files = fs.readdirSync(path.join(paths.GetBackendPath(), "XMLOutput"));
         files.forEach((file) => {
-            fs.copyFileSync(path.join(paths.GetBackendPath(), "XMLOutput", file), path.join(paths.GetUIPath(), "xml", file));
+            if (file.includes(".xml")) {
+                // Ignore the .SCN file
+                fs.copyFileSync(path.join(paths.GetBackendPath(), "XMLOutput", file), path.join(paths.GetUIPath(), "xml", file));
+            }
         });
         alert('Build complete! Files can now be viewed under the "View Vectors" tab.');
     });
