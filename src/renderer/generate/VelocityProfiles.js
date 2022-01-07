@@ -1,4 +1,4 @@
-const { VelocityProfile } = require("../../../../alsam-xml/alsam-xml.js");
+const { VelocityProfile } = require("alsam-xml");
 const { createInputWithLabel, createElementWithText } = require("./utility.js");
 
 const defaults = require(path.join(paths.GetBackendPath(), "schema.json"));

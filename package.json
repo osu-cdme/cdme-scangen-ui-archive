@@ -5,9 +5,11 @@
   "main": "main.js",
   "dependencies": {
     "@electron/remote": "^2.0.1",
+    "alsam-xml": "^1.2.4",
     "file-saver": "^2.0.5",
     "js2xmlparser": "^4.0.2",
     "jszip": "^3.7.1",
+    "mkdirp": "^1.0.4",
     "natsort": "^2.0.3"
   },
   "devDependencies": {
@@ -39,15 +41,19 @@
     "extraResources": [
       {
         "from": "../cdme-scangen/",
-        "to": "./"
+        "to": "./cdme-scangen/"
       },
       {
         "from": "python",
         "to": "python"
       },
       {
-        "from": "../cdme-scangen/pyslm",
-        "to": "pyslm"
+        "from": "src",
+        "to": "src"
+      }, 
+      {
+        "from": "static", 
+        "to": "static"
       }
     ],
     "win": {
@@ -55,6 +61,7 @@
         "zip"
       ],
       "icon": "static/logo.png"
-    }
+    },
+    "icon": "static/logo.png"
   }
 }

@@ -76,13 +76,15 @@ function spawnProcess(styles, profiles, defaults) {
         // Wipe all files currently in 'xml' directory, getting rid of whatever build was previously in there (if any)
         const fs = require("fs");
         const path = require("path");
+        if (!fs.existsSync(path.join(paths.GetUIPath(), "xml"))) {
+            fs.mkdirSync(path.join(paths.GetUIPath(), "xml"));
+        }
         const xmlFiles = fs.readdirSync(path.join(paths.GetUIPath(), "xml"));
         xmlFiles.forEach((file) => {
             fs.unlinkSync(path.join(paths.GetUIPath(), "xml", file));
         });
 
         // Copy over the XML files produced by `cdme-scangen` to the directory read from by `cdme-scangen-ui`
-
         const files = fs.readdirSync(path.join(paths.GetBackendPath(), "XMLOutput"));
         files.forEach((file) => {
             if (file.includes(".xml")) {

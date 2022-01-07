@@ -27,7 +27,7 @@ function reset() {
     d3.select("#mainsvg").selectAll("*").remove();
 }
 
-let { LoadXML } = require(path.join(paths.GetUIPath(), "../", "alsam-xml", "alsam-xml.js"));
+let { LoadXML } = require("alsam-xml");
 async function getBuildFromFilePath(filePath) {
     const response = await fetch(filePath);
     const text = await response.text();
@@ -321,7 +321,7 @@ function outputTrajectories(build, elementID) {
     });
 }
 
-let { ExportXML } = require(path.join(paths.GetUIPath(), "../", "alsam-xml", "alsam-xml.js"));
+let { ExportXML } = require("alsam-xml");
 function SaveChangesToLayer() {
     let text = ExportXML(currentBuild);
     fs.writeFile(currentPath, text, (err) => {
@@ -428,8 +428,14 @@ let currentBuild = null;
 let currentPath = null;
 main();
 async function main() {
-    // Get the first filename in the folder
-    let firstFile = fs.readdirSync(path.join(paths.GetUIPath(), "xml"))[0];
+    let files = fs.readdirSync(path.join(paths.GetUIPath(), "xml"));
+    if (files.length === 0) {
+        // Send them elsewhere if no .XML files to view
+        alert("No scan files found! Generate them first via the 'Generate Vectors' tab on the left.");
+        return;
+    }
+
+    let firstFile = files[0];
     console.log("First file: ", firstFile);
     const build = await getBuildFromFilePath(path.join(paths.GetUIPath(), "xml", firstFile));
     currentBuild = build;
