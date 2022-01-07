@@ -110,4 +110,5 @@ function onPointerMove(event) {
     };
     console.log("newViewBox", newViewBox);
     var viewBoxString = `${newViewBox.x} ${newViewBox.y} ${viewBox.width} ${viewBox.height}`;
+    svg.setAttribute("viewBox", viewBoxString);
 }
