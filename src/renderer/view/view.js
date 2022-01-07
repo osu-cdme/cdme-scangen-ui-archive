@@ -357,7 +357,9 @@ svg.addEventListener("click", (e) => {
     // console.log("Toggled closest segment!");
 });
 
-// TODO: Stroke weights in the svg should get lower as you zoom in further
+require("./panning.js");
+
+let zoomMultiplier = 1;
 svg.onwheel = (e) => {
     e.preventDefault();
 
@@ -389,6 +391,7 @@ svg.onwheel = (e) => {
         console.log("Scrolled In!");
         newWidth = width * 0.9;
         newHeight = height * 0.9;
+        zoomMultiplier *= 0.99;
 
         // Weighted average; move a little towards the new point, but not by much
         newX = (-newWidth / 2 + 0.9 * previousX + 0.1 * cursorpt.x).toFixed(2);
@@ -397,10 +400,15 @@ svg.onwheel = (e) => {
         console.log("Scrolled Out!");
         newWidth = width * 1.1;
         newHeight = height * 1.1;
+        zoomMultiplier *= 1.01;
 
         // Don't move the origin when zooming out; it just feels unnatural
         (newX = -newWidth / 2 + previousX).toFixed(2), (newY = -newHeight / 2 + previousY).toFixed(2);
     }
+
+    // TODO: Stroke width should be adjusted based on how far we're zoomed in
+    // My brief attempts resulted in way too many iterations and lookups to be efficient
+    // Best approach is probably to store each segment type (contour, hatch, jump) in a separate array which lets us map super quickly to them
 
     const viewboxStr = "" + newX + " " + newY + " " + newWidth + " " + newHeight;
     console.log("viewboxStr: ", viewboxStr);
