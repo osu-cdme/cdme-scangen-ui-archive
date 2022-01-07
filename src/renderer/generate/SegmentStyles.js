@@ -2,7 +2,7 @@
 // I'm basically reimplementing automatic state updating from React, lol
 const { SegmentStyle, Traveler, Wobble } = require("../../../../alsam-xml/alsam-xml.js");
 const paths = require("../paths.js");
-const optionsData = require(path.join(paths.GetBackendPath(), "schema.json"));
+const defaults = require(path.join(paths.GetBackendPath(), "schema.json"));
 const { createInputWithLabel, createElementWithText } = require("./utility.js");
 
 class SegmentStyles {
@@ -30,21 +30,21 @@ class SegmentStyles {
     New() {
         this.styles.push(
             new SegmentStyle({
-                id: "",
-                velocityProfileID: "",
-                laserMode: "",
+                id: defaults["Segment Styles"][0].id,
+                velocityProfileID: defaults["Segment Styles"][0].velocityProfileID,
+                laserMode: defaults["Segment Styles"][0].laserMode,
                 travelers: [
                     new Traveler({
-                        id: "",
-                        syncDelay: "",
-                        power: "",
-                        spotSize: "",
+                        id: defaults["Segment Styles"][0].travelers[0].id,
+                        syncDelay: defaults["Segment Styles"][0].travelers[0].syncDelay,
+                        power: defaults["Segment Styles"][0].travelers[0].power,
+                        spotSize: defaults["Segment Styles"][0].travelers[0].spotSize,
                         wobble: new Wobble({
-                            on: "",
-                            freq: "",
-                            shape: "",
-                            transAmp: "",
-                            longAmp: "",
+                            on: defaults["Segment Styles"][0].travelers[0].wobble.on,
+                            freq: defaults["Segment Styles"][0].travelers[0].wobble.freq,
+                            shape: defaults["Segment Styles"][0].travelers[0].wobble.shape,
+                            transAmp: defaults["Segment Styles"][0].travelers[0].wobble.transAmp,
+                            longAmp: defaults["Segment Styles"][0].travelers[0].wobble.longAmp,
                         }),
                     }),
                 ],
@@ -58,13 +58,13 @@ class SegmentStyles {
             document.getElementById("segmentStyles").removeChild(document.getElementById("segmentStyles").firstChild);
         }
 
-        let hatchDefaultInput = createInputWithLabel("Default Segment Style ID for Hatches: ", "", "");
+        let hatchDefaultInput = createInputWithLabel("Default Segment Style ID for Hatches: ", defaults["Hatch Default ID"], "");
         hatchDefaultInput.onchange = (e) => {
             this.defaultHatchSegmentStyleID = e.target.value;
         };
         document.getElementById("segmentStyles").append(hatchDefaultInput);
 
-        let contourDefaultInput = createInputWithLabel("Default Segment Style ID for Contours: ", "", "");
+        let contourDefaultInput = createInputWithLabel("Default Segment Style ID for Contours: ", defaults["Contour Default ID"], "");
         contourDefaultInput.onchange = (e) => {
             this.defaultContourSegmentStyleID = e.target.value;
         };

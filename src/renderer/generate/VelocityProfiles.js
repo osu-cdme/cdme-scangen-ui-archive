@@ -1,6 +1,8 @@
 const { VelocityProfile } = require("../../../../alsam-xml/alsam-xml.js");
 const { createInputWithLabel, createElementWithText } = require("./utility.js");
 
+const defaults = require(path.join(paths.GetBackendPath(), "schema.json"));
+
 class VelocityProfiles {
     constructor() {
         this.profiles = [];
@@ -21,14 +23,14 @@ class VelocityProfiles {
     New() {
         this.profiles.push(
             new VelocityProfile({
-                id: "",
-                velocity: "",
-                mode: "",
-                laserOnDelay: "",
-                laserOffDelay: "",
-                jumpDelay: "",
-                markDelay: "",
-                polygonDelay: "",
+                id: defaults["Velocity Profiles"][0].id,
+                velocity: defaults["Velocity Profiles"][0].velocity,
+                mode: defaults["Velocity Profiles"][0].mode,
+                laserOnDelay: defaults["Velocity Profiles"][0].laserOnDelay,
+                laserOffDelay: defaults["Velocity Profiles"][0].laserOffDelay,
+                jumpDelay: defaults["Velocity Profiles"][0].jumpDelay,
+                markDelay: defaults["Velocity Profiles"][0].markDelay,
+                polygonDelay: defaults["Velocity Profiles"][0].polygonDelay,
             })
         );
         this.Refresh();
