@@ -68,7 +68,6 @@ function animateBuild(build) {
 }
 
 var natsort = require("natsort").default;
-console.log("natsort: ", natsort);
 function populateLayerList() {
     let files = fs.readdirSync(path.join(paths.GetUIPath(), "xml"));
     files.sort(natsort()); // See documentation for what this does: https://www.npmjs.com/package/natsort
@@ -132,23 +131,27 @@ function drawBuild_canvas(build, canvas_id) {
 
     // Calculate bounds
     build.trajectories.forEach((trajectory) => {
-        if (trajectory.paths === []) {
-            trajectory.paths.forEach((path) => {
-                if (path.segments.length === 0) return; // Likely never true, but worth checking
-                if (path.type !== "contour") return; // Only draw contours
-                path.segments.forEach((segment) => {
-                    if (minX === null) minX = segment.x1;
-                    if (minY === null) minY = segment.y1;
-                    if (maxX === null) maxX = segment.x1;
-                    if (maxY === null) maxY = segment.y1;
-                    minX = Math.min(minX, segment.x1, segment.x2);
-                    minY = Math.min(minY, segment.y1, segment.y2);
-                    maxX = Math.max(maxX, segment.x1, segment.x2);
-                    maxY = Math.max(maxY, segment.y1, segment.y2);
-                });
+        if (trajectory.paths === []) return;
+        trajectory.paths.forEach((path) => {
+            if (path.segments.length === 0) return; // Likely never true, but worth checking
+            if (path.type !== "contour") return; // Only draw contours
+            path.segments.forEach((segment) => {
+                if (minX === null) minX = segment.x1;
+                if (minY === null) minY = segment.y1;
+                if (maxX === null) maxX = segment.x1;
+                if (maxY === null) maxY = segment.y1;
+                minX = Math.min(minX, segment.x1, segment.x2);
+                minY = Math.min(minY, segment.y1, segment.y2);
+                maxX = Math.max(maxX, segment.x1, segment.x2);
+                maxY = Math.max(maxY, segment.y1, segment.y2);
             });
-        }
+        });
     });
+
+    minX -= 1;
+    minY -= 1;
+    maxX += 1;
+    maxY += 1;
 
     // Calculate percentage between a and b that c is
     function percentage(a, b, c) {
@@ -227,50 +230,25 @@ function drawBuild(build, svg_id) {
 
 // Returns a [min x, min y, max x, max y] bounding box corresponding to the passed-in trajectories
 function GetSvgBoundingBox(build) {
-    let output = [0, 0, 0, 0];
+    let output = [null, null, null, null];
     build.trajectories.forEach((trajectory) => {
         if (trajectory.paths === []) return;
         trajectory.paths.forEach((path) => {
             if (path.segments.length === 0) return; // Likely never true, but worth checking
             path.segments.forEach((segment) => {
-                // Took me a solid hour to figure out each 'segment' is saved as a STRING and this needs cast
-                // But JavaScript is super loose and just let me compare strings and ints without complaining
-                let x1_int = parseInt(segment.x1);
-                let y1_int = parseInt(segment.y1);
-                let x2_int = parseInt(segment.x2);
-                let y2_int = parseInt(segment.y2);
-
-                if (x1_int < output[0]) {
-                    // Min X
-                    output[0] = x1_int;
-                }
-                if (x2_int < output[0]) {
-                    output[0] = x2_int;
+                // Set all initial values to the bounds
+                if (output[0] === null) {
+                    output[0] = segment.x1;
+                    output[1] = segment.y1;
+                    output[2] = segment.x1;
+                    output[3] = segment.y1;
                 }
 
-                if (x1_int > output[2]) {
-                    // Max X
-                    output[2] = x1_int;
-                }
-                if (x2_int > output[2]) {
-                    output[2] = x2_int;
-                }
-
-                if (y1_int < output[1]) {
-                    // Min Y
-                    output[1] = y1_int;
-                }
-                if (y2_int < output[1]) {
-                    output[1] = y2_int;
-                }
-
-                if (y1_int > output[3]) {
-                    // Max Y
-                    output[3] = y1_int;
-                }
-                if (y2_int > output[3]) {
-                    output[3] = y2_int;
-                }
+                // Check mins/maxes during iteration
+                output[0] = Math.min(output[0], segment.x1, segment.x2);
+                output[1] = Math.min(output[1], segment.y1, segment.y2);
+                output[2] = Math.max(output[2], segment.x1, segment.x2);
+                output[3] = Math.max(output[3], segment.y1, segment.y2);
             });
         });
     });
