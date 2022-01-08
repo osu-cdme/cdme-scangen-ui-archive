@@ -79,8 +79,6 @@ function onPointerMove(event) {
 
     // Figure out dx/dy from pointer movement
     var pointerPosition = getPointFromEvent(event);
-    console.log("pointerPosition", pointerPosition);
-    console.log("pointerOrigin", pointerOrigin);
     let dx = pointerPosition.x - pointerOrigin.x,
         dy = pointerPosition.y - pointerOrigin.y;
     pointerOrigin.x = pointerPosition.x;
@@ -108,7 +106,6 @@ function onPointerMove(event) {
         width: viewBox.width,
         height: viewBox.height,
     };
-    console.log("newViewBox", newViewBox);
     var viewBoxString = `${newViewBox.x} ${newViewBox.y} ${viewBox.width} ${viewBox.height}`;
     svg.setAttribute("viewBox", viewBoxString);
 }

@@ -27,16 +27,22 @@ function reset() {
     d3.select("#mainsvg").selectAll("*").remove();
 }
 
-let { LoadXML } = require("alsam-xml");
+let { LoadXML } = require("../../../../alsam-xml/alsam-xml.js");
 async function getBuildFromFilePath(filePath) {
     const response = await fetch(filePath);
     const text = await response.text();
     const build = LoadXML(text);
+    console.log("build: ", build);
+
+    // Add numbering into our data structure, which lets us do lookups to match HTML segments to data structure segments
     build.trajectories.forEach((trajectory) => {
-        if (trajectory.path === null) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
-        trajectory.path.segments.forEach((segment) => {
-            segment.number = currentSegmentCount;
-            currentSegmentCount++;
+        if (trajectory.paths === []) return;
+        trajectory.paths.forEach((path) => {
+            if (path.length === 0) return;
+            path.segments.forEach((segment) => {
+                segment.number = currentSegmentCount;
+                currentSegmentCount++;
+            });
         });
     });
     return build;
@@ -49,17 +55,23 @@ function animateBuild(build) {
     reset();
     let currentTime = 0;
     build.trajectories.forEach((trajectory) => {
-        if (trajectory.path === null) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
-        trajectory.path.segments.forEach((segment) => {
-            currentTime += 10; // Add 10 ms to the current time
-            linesQueued.push(setTimeout(outputSegment, currentTime, segment, "mainsvg"));
+        if (trajectory.paths === []) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
+        trajectory.paths.forEach((path) => {
+            if (path.segments.length === 0) return; // Likely never true, but worth checking
+            path.segments.forEach((segment) => {
+                currentTime += 10; // Add 10 ms to the current time
+                linesQueued.push(setTimeout(outputSegment, currentTime, segment, "mainsvg"));
+            });
         });
     });
     console.debug("Queued all lines for drawing!");
 }
 
+var natsort = require("natsort").default;
+console.log("natsort: ", natsort);
 function populateLayerList() {
     let files = fs.readdirSync(path.join(paths.GetUIPath(), "xml"));
+    files.sort(natsort()); // See documentation for what this does: https://www.npmjs.com/package/natsort
     numThumbnailsTotal = files.length;
     files.forEach(async (file) => {
         let filePath = path.join(paths.GetUIPath(), "xml", file);
@@ -120,18 +132,22 @@ function drawBuild_canvas(build, canvas_id) {
 
     // Calculate bounds
     build.trajectories.forEach((trajectory) => {
-        if (trajectory.path === null) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
-        if (trajectory.path.type !== "contour") return; // Only factor contours in, as we will only draw contours
-        trajectory.path.segments.forEach((segment) => {
-            if (minX === null) minX = segment.x1;
-            if (minY === null) minY = segment.y1;
-            if (maxX === null) maxX = segment.x1;
-            if (maxY === null) maxY = segment.y1;
-            minX = Math.min(minX, segment.x1, segment.x2);
-            minY = Math.min(minY, segment.y1, segment.y2);
-            maxX = Math.max(maxX, segment.x1, segment.x2);
-            maxY = Math.max(maxY, segment.y1, segment.y2);
-        });
+        if (trajectory.paths === []) {
+            trajectory.paths.forEach((path) => {
+                if (path.segments.length === 0) return; // Likely never true, but worth checking
+                if (path.type !== "contour") return; // Only draw contours
+                path.segments.forEach((segment) => {
+                    if (minX === null) minX = segment.x1;
+                    if (minY === null) minY = segment.y1;
+                    if (maxX === null) maxX = segment.x1;
+                    if (maxY === null) maxY = segment.y1;
+                    minX = Math.min(minX, segment.x1, segment.x2);
+                    minY = Math.min(minY, segment.y1, segment.y2);
+                    maxX = Math.max(maxX, segment.x1, segment.x2);
+                    maxY = Math.max(maxY, segment.y1, segment.y2);
+                });
+            });
+        }
     });
 
     // Calculate percentage between a and b that c is
@@ -144,19 +160,22 @@ function drawBuild_canvas(build, canvas_id) {
     canvas_ctx.lineWidth = 0.25;
     canvas_ctx.fillRect(0, 0, 50, 50);
     build.trajectories.forEach((trajectory) => {
-        if (trajectory.path === null) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
-        if (trajectory.path.type !== "contour") return; // Only draw contours
-        if (trajectory.path.segments.length === 0) return; // Likely never true, but worth checking
-        canvas_ctx.beginPath();
-        let x1 = percentage(minX, maxX, trajectory.path.segments[0].x1) * 50; // Need to essentially convert from IRL coords to Canvas coords
-        let y1 = percentage(minY, maxY, trajectory.path.segments[0].y1) * 50;
-        canvas_ctx.moveTo(x1, y1);
-        trajectory.path.segments.forEach((segment) => {
-            let x2 = percentage(minX, maxX, segment.x2) * 50;
-            let y2 = percentage(minY, maxY, segment.y2) * 50;
-            canvas_ctx.lineTo(x2, y2);
+        if (trajectory.paths === []) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
+        trajectory.paths.forEach((path) => {
+            if (path.segments.length === 0) return; // Likely never true, but worth checking
+            if (path.type !== "contour") return; // Only draw contours
+
+            canvas_ctx.beginPath();
+            let x1 = percentage(minX, maxX, path.segments[0].x1) * 50; // Need to essentially convert from IRL coords to Canvas coords
+            let y1 = percentage(minY, maxY, path.segments[0].y1) * 50;
+            canvas_ctx.moveTo(x1, y1);
+            path.segments.forEach((segment) => {
+                let x2 = percentage(minX, maxX, segment.x2) * 50;
+                let y2 = percentage(minY, maxY, segment.y2) * 50;
+                canvas_ctx.lineTo(x2, y2);
+            });
+            canvas_ctx.stroke();
         });
-        canvas_ctx.stroke();
     });
     numThumbnailsDrawn++;
     let progress = Math.floor((numThumbnailsDrawn / numThumbnailsTotal) * 100);
@@ -210,46 +229,49 @@ function drawBuild(build, svg_id) {
 function GetSvgBoundingBox(build) {
     let output = [0, 0, 0, 0];
     build.trajectories.forEach((trajectory) => {
-        if (trajectory.path === null) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
-        trajectory.path.segments.forEach((segment) => {
-            // Took me a solid hour to figure out each 'segment' is saved as a STRING and this needs cast
-            // But JavaScript is super loose and just let me compare strings and ints without complaining
-            let x1_int = parseInt(segment.x1);
-            let y1_int = parseInt(segment.y1);
-            let x2_int = parseInt(segment.x2);
-            let y2_int = parseInt(segment.y2);
+        if (trajectory.paths === []) return;
+        trajectory.paths.forEach((path) => {
+            if (path.segments.length === 0) return; // Likely never true, but worth checking
+            path.segments.forEach((segment) => {
+                // Took me a solid hour to figure out each 'segment' is saved as a STRING and this needs cast
+                // But JavaScript is super loose and just let me compare strings and ints without complaining
+                let x1_int = parseInt(segment.x1);
+                let y1_int = parseInt(segment.y1);
+                let x2_int = parseInt(segment.x2);
+                let y2_int = parseInt(segment.y2);
 
-            if (x1_int < output[0]) {
-                // Min X
-                output[0] = x1_int;
-            }
-            if (x2_int < output[0]) {
-                output[0] = x2_int;
-            }
+                if (x1_int < output[0]) {
+                    // Min X
+                    output[0] = x1_int;
+                }
+                if (x2_int < output[0]) {
+                    output[0] = x2_int;
+                }
 
-            if (x1_int > output[2]) {
-                // Max X
-                output[2] = x1_int;
-            }
-            if (x2_int > output[2]) {
-                output[2] = x2_int;
-            }
+                if (x1_int > output[2]) {
+                    // Max X
+                    output[2] = x1_int;
+                }
+                if (x2_int > output[2]) {
+                    output[2] = x2_int;
+                }
 
-            if (y1_int < output[1]) {
-                // Min Y
-                output[1] = y1_int;
-            }
-            if (y2_int < output[1]) {
-                output[1] = y2_int;
-            }
+                if (y1_int < output[1]) {
+                    // Min Y
+                    output[1] = y1_int;
+                }
+                if (y2_int < output[1]) {
+                    output[1] = y2_int;
+                }
 
-            if (y1_int > output[3]) {
-                // Max Y
-                output[3] = y1_int;
-            }
-            if (y2_int > output[3]) {
-                output[3] = y2_int;
-            }
+                if (y1_int > output[3]) {
+                    // Max Y
+                    output[3] = y1_int;
+                }
+                if (y2_int > output[3]) {
+                    output[3] = y2_int;
+                }
+            });
         });
     });
 
@@ -314,14 +336,17 @@ Displays an interactable picture representing the same data object returned by g
 */
 function outputTrajectories(build, elementID) {
     build.trajectories.forEach((trajectory) => {
-        if (trajectory.path === null) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
-        trajectory.path.segments.forEach((segment) => {
-            outputSegment(segment, elementID);
+        if (trajectory.paths === []) return;
+        trajectory.paths.forEach((path) => {
+            if (path.segments.length === 0) return; // Likely never true, but worth checking
+            path.segments.forEach((segment) => {
+                outputSegment(segment, elementID);
+            });
         });
     });
 }
 
-let { ExportXML } = require("alsam-xml");
+let { ExportXML } = require("../../../../alsam-xml/alsam-xml.js");
 function SaveChangesToLayer() {
     let text = ExportXML(currentBuild);
     fs.writeFile(currentPath, text, (err) => {
@@ -334,6 +359,7 @@ document.getElementById("save").addEventListener("click", SaveChangesToLayer);
 // Get click coordinates on svg
 const svg = document.getElementById("mainsvg");
 const { getClosestSegment, getHTMLSegmentFromNumber, toggleSegment, RenderSegmentInfo } = require("./vectorquerying.js");
+const FileSaver = require("file-saver");
 var pt = svg.createSVGPoint(); // Created once for document
 svg.addEventListener("click", (e) => {
     pt.x = e.clientX;
@@ -376,13 +402,11 @@ svg.onwheel = (e) => {
     box[1] = parseFloat(box[1]);
     box[2] = parseFloat(box[2]);
     box[3] = parseFloat(box[3]);
-    console.log("box: ", box);
 
     let width = box[2],
         height = box[3];
     let previousX = box[0] + width / 2,
         previousY = box[1] + height / 2;
-    console.log("Previous center: (" + previousX + ", " + previousY + ")");
 
     // Zoom in
     let newWidth, newHeight;
@@ -411,7 +435,6 @@ svg.onwheel = (e) => {
     // Best approach is probably to store each segment type (contour, hatch, jump) in a separate array which lets us map super quickly to them
 
     const viewboxStr = "" + newX + " " + newY + " " + newWidth + " " + newHeight;
-    console.log("viewboxStr: ", viewboxStr);
     svg.setAttribute("viewBox", viewboxStr); // Basically lets us define our bounds
 };
 

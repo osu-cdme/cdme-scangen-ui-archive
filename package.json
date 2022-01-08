@@ -1,6 +1,6 @@
 {
   "name": "cdme-scangen-ui",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "An Electron application that offers a more streamlined, user-friendly way to set input options to the main `cdme-scangen` script.",
   "main": "main.js",
   "dependencies": {
@@ -50,9 +50,9 @@
       {
         "from": "src",
         "to": "src"
-      }, 
+      },
       {
-        "from": "static", 
+        "from": "static",
         "to": "static"
       }
     ],
