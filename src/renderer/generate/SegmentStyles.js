@@ -10,7 +10,20 @@ class SegmentStyles {
         this.styles = [];
         this.defaultHatchSegmentStyleID = "default";
         this.defaultContourSegmentStyleID = "default";
+
+        // Add a new segment style, which defaults to the first one in the schema
         this.New();
+
+        // Manually add the second one from the schema
+        this.styles.push(
+            new SegmentStyle({
+                id: defaults["Segment Styles"][1].id,
+                velocityProfileID: defaults["Segment Styles"][1].velocityProfileID,
+                laserMode: defaults["Segment Styles"][1].laserMode,
+                travelers: [],
+            })
+        );
+        this.Refresh();
     }
     Get() {
         // Used during form input to super easily handle these

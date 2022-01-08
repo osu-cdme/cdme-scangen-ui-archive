@@ -257,40 +257,45 @@ function GetSvgBoundingBox(build) {
 }
 
 // NOTE: Makes an assumption independent of the schema that contours have 'contour' in their ID and everything else (with a Traveler) is a hatch
-function SegmentIDType(segmentID) {
+function SegmentIDType(path, segmentID) {
+    // First, try and match to a Segment Style so we can check Traveler length to see if it's a jump
     for (let segmentStyle of currentBuild.segmentStyles) {
         if (segmentStyle.id === segmentID) {
             if (segmentStyle.travelers.length === 0) {
                 return "jump";
-            } else if (segmentStyle.id.includes("contour")) {
-                return "contour";
-            } else {
-                // Assume anything else is a hatch
-                return "hatch";
             }
         }
     }
+
+    // Otherwise, we examine the Path's 'type' attribute and choose based on that
+    if (path.type === "contour") {
+        return "contour";
+    } else {
+        // Assume anything else is a hatch
+        return "hatch";
+    }
+
     throw new Error(`Segment Style ID ${segmentID} never found in .XML file!`);
 }
 
 let currentSegmentCount = 0;
-function outputSegment(segment, svg_id) {
-    let type = SegmentIDType(segment.segStyle);
+function outputSegment(segment, path, svg_id) {
+    let type = SegmentIDType(path, segment.segStyle);
     let color = null,
         stripeWidth = null,
         dash = "";
     switch (type) {
         case "contour":
             color = "#000000"; // Black
-            stripeWidth = 0.2;
+            stripeWidth = 0.05;
             break;
         case "hatch":
             color = "#BD0000"; // Red
-            stripeWidth = 0.04;
+            stripeWidth = 0.03;
             break;
         case "jump":
             color = "#0000FF"; // Blue
-            stripeWidth = 0.03;
+            stripeWidth = 0.02;
             dash = ".3,.3";
             break;
         default:
@@ -318,7 +323,7 @@ function outputTrajectories(build, elementID) {
         trajectory.paths.forEach((path) => {
             if (path.segments.length === 0) return; // Likely never true, but worth checking
             path.segments.forEach((segment) => {
-                outputSegment(segment, elementID);
+                outputSegment(segment, path, elementID);
             });
         });
     });
