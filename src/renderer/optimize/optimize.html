@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+    <link rel="stylesheet" href="generate.css" />
+    <title>Optimize Vectors | Scan Generation - The Ohio State Center for Design & Manufacturing Excellence</title>
+</head>
+
+<body>
+    <!-- TODO: Better to split this into two columns rather than require lots of scrolling -->
+    <nav>
+        <img src="../../../static/logo.jpg" />
+        <ul id="pageList">
+            <li><a href="../generate/generate.html">Generate Vectors</a></li>
+            <li id="ToViewVectorsScreen"><a href="../view/view.html">View Vectors</a></li>
+            <li><a href="../importexport/importexport.html">Import/Export</a></li>
+        </ul>
+        <h1>CDME Scangen</h1>
+        <div class="bottom">
+            Node.js <span id="node-version"></span><br />
+            Chromium <span id="chrome-version"></span><br />
+            Electron <span id="electron-version"></span>
+        </div>
+    </nav>
+    <form id="rightPart">
+        <h1>Options</h1>
+        <button id="optimizeButton"></button>
+    </form>
+
+    <!-- Browser-side JS we want -->
+    <script src="optimize.js"></script>
+    <script src="../navbar.js"></script>
+</body>
+
+</html>
