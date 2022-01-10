@@ -95,16 +95,6 @@ input {
     font-size: 0.8rem;
 }
 
-#progress > div {
-    padding-left: 15px;
-    text-align: left;
-}
-
-#progress p {
-    display: inline;
-    font-weight: bold;
-}
-
 .rightPartHeader {
     margin-top: 20px;
     margin-bottom: 5px;
@@ -178,4 +168,29 @@ button {
     color: white;
     padding: 5px;
     border: 1px gray solid;
+}
+
+#progress {
+    width: calc(100% - 250px);
+    position: fixed;
+    bottom: 0;
+    height: 50px;
+    background-color: #454545;
+    margin-left: -15px;
+    text-align: center;
+    line-height: 50px;
+}
+
+#progress > p {
+    font-weight: bold;
+    margin: 0;
+    z-index: 2;
+}
+
+#done {
+    z-index: 1;
+    width: 0%;
+    height: 100%;
+    margin-top: -49px;
+    background-color: green;
 }

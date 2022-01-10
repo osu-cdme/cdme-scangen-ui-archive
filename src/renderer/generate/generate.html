@@ -18,17 +18,6 @@
                 <li><a href="../importexport/importexport.html">Import/Export</a></li>
             </ul>
             <h1>CDME Scangen</h1>
-            <div id="progress">
-                <div>
-                    <p>Current Task:</p>
-                    <span id="currentTask"></span>
-                </div>
-                <div>
-                    <p>Current Progress:</p>
-                    <span id="currentProgress"></span>
-                </div>
-                <div>Output Location: <span>resources/LayerFiles</span></div>
-            </div>
             <div class="bottom">
                 Node.js <span id="node-version"></span><br />
                 Chromium <span id="chrome-version"></span><br />
@@ -44,6 +33,10 @@
                 <div id="velocityProfiles"></div>
             </div>
             <div class="submitButtonDiv"><button type="button" id="start">Start Scanning</button></div>
+            <div id="progress">
+                <p id="progressText">Status: Waiting for generation to start.</p>
+                <div id="done"></div>
+            </div>
         </form>
 
         <!-- Browser-side JS we want -->

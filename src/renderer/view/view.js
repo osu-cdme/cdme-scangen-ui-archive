@@ -32,7 +32,6 @@ async function getBuildFromFilePath(filePath) {
     const response = await fetch(filePath);
     const text = await response.text();
     const build = LoadXML(text);
-    console.log("build: ", build);
 
     // Add numbering into our data structure, which lets us do lookups to match HTML segments to data structure segments
     build.trajectories.forEach((trajectory) => {
@@ -355,11 +354,9 @@ svg.addEventListener("click", (e) => {
     // Get closest segment to that one
     let closestSegment = getClosestSegment(cursorpt.x, cursorpt.y, currentBuild);
     RenderSegmentInfo(closestSegment, currentBuild);
-    console.log("Closest segment: ", closestSegment);
 
     // Backtrack from the same JSON backend to the HTML frontend segment
     let closestSegmentHTML = getHTMLSegmentFromNumber(closestSegment.number);
-    console.log("Closest segment HTML: ", closestSegmentHTML);
 
     // Toggle it!
     toggleSegment(closestSegmentHTML);
@@ -376,7 +373,6 @@ svg.onwheel = (e) => {
     pt.x = e.clientX;
     pt.y = e.clientY;
     var cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
-    console.log("Cursor Pos: (" + cursorpt.x + ", " + cursorpt.y + ")");
 
     // Get current viewbox
     var box = svg.getAttribute("viewBox");
@@ -395,7 +391,6 @@ svg.onwheel = (e) => {
     let newWidth, newHeight;
     let newX, newY;
     if (ScrollDirectionIsUp(e)) {
-        console.log("Scrolled In!");
         newWidth = width * 0.9;
         newHeight = height * 0.9;
         zoomMultiplier *= 0.99;
@@ -404,7 +399,6 @@ svg.onwheel = (e) => {
         newX = (-newWidth / 2 + 0.9 * previousX + 0.1 * cursorpt.x).toFixed(2);
         newY = (-newHeight / 2 + 0.9 * previousY + 0.1 * cursorpt.y).toFixed(2);
     } else {
-        console.log("Scrolled Out!");
         newWidth = width * 1.1;
         newHeight = height * 1.1;
         zoomMultiplier *= 1.01;
@@ -442,11 +436,9 @@ async function main() {
     }
 
     let firstFile = files[0];
-    console.log("First file: ", firstFile);
     const build = await getBuildFromFilePath(path.join(paths.GetUIPath(), "xml", firstFile));
     currentBuild = build;
     currentPath = path.join(paths.GetUIPath(), "xml", firstFile);
-    console.log("build: ", build);
     drawBuild(build, "mainsvg", true);
 
     // Set this to false to remove the load step; useful for quick debugging stuff

@@ -6,28 +6,47 @@ const FOLDERS_TO_ADD_TO_PYTHONPATH = [
     path.join(paths.GetBackendPath(), "pyslm", "pyslm"),
 ];
 
-const currentTaskElem = document.getElementById("currentTask");
-const currentProgressElem = document.getElementById("currentProgress");
-currentTaskElem.textContent = "Waiting for user input.";
+const getFractionRegex = /\d+\/\d+/g;
+let lastLayer;
 function parseStderr(chunkBuf) {
     const chunkStr = chunkBuf.toString("utf8");
     const regex = /(\d+(\.\d+)?%)/g; // Matches a number and a percent
-    console.log("stderr: " + chunkStr);
+    // console.log("stderr: " + chunkStr);
     if (chunkStr.includes("Processing Layers")) {
+        const fraction = chunkStr.match(getFractionRegex)[0];
+        lastLayer = parseInt(fraction.match(/\d+/g)[1]);
         const number = regex.exec(chunkStr)[0]; // Exec used rather than string.match() b/c exec only returns the first match by default
-        console.log(number);
         if (number) {
-            currentTaskElem.textContent = "Processing Layers";
-            currentProgressElem.textContent = number;
+            if (number.includes("100")) {
+                document.getElementById("progressText").textContent = `Done!`;
+            } else {
+                document.getElementById("done").style.width = number;
+                document.getElementById("progressText").textContent = `(1/2) Processing Layers (${number})`;
+            }
         }
-    } else if (chunkStr.includes("Generating Layer Plots")) {
-        const number = regex.exec(chunkStr)[0];
-        if (number) {
-            currentTaskElem.textContent = "Generating Layer Plots";
-            currentProgressElem.textContent = number;
+    }
+}
+
+let startRegex = /XML Layer # \d+ Started/g;
+let finishRegex = /XML Layer # \d+ Complete/g;
+let numberRegex = /\d+/g;
+function parseStdout(chunkBuf) {
+    const chunkStr = chunkBuf.toString("utf8");
+    // console.log("chunkStr: " + chunkStr);
+
+    if (chunkStr.includes("XML Layer")) {
+        /* 
+        if (chunkStr.match(startRegex)) {
+            const startText = chunkStr.match(startRegex)[0];
+            const number = startText.match(numberRegex)[0];
         }
-        if (number.includes("100")) {
-            currentTaskElem.textContent = "Done.";
+        */
+
+        if (chunkStr.match(finishRegex)) {
+            const finishText = chunkStr.match(finishRegex)[0];
+            const number = finishText.match(numberRegex)[0];
+            document.getElementById("done").style.width = (number / lastLayer) * 100 + "%";
+            document.getElementById("progressText").textContent = `(2/2) Generating XML Files (${number}/${lastLayer})`;
         }
     }
 }
@@ -35,12 +54,11 @@ function parseStderr(chunkBuf) {
 // Launch the application when they hit the button
 const spawn = require("child_process").spawn;
 function spawnProcess(styles, profiles, defaults) {
-    console.log("styles: ", styles);
-    console.log("profiles: ", profiles);
-    currentTaskElem.textContent = "Spawning child process.";
+    // console.log("styles: ", styles);
+    // console.log("profiles: ", profiles);
+    document.getElementById("progressText").textContent = "Spawning child process.";
     const formEl = document.forms.rightPart;
     const formData = new FormData(formEl);
-    console.log("formData: ", formData);
     const fields = {};
     for (const key in optionsData) {
         for (const key2 in optionsData[key]) {
@@ -51,8 +69,10 @@ function spawnProcess(styles, profiles, defaults) {
     fields["Contour Default ID"] = defaults.contourID;
     fields["Segment Styles"] = styles;
     fields["Velocity Profiles"] = profiles;
-    console.log("paths.GetBackendPath(): " + paths.GetBackendPath());
-    console.log("Running script " + paths.GetBackendPath() + "main.py using interpreter " + pythonPath);
+
+    console.log("Passing as first cmd line parameter: ", fields);
+    console.log("Passing as second cmd line parameter: ", FOLDERS_TO_ADD_TO_PYTHONPATH);
+    console.log("Running script " + path.join(paths.GetBackendPath(), "main.py") + " using interpreter " + pythonPath);
 
     const process = spawn(
         pythonPath,
@@ -65,13 +85,20 @@ function spawnProcess(styles, profiles, defaults) {
         { cwd: paths.GetBackendPath() }
     ); // Python interpreter needs run from the other directory b/c relative paths
     process.stdout.on("data", (chunk) => {
-        console.log("stdout: " + chunk);
+        parseStdout(chunk);
     });
     process.stderr.on("data", (chunk) => {
         parseStderr(chunk);
     });
     process.on("close", (code) => {
-        console.log("child process exited with code " + code);
+        console.log("Child process exited with code " + code + ".");
+        if (code !== 0) {
+            alert(
+                "Build process did not work correctly! Please send the .STL file you were using and screenshots of your generation settings to the developers of this application."
+            );
+            document.getElementById("progressText").textContent = "Error spawning child process.";
+            document.getElementById("done").style.width = "0%";
+        }
 
         // Wipe all files currently in 'xml' directory, getting rid of whatever build was previously in there (if any)
         const fs = require("fs");
