@@ -63,7 +63,6 @@ function animateBuild(build) {
             });
         });
     });
-    console.debug("Queued all lines for drawing!");
 }
 
 var natsort = require("natsort").default;
@@ -98,7 +97,6 @@ function populateLayerList() {
 
 // Renders the .PNG files that `pyslm` outputs.
 function renderPNGs() {
-    console.debug("Rendering .PNG output from `pyslm`.");
     let files = fs.readdirSync(path.join(paths.GetBackendPath(), "LayerFiles"));
     files.forEach((file) => {
         let text = document.createElement("p");
@@ -214,7 +212,6 @@ function drawBuild(build, svg_id) {
     // We need to recalculate and re-set the viewbox for each layer, as they have different bounds
     // Very good writeup on how viewBox, etc. works here: https://pandaqitutorials.com/Website/svg-coordinates-viewports
     let boundingBox = GetSvgBoundingBox(build);
-    console.debug("Calculated bounding box for part. BB: ", boundingBox);
     const BOUNDS_WIDTH = boundingBox[2] - boundingBox[0];
     const BOUNDS_HEIGHT = boundingBox[3] - boundingBox[1];
     const PADDING = 2;
@@ -224,7 +221,6 @@ function drawBuild(build, svg_id) {
 
     // Actually output
     outputTrajectories(build, svg_id);
-    console.debug("Displayed trajectories.");
 }
 
 // Returns a [min x, min y, max x, max y] bounding box corresponding to the passed-in trajectories

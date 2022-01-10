@@ -75,14 +75,11 @@ function SetupSTLImport() {
                         e.reply("alert", `Error reading file at ${filePath}: ${err}`);
                         return;
                     }
-                    console.debug("Copying over STL file at path " + filePath);
 
                     // Extract file name from file path
                     let fileName = filePath.split("\\").pop(filePath);
-                    console.debug("Extracted file name " + fileName);
 
                     // Copy stl file over to main project
-                    console.debug("Writing file to " + path.join(paths.GetBackendPath(), "geometry", fileName));
                     fs.writeFileSync(path.join(paths.GetBackendPath(), "geometry", fileName), data);
                     e.reply("alert", "STL file successfully imported!");
                 });
@@ -113,13 +110,13 @@ function SetupSCNExport() {
                 });
 
                 // 2: Actually save it
-                console.debug("Saving .scn file at ", filePath);
                 zip.generateNodeStream({ type: "nodebuffer", streamFiles: true })
                     .pipe(fs.createWriteStream(filePath))
                     .on("finish", function () {
                         console.log("SCN file written.");
-                    });
-                e.reply("alert", "SCN file successfully exported!");
+                        e.reply("alert", "SCN file successfully exported!");
+                    })
+                    .on("error", alert(err));
             });
     });
 }
