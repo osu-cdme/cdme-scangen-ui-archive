@@ -172,3 +172,10 @@ input {
 .wobble > h5 {
     margin-bottom: 0;
 }
+
+button {
+    background-color: #232323;
+    color: white;
+    padding: 5px;
+    border: 1px gray solid;
+}
