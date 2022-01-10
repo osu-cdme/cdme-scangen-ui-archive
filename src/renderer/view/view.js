@@ -27,7 +27,55 @@ function reset() {
     d3.select("#mainsvg").selectAll("*").remove();
 }
 
-let { LoadXML } = require("../../../../alsam-xml/alsam-xml.js");
+let animationSpeed = 1;
+document.getElementById("fasterAnimation").onclick = function () {
+    animationSpeed *= 1.2;
+    queueSegments();
+};
+document.getElementById("slowerAnimation").onclick = function () {
+    animationSpeed *= 0.8;
+    queueSegments();
+};
+function queueSegments() {
+    for (let lineQueued in linesQueued) {
+        clearTimeout(lineQueued);
+    }
+    let currentTime = 0;
+    currentBuild.trajectories.forEach((trajectory) => {
+        if (trajectory.paths === []) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
+        trajectory.paths.forEach((path) => {
+            if (path.segments.length === 0) return; // Likely never true, but worth checking
+            path.segments.forEach((segment) => {
+                if (segment.animated) return;
+                velocity = getVelocityOfSegment(segment);
+                currentTime += ((100 / velocity) * 10) / animationSpeed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation
+                linesQueued.push(setTimeout(outputSegment, currentTime, segment, path, "mainsvg"));
+            });
+        });
+    });
+}
+
+// We *could* do this recursively, but instead we just iterate through every trajectory and
+// do a setTimeout with 10 ms delay added to each sequential one
+let linesQueued = [];
+function animateBuild(build) {
+    reset();
+    let currentTime = 0;
+    build.trajectories.forEach((trajectory) => {
+        if (trajectory.paths === []) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
+        trajectory.paths.forEach((path) => {
+            if (path.segments.length === 0) return; // Likely never true, but worth checking
+            path.segments.forEach((segment) => {
+                segment.animated = false;
+                velocity = getVelocityOfSegment(segment);
+                currentTime += ((100 / velocity) * 10) / animationSpeed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation
+                linesQueued.push(setTimeout(outputSegment, currentTime, segment, path, "mainsvg"));
+            });
+        });
+    });
+}
+
+let { LoadXML } = require("alsam-xml");
 async function getBuildFromFilePath(filePath) {
     const response = await fetch(filePath);
     const text = await response.text();
@@ -47,22 +95,17 @@ async function getBuildFromFilePath(filePath) {
     return build;
 }
 
-// We *could* do this recursively, but instead we just iterate through every trajectory and
-// do a setTimeout with 10 ms delay added to each sequential one
-let linesQueued = [];
-function animateBuild(build) {
-    reset();
-    let currentTime = 0;
-    build.trajectories.forEach((trajectory) => {
-        if (trajectory.paths === []) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
-        trajectory.paths.forEach((path) => {
-            if (path.segments.length === 0) return; // Likely never true, but worth checking
-            path.segments.forEach((segment) => {
-                currentTime += 10; // Add 10 ms to the current time
-                linesQueued.push(setTimeout(outputSegment, currentTime, segment, "mainsvg"));
-            });
-        });
+function getVelocityOfSegment(segment) {
+    let segStyle = currentBuild.segmentStyles.find((segmentStyle) => {
+        return segmentStyle.id === segment.segStyle;
     });
+    let velProfile = currentBuild.velocityProfiles.find((velocityProfile) => {
+        return (velocityProfile.id = segStyle.velocityProfileID);
+    });
+    if (velProfile === undefined) {
+        throw new Error("Unable to find velocity profile with ID " + segStyle.velocityProfileID);
+    }
+    return velProfile.velocity;
 }
 
 var natsort = require("natsort").default;
@@ -170,6 +213,7 @@ function drawBuild_canvas(build, canvas_id) {
             let y1 = percentage(minY, maxY, path.segments[0].y1) * 50;
             canvas_ctx.moveTo(x1, y1);
             path.segments.forEach((segment) => {
+                if (SegmentIDType(path, segment.segStyle) === "jump") return;
                 let x2 = percentage(minX, maxX, segment.x2) * 50;
                 let y2 = percentage(minY, maxY, segment.y2) * 50;
                 canvas_ctx.lineTo(x2, y2);
@@ -252,14 +296,18 @@ function GetSvgBoundingBox(build) {
 }
 
 // NOTE: Makes an assumption independent of the schema that contours have 'contour' in their ID and everything else (with a Traveler) is a hatch
-function SegmentIDType(path, segmentID) {
-    // First, try and match to a Segment Style so we can check Traveler length to see if it's a jump
-    for (let segmentStyle of currentBuild.segmentStyles) {
-        if (segmentStyle.id === segmentID) {
-            if (segmentStyle.travelers.length === 0) {
-                return "jump";
-            }
-        }
+function SegmentIDType(path, segmentStyleID) {
+    // First, match Segment Style and see if Traveler length is zero, indicating a jump
+    let segmentStyle = currentBuild.segmentStyles.find((segmentStyle) => {
+        return segmentStyle.id === segmentStyleID;
+    });
+    if (segmentStyle === undefined) {
+        let errText = "Could not find segment style with ID " + segmentStyleID + " in path " + path.id;
+        alert(errText);
+        throw new Error(errText);
+    }
+    if (segmentStyle.travelers.length === 0) {
+        return "jump";
     }
 
     // Otherwise, we examine the Path's 'type' attribute and choose based on that
@@ -275,6 +323,8 @@ function SegmentIDType(path, segmentID) {
 
 let currentSegmentCount = 0;
 function outputSegment(segment, path, svg_id) {
+    // If this was called as part of animation sequence, remove it from arr so it doesn't get re-drawn if user speeds up or slows down draw
+    segment.animated = true;
     let type = SegmentIDType(path, segment.segStyle);
     let color = null,
         stripeWidth = null,
@@ -324,7 +374,7 @@ function outputTrajectories(build, elementID) {
     });
 }
 
-let { ExportXML } = require("../../../../alsam-xml/alsam-xml.js");
+let { ExportXML } = require("alsam-xml");
 function SaveChangesToLayer() {
     let text = ExportXML(currentBuild);
     fs.writeFile(currentPath, text, (err) => {
@@ -434,11 +484,12 @@ async function main() {
     let firstFile = files[0];
     const build = await getBuildFromFilePath(path.join(paths.GetUIPath(), "xml", firstFile));
     currentBuild = build;
+    console.log("Current Build: ", currentBuild);
     currentPath = path.join(paths.GetUIPath(), "xml", firstFile);
     drawBuild(build, "mainsvg", true);
 
     // Set this to false to remove the load step; useful for quick debugging stuff
-    const DRAW_THUMBNAILS = true;
+    const DRAW_THUMBNAILS = false;
     if (DRAW_THUMBNAILS) {
         populateLayerList();
     } else {

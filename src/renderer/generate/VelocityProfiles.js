@@ -69,7 +69,7 @@ class VelocityProfiles {
         };
         div.append(idInput);
 
-        let velocityInput = createInputWithLabel("Velocity: ", profile.velocity, "(Any Number)");
+        let velocityInput = createInputWithLabel("Velocity: ", profile.velocity, "(mm/s)");
         velocityInput.onchange = (e) => {
             profile.velocity = e.target.value;
         };
