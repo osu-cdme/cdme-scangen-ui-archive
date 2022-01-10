@@ -474,6 +474,11 @@ let currentBuild = null;
 let currentPath = null;
 main();
 async function main() {
+    // If xml directory doesn't exist, create it
+    if (!fs.existsSync(path.join(paths.GetUIPath(), "xml"))) {
+        fs.mkdirSync(path.join(paths.GetUIPath(), "xml"));
+    }
+
     let files = fs.readdirSync(path.join(paths.GetUIPath(), "xml"));
     if (files.length === 0) {
         // Send them elsewhere if no .XML files to view
@@ -489,7 +494,7 @@ async function main() {
     drawBuild(build, "mainsvg", true);
 
     // Set this to false to remove the load step; useful for quick debugging stuff
-    const DRAW_THUMBNAILS = false;
+    const DRAW_THUMBNAILS = true;
     if (DRAW_THUMBNAILS) {
         populateLayerList();
     } else {
