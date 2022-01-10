@@ -68,12 +68,11 @@ function AdjustPower(build, highTemps, lowTemps) {
         trajectory.paths.forEach((path) => {
             if (path.segments.length === 0) return; // Likely never true, but worth checking
             path.segments.forEach((segment) => {
-                // List of .1mm evenly spaced points along segment
                 let points = PointsAlongSegment(segment);
                 let isCloseToHighHeat = false;
                 points.forEach((point) => {
                     highTemps.forEach((highTemp) => {
-                        if (distance(point, highTemp) < 0.2) {
+                        if (distance(point, highTemp) < 0.5) {
                             isCloseToHighHeat = true;
                         }
                     });
@@ -83,7 +82,7 @@ function AdjustPower(build, highTemps, lowTemps) {
                 let isCloseToLowHeat = false;
                 points.forEach((point) => {
                     lowTemps.forEach((lowTemp) => {
-                        if (distance(point, lowTemp) < 0.2) {
+                        if (distance(point, lowTemp) < 0.5) {
                             isCloseToLowHeat = true;
                         }
                     });
@@ -146,5 +145,6 @@ function main() {
     console.log("Current Build: ", currentBuild);
     currentPath = path.join(paths.GetUIPath(), "xml", firstFile);
 
+    // Adjust vectors based on passed-in heat distribution problem points
     AdjustPower(build, [[0, 0]], []);
 }
