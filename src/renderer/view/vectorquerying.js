@@ -1,25 +1,21 @@
+const { getSegmentsFromBuild, getPointsOfSegment } = require('../common');
+
 // Given a click location on the svg, return the closest segment to that point
 function getClosestSegment (x, y, build) {
   let closestSegment = null;
   let closestDistance = Infinity;
-  build.trajectories.forEach((trajectory) => {
-    if (trajectory.paths.length === 0) return;
-    trajectory.paths.forEach((path) => {
-      if (path.segments.length === 0) return;
-      path.segments.forEach((segment) => {
-        // It's complicated and intensive to sample every point, so we just get the endpoints and the midpoint
-        const d1 = Math.sqrt(Math.pow(segment.x1 - x, 2) + Math.pow(segment.y1 - y, 2));
-        const d2 = Math.sqrt(Math.pow(segment.x2 - x, 2) + Math.pow(segment.y2 - y, 2));
-        const midX = (segment.x1 + segment.x2) / 2;
-        const midY = (segment.y1 + segment.y2) / 2;
-        const d3 = Math.sqrt(Math.pow(midX - x, 2) + Math.pow(midY - y, 2));
-        if (d1 < closestDistance || d2 < closestDistance || d3 < closestDistance) {
-          closestSegment = segment;
-          closestDistance = Math.min(d1, d2, d3);
-        }
-      });
-    });
-  });
+
+  for (const segment of getSegmentsFromBuild(build)) {
+    // TODO: Probably best to scale this based on zoom level or bounding box, as this'll start to get unperformant very quickly with longer vectors
+    const INTERVAL = 0.1; // mm
+    for (const point of getPointsOfSegment(segment, INTERVAL)) {
+      const distance = Math.hypot(x - point.x, y - point.y);
+      if (distance < closestDistance) {
+        closestSegment = segment;
+        closestDistance = distance;
+      }
+    }
+  }
   return closestSegment;
 }
 

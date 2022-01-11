@@ -12,6 +12,19 @@ function * getSegmentsFromBuild (build) {
 }
 exports.getSegmentsFromBuild = getSegmentsFromBuild;
 
+// Generator which returns .1mm spaced segments along a segment
+function * getPointsOfSegment (segment, interval) {
+  const length = Math.sqrt(Math.pow(segment.x2 - segment.x1, 2) + Math.pow(segment.y2 - segment.y1, 2));
+  for (let i = 0; i < length; i += interval) {
+    const point = {
+      x: segment.x1 + i * (segment.x2 - segment.x1) / length,
+      y: segment.y1 + i * (segment.y2 - segment.y1) / length
+    };
+    yield point;
+  }
+}
+exports.getPointsOfSegment = getPointsOfSegment;
+
 // Generator which returns only hatch segments
 function * getHatchesFromBuild (build) {
   for (const segment of getSegmentsFromBuild(build)) {
