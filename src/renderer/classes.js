@@ -1,8 +1,8 @@
 exports.BoundingBox = class BoundingBox {
   constructor () {
-    this.minX = Number.MAX_VALUE;
-    this.minY = Number.MAX_VALUE;
-    this.maxX = Number.MIN_VALUE;
-    this.maxY = Number.MIN_VALUE;
+    this.minX = 99999999; // Using Number.MAX_VALUE just doesn't work right for comparisons, for whatever reason
+    this.minY = 99999999;
+    this.maxX = -99999999;
+    this.maxY = -99999999;
   }
 };

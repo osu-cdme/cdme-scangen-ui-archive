@@ -1,8 +1,6 @@
 // Generator which returns segment by segment
 function * getSegmentsFromBuild (build) {
-  console.log('getSegmentsFromBuild given this input: ', build);
   for (const trajectory of build.trajectories) {
-    console.log('trajectory: ', trajectory);
     if (trajectory.paths === []) return;
     for (const path of trajectory.paths) {
       if (path.length === 0) return;
@@ -39,7 +37,6 @@ function * getJumpsFromBuild (build) {
 exports.getJumpsFromBuild = getJumpsFromBuild;
 
 const { LoadXML } = require('alsam-xml');
-const fetch = require('node-fetch');
 exports.getBuildFromFilePath = async function getBuildFromFilePath (filePath) {
   const response = await fetch(filePath);
   const text = await response.text();

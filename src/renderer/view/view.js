@@ -58,7 +58,7 @@ function queueSegments () {
         if (segment.animated) return;
         const velocity = getVelocityOfSegment(segment);
         currentTime += ((100 / velocity) * 10) / animationSpeed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation
-        linesQueued.push(setTimeout(outputSegment, currentTime, segment, path, 'mainsvg'));
+        linesQueued.push(setTimeout(outputSegment, currentTime, segment, 'mainsvg'));
       });
     });
   });
@@ -78,7 +78,7 @@ function animateBuild (build) {
         segment.animated = false;
         const velocity = getVelocityOfSegment(segment);
         currentTime += ((100 / velocity) * 10) / animationSpeed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation
-        linesQueued.push(setTimeout(outputSegment, currentTime, segment, path, 'mainsvg'));
+        linesQueued.push(setTimeout(outputSegment, currentTime, segment, 'mainsvg'));
       });
     });
   });
@@ -142,24 +142,23 @@ function drawBuildCanvas (build, canvasID) {
     return (c - a) / (b - a);
   }
 
-  // Actually draw
+  // Canvas setup
   canvasCtx.fillStyle = 'white';
   canvasCtx.lineWidth = 0.25;
   const THUMBNAIL_SIZE = 50;
   canvasCtx.fillRect(0, 0, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
+
+  // Draw contours
   canvasCtx.beginPath();
-  const segments = getContoursFromBuild(build);
-  if (segments.length) {
-    const x1 = percentage(bbox.minX, bbox.maxX, segments[0].x1) * THUMBNAIL_SIZE; // Need to essentially convert from IRL coords to Canvas coords
-    const y1 = percentage(bbox.minY, bbox.maxY, segments[0].y1) * THUMBNAIL_SIZE;
+  for (const segment of getContoursFromBuild(build)) {
+    const x1 = percentage(bbox.minX, bbox.maxX, segment.x1) * THUMBNAIL_SIZE;
+    const y1 = percentage(bbox.minY, bbox.maxY, segment.y1) * THUMBNAIL_SIZE;
+    const x2 = percentage(bbox.minX, bbox.maxX, segment.x2) * THUMBNAIL_SIZE;
+    const y2 = percentage(bbox.minY, bbox.maxY, segment.y2) * THUMBNAIL_SIZE;
     canvasCtx.moveTo(x1, y1);
-    segments.forEach(segment => {
-      const x2 = percentage(bbox.minX, bbox.maxX, segment.x2) * THUMBNAIL_SIZE;
-      const y2 = percentage(bbox.minY, bbox.maxY, segment.y2) * THUMBNAIL_SIZE;
-      canvasCtx.lineTo(x2, y2);
-    });
-    canvasCtx.stroke();
+    canvasCtx.lineTo(x2, y2);
   }
+  canvasCtx.stroke();
 
   numThumbnailsDrawn++;
   const progress = Math.floor((numThumbnailsDrawn / numThumbnailsTotal) * 100);
@@ -199,8 +198,7 @@ function drawBuild (build, svgID) {
 
 function GetSvgBoundingBox (build, padding) {
   const bbox = new BoundingBox();
-  for (const segment in getSegmentsFromBuild(build)) {
-    console.log('segment: ', segment);
+  for (const segment of getSegmentsFromBuild(build)) {
     bbox.minX = Math.min(bbox.minX, segment.x1, segment.x2);
     bbox.minY = Math.min(bbox.minY, segment.y1, segment.y2);
     bbox.maxX = Math.max(bbox.maxX, segment.x1, segment.x2);
@@ -210,7 +208,6 @@ function GetSvgBoundingBox (build, padding) {
   bbox.minY = (bbox.minY - padding).toFixed(4);
   bbox.maxX = (bbox.maxX + padding).toFixed(4);
   bbox.maxY = (bbox.maxY + padding).toFixed(4);
-  console.log('Bounding box:', bbox);
   return bbox;
 }
 
@@ -363,7 +360,6 @@ async function main () {
   const firstFile = files[0];
   const build = await getBuildFromFilePath(path.join(paths.GetUIPath(), 'xml', firstFile));
   currentBuild = build;
-  console.log('Current Build: ', currentBuild);
   currentPath = path.join(paths.GetUIPath(), 'xml', firstFile);
   drawBuild(build, 'mainsvg', true);
 
