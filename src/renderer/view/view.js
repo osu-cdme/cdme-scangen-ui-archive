@@ -1,471 +1,345 @@
-const path = require("path");
-const paths = require("../paths");
-const d3 = require(path.join(paths.GetUIPath(), "static", "d3.min.js"));
+const path = require('path');
+const paths = require('../paths');
+const d3 = require(path.join(paths.GetUIPath(), 'static', 'd3.min.js'));
 
-let parent = document.getElementById("rightPart");
-const fs = require("fs");
+const fs = require('fs');
+
+// Class Definitions
+const { BoundingBox } = require('../classes');
+
+// Functions used from other classes
+const { getSegmentsFromBuild, getContoursFromBuild, getBuildFromFilePath } = require('../common');
+
+// Event listeners
 
 // "Display" button event listener
 // Only theoretically clicked on when the player wants to skip an animation and go all the way to the end
 // We simply save the last render we did and default to that here
-d3.select("#display").on("click", (e) => {
-    e.preventDefault();
-    drawBuild(currentBuild, "mainsvg");
+d3.select('#display').on('click', e => {
+  e.preventDefault();
+  drawBuild(currentBuild, 'mainsvg');
 });
 
 // "Animate" button event listener
-d3.select("#animate").on("click", (e) => {
-    e.preventDefault();
-    animateBuild(currentBuild);
+d3.select('#animate').on('click', e => {
+  e.preventDefault();
+  animateBuild(currentBuild);
 });
 
 // Cancels any current animation and wipes the svg
-function reset() {
-    for (let lineQueued in linesQueued) {
-        clearTimeout(lineQueued);
-    }
-    d3.select("#mainsvg").selectAll("*").remove();
+function reset () {
+  for (const lineQueued in linesQueued) {
+    clearTimeout(lineQueued);
+  }
+  d3.select('#mainsvg')
+    .selectAll('*')
+    .remove();
 }
 
 let animationSpeed = 1;
-document.getElementById("fasterAnimation").onclick = function () {
-    animationSpeed *= 1.2;
-    queueSegments();
+document.getElementById('fasterAnimation').onclick = function () {
+  animationSpeed *= 1.2;
+  queueSegments();
 };
-document.getElementById("slowerAnimation").onclick = function () {
-    animationSpeed *= 0.8;
-    queueSegments();
+document.getElementById('slowerAnimation').onclick = function () {
+  animationSpeed *= 0.8;
+  queueSegments();
 };
-function queueSegments() {
-    for (let lineQueued in linesQueued) {
-        clearTimeout(lineQueued);
-    }
-    let currentTime = 0;
-    currentBuild.trajectories.forEach((trajectory) => {
-        if (trajectory.paths === []) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
-        trajectory.paths.forEach((path) => {
-            if (path.segments.length === 0) return; // Likely never true, but worth checking
-            path.segments.forEach((segment) => {
-                if (segment.animated) return;
-                velocity = getVelocityOfSegment(segment);
-                currentTime += ((100 / velocity) * 10) / animationSpeed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation
-                linesQueued.push(setTimeout(outputSegment, currentTime, segment, path, "mainsvg"));
-            });
-        });
+function queueSegments () {
+  for (const lineQueued in linesQueued) {
+    clearTimeout(lineQueued);
+  }
+  let currentTime = 0;
+  currentBuild.trajectories.forEach(trajectory => {
+    if (trajectory.paths === []) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
+    trajectory.paths.forEach(path => {
+      if (path.segments.length === 0) return; // Likely never true, but worth checking
+      path.segments.forEach(segment => {
+        if (segment.animated) return;
+        const velocity = getVelocityOfSegment(segment);
+        currentTime += ((100 / velocity) * 10) / animationSpeed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation
+        linesQueued.push(setTimeout(outputSegment, currentTime, segment, path, 'mainsvg'));
+      });
     });
+  });
 }
 
 // We *could* do this recursively, but instead we just iterate through every trajectory and
 // do a setTimeout with 10 ms delay added to each sequential one
-let linesQueued = [];
-function animateBuild(build) {
-    reset();
-    let currentTime = 0;
-    build.trajectories.forEach((trajectory) => {
-        if (trajectory.paths === []) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
-        trajectory.paths.forEach((path) => {
-            if (path.segments.length === 0) return; // Likely never true, but worth checking
-            path.segments.forEach((segment) => {
-                segment.animated = false;
-                velocity = getVelocityOfSegment(segment);
-                currentTime += ((100 / velocity) * 10) / animationSpeed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation
-                linesQueued.push(setTimeout(outputSegment, currentTime, segment, path, "mainsvg"));
-            });
-        });
+const linesQueued = [];
+function animateBuild (build) {
+  reset();
+  let currentTime = 0;
+  build.trajectories.forEach(trajectory => {
+    if (trajectory.paths === []) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
+    trajectory.paths.forEach(path => {
+      if (path.segments.length === 0) return; // Likely never true, but worth checking
+      path.segments.forEach(segment => {
+        segment.animated = false;
+        const velocity = getVelocityOfSegment(segment);
+        currentTime += ((100 / velocity) * 10) / animationSpeed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation
+        linesQueued.push(setTimeout(outputSegment, currentTime, segment, path, 'mainsvg'));
+      });
     });
+  });
 }
 
-let { LoadXML } = require("alsam-xml");
-async function getBuildFromFilePath(filePath) {
-    const response = await fetch(filePath);
-    const text = await response.text();
-    const build = LoadXML(text);
-
-    // Add numbering into our data structure, which lets us do lookups to match HTML segments to data structure segments
-    build.trajectories.forEach((trajectory) => {
-        if (trajectory.paths === []) return;
-        trajectory.paths.forEach((path) => {
-            if (path.length === 0) return;
-            path.segments.forEach((segment) => {
-                segment.number = currentSegmentCount;
-                currentSegmentCount++;
-            });
-        });
-    });
-    return build;
+function getVelocityOfSegment (segment) {
+  const segStyle = currentBuild.segmentStyles.find(segmentStyle => {
+    return segmentStyle.id === segment.segStyle;
+  });
+  const velProfile = currentBuild.velocityProfiles.find(velocityProfile => {
+    return (velocityProfile.id = segStyle.velocityProfileID);
+  });
+  if (velProfile === undefined) {
+    throw new Error('Unable to find velocity profile with ID ' + segStyle.velocityProfileID);
+  }
+  return velProfile.velocity;
 }
 
-function getVelocityOfSegment(segment) {
-    let segStyle = currentBuild.segmentStyles.find((segmentStyle) => {
-        return segmentStyle.id === segment.segStyle;
-    });
-    let velProfile = currentBuild.velocityProfiles.find((velocityProfile) => {
-        return (velocityProfile.id = segStyle.velocityProfileID);
-    });
-    if (velProfile === undefined) {
-        throw new Error("Unable to find velocity profile with ID " + segStyle.velocityProfileID);
-    }
-    return velProfile.velocity;
-}
+const natsort = require('natsort').default;
+function populateLayerList () {
+  const files = fs.readdirSync(path.join(paths.GetUIPath(), 'xml'));
+  files.sort(natsort()); // See documentation for what this does: https://www.npmjs.com/package/natsort
+  numThumbnailsTotal = files.length;
+  files.forEach(async file => {
+    const filePath = path.join(paths.GetUIPath(), 'xml', file);
+    const layerNum = parseInt(file.match(/(\d+)/)[0]); // First part finds the number, second part trims zeroes
 
-var natsort = require("natsort").default;
-function populateLayerList() {
-    let files = fs.readdirSync(path.join(paths.GetUIPath(), "xml"));
-    files.sort(natsort()); // See documentation for what this does: https://www.npmjs.com/package/natsort
-    numThumbnailsTotal = files.length;
-    files.forEach(async (file) => {
-        let filePath = path.join(paths.GetUIPath(), "xml", file);
-        let layerNum = parseInt(file.match(/(\d+)/)[0]); // First part finds the number, second part trims zeroes
+    const li = d3.select('#layerList').append('li');
 
-        let li = d3.select("#layerList").append("li");
+    li.append('canvas')
+      .attr('id', 'canvas_' + layerNum)
+      .attr('width', 50)
+      .attr('height', 50);
+    const build = await getBuildFromFilePath(filePath);
+    drawBuildCanvas(build, 'canvas_' + layerNum);
 
-        li.append("canvas")
-            .attr("id", "canvas_" + layerNum)
-            .attr("width", 50)
-            .attr("height", 50);
+    li.append('p')
+      .text('Layer ' + layerNum) // Extract only the number from the file name
+      .on('click', async e => {
+        e.preventDefault();
         const build = await getBuildFromFilePath(filePath);
-        drawBuild_canvas(build, "canvas_" + layerNum);
-
-        li.append("p")
-            .text("Layer " + layerNum) // Extract only the number from the file name
-            .on("click", async (e) => {
-                e.preventDefault();
-                const build = await getBuildFromFilePath(filePath);
-                currentBuild = build;
-                currentPath = filePath;
-                drawBuild(build, "mainsvg");
-            });
-    });
-}
-
-// Renders the .PNG files that `pyslm` outputs.
-function renderPNGs() {
-    let files = fs.readdirSync(path.join(paths.GetBackendPath(), "LayerFiles"));
-    files.forEach((file) => {
-        let text = document.createElement("p");
-        text.textContent = file;
-
-        let img = document.createElement("img");
-        img.src = path.join(paths.GetBackendPath(), "LayerFiles", file);
-
-        let container = document.createElement("div");
-        container.classList.toggle("layerimage");
-        container.appendChild(text);
-        container.appendChild(img);
-
-        parent.appendChild(container);
-    });
+        currentBuild = build;
+        currentPath = filePath;
+        drawBuild(build, 'mainsvg');
+      });
+  });
 }
 
 // Canvas is less flexible for zooming and such, but is generally more performant, so we use it for thumbnails
-let numThumbnailsDrawn = 0,
-    numThumbnailsTotal;
-function drawBuild_canvas(build, canvas_id) {
-    let canvas_ctx = document.getElementById(canvas_id).getContext("2d");
+let numThumbnailsDrawn = 0;
+let numThumbnailsTotal;
+function drawBuildCanvas (build, canvasID) {
+  const canvasCtx = document.getElementById(canvasID).getContext('2d');
 
-    // We have to transform coordinates, as 'Canvas' doesn't use a cartesian coordinate system
-    let minX = null,
-        minY = null,
-        maxX = null,
-        maxY = null;
+  // Calculate bounds
+  const PADDING = 2;
+  const bbox = GetSvgBoundingBox(build, PADDING);
 
-    // Calculate bounds
-    build.trajectories.forEach((trajectory) => {
-        if (trajectory.paths === []) return;
-        trajectory.paths.forEach((path) => {
-            if (path.segments.length === 0) return; // Likely never true, but worth checking
-            if (path.type !== "contour") return; // Only draw contours
-            path.segments.forEach((segment) => {
-                if (minX === null) minX = segment.x1;
-                if (minY === null) minY = segment.y1;
-                if (maxX === null) maxX = segment.x1;
-                if (maxY === null) maxY = segment.y1;
-                minX = Math.min(minX, segment.x1, segment.x2);
-                minY = Math.min(minY, segment.y1, segment.y2);
-                maxX = Math.max(maxX, segment.x1, segment.x2);
-                maxY = Math.max(maxY, segment.y1, segment.y2);
-            });
-        });
+  // Calculate percentage between a and b that c is
+  function percentage (a, b, c) {
+    return (c - a) / (b - a);
+  }
+
+  // Actually draw
+  canvasCtx.fillStyle = 'white';
+  canvasCtx.lineWidth = 0.25;
+  const THUMBNAIL_SIZE = 50;
+  canvasCtx.fillRect(0, 0, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
+  canvasCtx.beginPath();
+  const segments = getContoursFromBuild(build);
+  if (segments.length) {
+    const x1 = percentage(bbox.minX, bbox.maxX, segments[0].x1) * THUMBNAIL_SIZE; // Need to essentially convert from IRL coords to Canvas coords
+    const y1 = percentage(bbox.minY, bbox.maxY, segments[0].y1) * THUMBNAIL_SIZE;
+    canvasCtx.moveTo(x1, y1);
+    segments.forEach(segment => {
+      const x2 = percentage(bbox.minX, bbox.maxX, segment.x2) * THUMBNAIL_SIZE;
+      const y2 = percentage(bbox.minY, bbox.maxY, segment.y2) * THUMBNAIL_SIZE;
+      canvasCtx.lineTo(x2, y2);
     });
+    canvasCtx.stroke();
+  }
 
-    minX -= 1;
-    minY -= 1;
-    maxX += 1;
-    maxY += 1;
-
-    // Calculate percentage between a and b that c is
-    function percentage(a, b, c) {
-        return (c - a) / (b - a);
-    }
-
-    // Actually draw
-    canvas_ctx.fillStyle = "white";
-    canvas_ctx.lineWidth = 0.25;
-    canvas_ctx.fillRect(0, 0, 50, 50);
-    build.trajectories.forEach((trajectory) => {
-        if (trajectory.paths === []) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
-        trajectory.paths.forEach((path) => {
-            if (path.segments.length === 0) return; // Likely never true, but worth checking
-            if (path.type !== "contour") return; // Only draw contours
-
-            canvas_ctx.beginPath();
-            let x1 = percentage(minX, maxX, path.segments[0].x1) * 50; // Need to essentially convert from IRL coords to Canvas coords
-            let y1 = percentage(minY, maxY, path.segments[0].y1) * 50;
-            canvas_ctx.moveTo(x1, y1);
-            path.segments.forEach((segment) => {
-                if (SegmentIDType(path, segment.segStyle) === "jump") return;
-                let x2 = percentage(minX, maxX, segment.x2) * 50;
-                let y2 = percentage(minY, maxY, segment.y2) * 50;
-                canvas_ctx.lineTo(x2, y2);
-            });
-            canvas_ctx.stroke();
-        });
-    });
-    numThumbnailsDrawn++;
-    let progress = Math.floor((numThumbnailsDrawn / numThumbnailsTotal) * 100);
-    document.getElementById("loading").textContent = `Loading. Please wait a sec... (Progress: ${progress}%)`;
-    if (numThumbnailsDrawn >= numThumbnailsTotal) {
-        toggleLoading();
-    }
+  numThumbnailsDrawn++;
+  const progress = Math.floor((numThumbnailsDrawn / numThumbnailsTotal) * 100);
+  document.getElementById('loading').textContent = `Loading. Please wait a sec... (Progress: ${progress}%)`;
+  if (numThumbnailsDrawn >= numThumbnailsTotal) {
+    toggleLoading();
+  }
 }
 
-function reset() {
-    let svg = document.getElementById("mainsvg");
-    while (svg.firstChild) {
-        svg.removeChild(svg.firstChild);
-    }
-    linesQueued.forEach((timeout) => {
-        clearTimeout(timeout);
-    });
-    linesQueued = [];
-}
-
-function toggleLoading() {
-    let loading = document.getElementById("loading");
-    if (loading.style.display === "none") {
-        loading.style.display = "absolute";
-    } else {
-        loading.style.display = "none";
-    }
+function toggleLoading () {
+  const loading = document.getElementById('loading');
+  if (loading.style.display === 'none') {
+    loading.style.display = 'absolute';
+  } else {
+    loading.style.display = 'none';
+  }
 }
 
 // The synchronous part that actually draws the svg on the screen
-function drawBuild(build, svg_id) {
-    if (svg_id === "mainsvg") reset();
+function drawBuild (build, svgID) {
+  if (svgID === 'mainsvg') reset();
 
-    // We need to recalculate and re-set the viewbox for each layer, as they have different bounds
-    // Very good writeup on how viewBox, etc. works here: https://pandaqitutorials.com/Website/svg-coordinates-viewports
-    let boundingBox = GetSvgBoundingBox(build);
-    const BOUNDS_WIDTH = boundingBox[2] - boundingBox[0];
-    const BOUNDS_HEIGHT = boundingBox[3] - boundingBox[1];
-    const PADDING = 2;
-    const viewboxStr =
-        "" + (boundingBox[0] - PADDING) + " " + (boundingBox[1] - PADDING) + " " + (BOUNDS_WIDTH + PADDING * 2) + " " + (BOUNDS_HEIGHT + PADDING * 2);
-    d3.select("#" + svg_id).attr("viewBox", viewboxStr); // Basically lets us define our bounds
+  // We need to recalculate and re-set the viewbox for each layer, as they have different bounds
+  // Very good writeup on how viewBox, etc. works here: https://pandaqitutorials.com/Website/svg-coordinates-viewports
+  const PADDING = 2;
+  const bbox = GetSvgBoundingBox(build, PADDING);
+  const BOUNDS_WIDTH = bbox.maxX - bbox.minX;
+  const BOUNDS_HEIGHT = bbox.maxY - bbox.minY;
+  const viewboxStr = `${bbox.minX} ${bbox.minY} ${BOUNDS_WIDTH} ${BOUNDS_HEIGHT}`;
+  d3.select('#' + svgID).attr('viewBox', viewboxStr); // Basically lets us define our bounds
 
-    // Actually output
-    outputTrajectories(build, svg_id);
+  // Actually output
+  for (const segment of getSegmentsFromBuild(build)) {
+    outputSegment(segment, svgID);
+  }
 }
 
-// Returns a [min x, min y, max x, max y] bounding box corresponding to the passed-in trajectories
-function GetSvgBoundingBox(build) {
-    let output = [null, null, null, null];
-    build.trajectories.forEach((trajectory) => {
-        if (trajectory.paths === []) return;
-        trajectory.paths.forEach((path) => {
-            if (path.segments.length === 0) return; // Likely never true, but worth checking
-            path.segments.forEach((segment) => {
-                // Set all initial values to the bounds
-                if (output[0] === null) {
-                    output[0] = segment.x1;
-                    output[1] = segment.y1;
-                    output[2] = segment.x1;
-                    output[3] = segment.y1;
-                }
-
-                // Check mins/maxes during iteration
-                output[0] = Math.min(output[0], segment.x1, segment.x2);
-                output[1] = Math.min(output[1], segment.y1, segment.y2);
-                output[2] = Math.max(output[2], segment.x1, segment.x2);
-                output[3] = Math.max(output[3], segment.y1, segment.y2);
-            });
-        });
-    });
-
-    return output;
+function GetSvgBoundingBox (build, padding) {
+  const bbox = new BoundingBox();
+  for (const segment in getSegmentsFromBuild(build)) {
+    console.log('segment: ', segment);
+    bbox.minX = Math.min(bbox.minX, segment.x1, segment.x2);
+    bbox.minY = Math.min(bbox.minY, segment.y1, segment.y2);
+    bbox.maxX = Math.max(bbox.maxX, segment.x1, segment.x2);
+    bbox.maxY = Math.max(bbox.maxY, segment.y1, segment.y2);
+  }
+  bbox.minX = (bbox.minX - padding).toFixed(4); // Apply padding and truncate huge precision, which viewBox has issues with
+  bbox.minY = (bbox.minY - padding).toFixed(4);
+  bbox.maxX = (bbox.maxX + padding).toFixed(4);
+  bbox.maxY = (bbox.maxY + padding).toFixed(4);
+  console.log('Bounding box:', bbox);
+  return bbox;
 }
 
-// NOTE: Makes an assumption independent of the schema that contours have 'contour' in their ID and everything else (with a Traveler) is a hatch
-function SegmentIDType(path, segmentStyleID) {
-    // First, match Segment Style and see if Traveler length is zero, indicating a jump
-    let segmentStyle = currentBuild.segmentStyles.find((segmentStyle) => {
-        return segmentStyle.id === segmentStyleID;
-    });
-    if (segmentStyle === undefined) {
-        let errText = "Could not find segment style with ID " + segmentStyleID + " in path " + path.id;
-        alert(errText);
-        throw new Error(errText);
-    }
-    if (segmentStyle.travelers.length === 0) {
-        return "jump";
-    }
+function outputSegment (segment, svgID) {
+  // If this was called as part of animation sequence, remove it from arr so it doesn't get re-drawn if user speeds up or slows down draw
+  segment.animated = true;
+  const type = segment.type;
+  let color = null;
+  let stripeWidth = null;
+  let dash = '';
+  switch (segment.type) {
+    case 'contour':
+      color = '#000000'; // Black
+      stripeWidth = 0.05;
+      break;
+    case 'hatch':
+      color = '#BD0000'; // Red
+      stripeWidth = 0.03;
+      break;
+    case 'jump':
+      color = '#0000FF'; // Blue
+      stripeWidth = 0.02;
+      dash = '.3,.3';
+      break;
+    default:
+      throw new Error('Unknown segment type: ' + type);
+  }
 
-    // Otherwise, we examine the Path's 'type' attribute and choose based on that
-    if (path.type === "contour") {
-        return "contour";
-    } else {
-        // Assume anything else is a hatch
-        return "hatch";
-    }
-
-    throw new Error(`Segment Style ID ${segmentID} never found in .XML file!`);
+  d3.select('#' + svgID)
+    .append('line')
+    .attr('x1', segment.x1)
+    .attr('y1', segment.y1)
+    .attr('x2', segment.x2)
+    .attr('y2', segment.y2)
+    .attr('id', 'segment-' + segment.number) // Used as a lookup number for vector querying
+    .attr('stroke-dasharray', dash)
+    .attr('stroke', color)
+    .attr('stroke-width', stripeWidth);
 }
 
-let currentSegmentCount = 0;
-function outputSegment(segment, path, svg_id) {
-    // If this was called as part of animation sequence, remove it from arr so it doesn't get re-drawn if user speeds up or slows down draw
-    segment.animated = true;
-    let type = SegmentIDType(path, segment.segStyle);
-    let color = null,
-        stripeWidth = null,
-        dash = "";
-    switch (type) {
-        case "contour":
-            color = "#000000"; // Black
-            stripeWidth = 0.05;
-            break;
-        case "hatch":
-            color = "#BD0000"; // Red
-            stripeWidth = 0.03;
-            break;
-        case "jump":
-            color = "#0000FF"; // Blue
-            stripeWidth = 0.02;
-            dash = ".3,.3";
-            break;
-        default:
-            throw new Error("Unknown segment type: " + type);
-    }
-
-    d3.select("#" + svg_id)
-        .append("line")
-        .attr("x1", segment.x1)
-        .attr("y1", segment.y1)
-        .attr("x2", segment.x2)
-        .attr("y2", segment.y2)
-        .attr("id", "segment-" + segment.number) // Used as a lookup number for vector querying
-        .attr("stroke-dasharray", dash)
-        .attr("stroke", color)
-        .attr("stroke-width", stripeWidth);
+const { ExportXML } = require('alsam-xml');
+function SaveChangesToLayer () {
+  const text = ExportXML(currentBuild);
+  fs.writeFile(currentPath, text, err => {
+    if (err) throw new Error('Error writing file: ' + err);
+    alert('Successfully saved changes to layer!');
+  });
 }
-
-/* 
-Displays an interactable picture representing the same data object returned by getTrajectories
-*/
-function outputTrajectories(build, elementID) {
-    build.trajectories.forEach((trajectory) => {
-        if (trajectory.paths === []) return;
-        trajectory.paths.forEach((path) => {
-            if (path.segments.length === 0) return; // Likely never true, but worth checking
-            path.segments.forEach((segment) => {
-                outputSegment(segment, path, elementID);
-            });
-        });
-    });
-}
-
-let { ExportXML } = require("alsam-xml");
-function SaveChangesToLayer() {
-    let text = ExportXML(currentBuild);
-    fs.writeFile(currentPath, text, (err) => {
-        if (err) throw new Error("Error writing file: " + err);
-        alert("Successfully saved changes to layer!");
-    });
-}
-document.getElementById("save").addEventListener("click", SaveChangesToLayer);
+document.getElementById('save').addEventListener('click', SaveChangesToLayer);
 
 // Get click coordinates on svg
-const svg = document.getElementById("mainsvg");
-const { getClosestSegment, getHTMLSegmentFromNumber, toggleSegment, RenderSegmentInfo } = require("./vectorquerying.js");
-const FileSaver = require("file-saver");
-var pt = svg.createSVGPoint(); // Created once for document
-svg.addEventListener("click", (e) => {
-    pt.x = e.clientX;
-    pt.y = e.clientY;
+const svg = document.getElementById('mainsvg');
+const { getClosestSegment, getHTMLSegmentFromNumber, toggleSegment, RenderSegmentInfo } = require('./vectorquerying.js');
+const pt = svg.createSVGPoint(); // Created once for document
+svg.addEventListener('click', e => {
+  pt.x = e.clientX;
+  pt.y = e.clientY;
 
-    // Get cursor position
-    var cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
-    // console.log("Cursor Pos: (" + cursorpt.x + ", " + cursorpt.y + ")");
+  // Get cursor position
+  const cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
+  // console.log("Cursor Pos: (" + cursorpt.x + ", " + cursorpt.y + ")");
 
-    // Get closest segment to that one
-    let closestSegment = getClosestSegment(cursorpt.x, cursorpt.y, currentBuild);
-    RenderSegmentInfo(closestSegment, currentBuild);
+  // Get closest segment to that one
+  const closestSegment = getClosestSegment(cursorpt.x, cursorpt.y, currentBuild);
+  RenderSegmentInfo(closestSegment, currentBuild);
 
-    // Backtrack from the same JSON backend to the HTML frontend segment
-    let closestSegmentHTML = getHTMLSegmentFromNumber(closestSegment.number);
+  // Backtrack from the same JSON backend to the HTML frontend segment
+  const closestSegmentHTML = getHTMLSegmentFromNumber(closestSegment.number);
 
-    // Toggle it!
-    toggleSegment(closestSegmentHTML);
-    // console.log("Toggled closest segment!");
+  // Toggle it!
+  toggleSegment(closestSegmentHTML);
+  // console.log("Toggled closest segment!");
 });
 
-require("./panning.js");
+require('./panning.js');
 
-let zoomMultiplier = 1;
-svg.onwheel = (e) => {
-    e.preventDefault();
+svg.onwheel = e => {
+  e.preventDefault();
 
-    // Get cursor pos relative to svg coords
-    pt.x = e.clientX;
-    pt.y = e.clientY;
-    var cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
+  // Get cursor pos relative to svg coords
+  pt.x = e.clientX;
+  pt.y = e.clientY;
+  const cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
 
-    // Get current viewbox
-    var box = svg.getAttribute("viewBox");
-    box = box.split(/\s+|,/);
-    box[0] = parseFloat(box[0]);
-    box[1] = parseFloat(box[1]);
-    box[2] = parseFloat(box[2]);
-    box[3] = parseFloat(box[3]);
+  // Get current viewbox
+  let box = svg.getAttribute('viewBox');
+  box = box.split(/\s+|,/);
+  box[0] = parseFloat(box[0]);
+  box[1] = parseFloat(box[1]);
+  box[2] = parseFloat(box[2]);
+  box[3] = parseFloat(box[3]);
 
-    let width = box[2],
-        height = box[3];
-    let previousX = box[0] + width / 2,
-        previousY = box[1] + height / 2;
+  const width = box[2];
+  const height = box[3];
+  const previousX = box[0] + width / 2;
+  const previousY = box[1] + height / 2;
 
-    // Zoom in
-    let newWidth, newHeight;
-    let newX, newY;
-    if (ScrollDirectionIsUp(e)) {
-        newWidth = width * 0.9;
-        newHeight = height * 0.9;
-        zoomMultiplier *= 0.99;
+  // Zoom in
+  let newWidth, newHeight;
+  let newX, newY;
+  if (ScrollDirectionIsUp(e)) {
+    newWidth = width * 0.9;
+    newHeight = height * 0.9;
 
-        // Weighted average; move a little towards the new point, but not by much
-        newX = (-newWidth / 2 + 0.9 * previousX + 0.1 * cursorpt.x).toFixed(2);
-        newY = (-newHeight / 2 + 0.9 * previousY + 0.1 * cursorpt.y).toFixed(2);
-    } else {
-        newWidth = width * 1.1;
-        newHeight = height * 1.1;
-        zoomMultiplier *= 1.01;
+    // Weighted average; move a little towards the new point, but not by much
+    newX = (-newWidth / 2 + 0.9 * previousX + 0.1 * cursorpt.x).toFixed(2);
+    newY = (-newHeight / 2 + 0.9 * previousY + 0.1 * cursorpt.y).toFixed(2);
+  } else {
+    newWidth = width * 1.1;
+    newHeight = height * 1.1;
 
-        // Don't move the origin when zooming out; it just feels unnatural
-        (newX = -newWidth / 2 + previousX).toFixed(2), (newY = -newHeight / 2 + previousY).toFixed(2);
-    }
+    // Don't move the origin when zooming out; it just feels unnatural
+    newX = (-newWidth / 2 + previousX).toFixed(2);
+    newY = (-newHeight / 2 + previousY).toFixed(2);
+  }
 
-    // TODO: Stroke width should be adjusted based on how far we're zoomed in
-    // My brief attempts resulted in way too many iterations and lookups to be efficient
-    // Best approach is probably to store each segment type (contour, hatch, jump) in a separate array which lets us map super quickly to them
+  // TODO: Stroke width should be adjusted based on how far we're zoomed in
+  // My brief attempts resulted in way too many iterations and lookups to be efficient
+  // Best approach is probably to store each segment type (contour, hatch, jump) in a separate array which lets us map super quickly to them
 
-    const viewboxStr = "" + newX + " " + newY + " " + newWidth + " " + newHeight;
-    svg.setAttribute("viewBox", viewboxStr); // Basically lets us define our bounds
+  const viewboxStr = '' + newX + ' ' + newY + ' ' + newWidth + ' ' + newHeight;
+  svg.setAttribute('viewBox', viewboxStr); // Basically lets us define our bounds
 };
 
-function ScrollDirectionIsUp(event) {
-    if (event.wheelDelta) {
-        return event.wheelDelta > 0;
-    }
-    return event.deltaY < 0;
+function ScrollDirectionIsUp (event) {
+  if (event.wheelDelta) {
+    return event.wheelDelta > 0;
+  }
+  return event.deltaY < 0;
 }
 
 // Not really "necessary" to have a main for js, but helps organizationally and to easily enable/disable functionality
@@ -473,31 +347,31 @@ function ScrollDirectionIsUp(event) {
 let currentBuild = null;
 let currentPath = null;
 main();
-async function main() {
-    // If xml directory doesn't exist, create it
-    if (!fs.existsSync(path.join(paths.GetUIPath(), "xml"))) {
-        fs.mkdirSync(path.join(paths.GetUIPath(), "xml"));
-    }
+async function main () {
+  // If xml directory doesn't exist, create it
+  if (!fs.existsSync(path.join(paths.GetUIPath(), 'xml'))) {
+    fs.mkdirSync(path.join(paths.GetUIPath(), 'xml'));
+  }
 
-    let files = fs.readdirSync(path.join(paths.GetUIPath(), "xml"));
-    if (files.length === 0) {
-        // Send them elsewhere if no .XML files to view
-        alert("No scan files found! Generate them first via the 'Generate Vectors' tab on the left.");
-        return;
-    }
+  const files = fs.readdirSync(path.join(paths.GetUIPath(), 'xml'));
+  if (files.length === 0) {
+    // Send them elsewhere if no .XML files to view
+    alert("No scan files found! Generate them first via the 'Generate Vectors' tab on the left.");
+    return;
+  }
 
-    let firstFile = files[0];
-    const build = await getBuildFromFilePath(path.join(paths.GetUIPath(), "xml", firstFile));
-    currentBuild = build;
-    console.log("Current Build: ", currentBuild);
-    currentPath = path.join(paths.GetUIPath(), "xml", firstFile);
-    drawBuild(build, "mainsvg", true);
+  const firstFile = files[0];
+  const build = await getBuildFromFilePath(path.join(paths.GetUIPath(), 'xml', firstFile));
+  currentBuild = build;
+  console.log('Current Build: ', currentBuild);
+  currentPath = path.join(paths.GetUIPath(), 'xml', firstFile);
+  drawBuild(build, 'mainsvg', true);
 
-    // Set this to false to remove the load step; useful for quick debugging stuff
-    const DRAW_THUMBNAILS = true;
-    if (DRAW_THUMBNAILS) {
-        populateLayerList();
-    } else {
-        toggleLoading();
-    }
+  // Set this to false to remove the load step; useful for quick debugging stuff
+  const DRAW_THUMBNAILS = true;
+  if (DRAW_THUMBNAILS) {
+    populateLayerList();
+  } else {
+    toggleLoading();
+  }
 }

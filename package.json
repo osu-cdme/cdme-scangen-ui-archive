@@ -5,22 +5,20 @@
   "main": "main.js",
   "dependencies": {
     "@electron/remote": "^2.0.1",
+    "acorn": "^8.7.0",
     "alsam-xml": "^1.2.4",
     "deepcopy": "^2.1.0",
     "file-saver": "^2.0.5",
     "js2xmlparser": "^4.0.2",
+    "json5": "^2.2.0",
     "jszip": "^3.7.1",
     "mkdirp": "^1.0.4",
-    "natsort": "^2.0.3"
+    "natsort": "^2.0.3",
+    "semistandard": "^16.0.1"
   },
   "devDependencies": {
     "electron": "^13.1.5",
-    "electron-builder": "^22.11.7",
-    "eslint": "^7.32.0",
-    "eslint-config-standard": "^16.0.3",
-    "eslint-plugin-import": "^2.23.4",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^5.1.0"
+    "electron-builder": "^22.11.7"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
