@@ -1,9 +1,7 @@
-const path = require('path');
-const paths = require('../paths.js');
+const { path, paths } = require('../common');
 
 // Load data; requires cdme-scangen repository to be in parallel folder to cdme-scangen-ui, for now
-const optionsData = require(path.join(paths.GetBackendPath(), 'schema.json'));
-exports.optionsData = optionsData;
+const optionsData = require('./optionsdata');
 
 // Handles generating UI inputs for the rest, which is generalizable
 const specialElements = new Set(['Hatch Default ID', 'Contour Default ID', 'Segment Styles', 'Velocity Profiles']);

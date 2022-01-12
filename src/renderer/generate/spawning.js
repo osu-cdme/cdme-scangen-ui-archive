@@ -1,13 +1,12 @@
 // Functionality to spawn the pyslm child process and interface correctly with it
-const path = require('path');
-const paths = require('../paths');
+const { path, paths } = require('../common');
 const pythonPath = path.join(paths.GetUIPath(), 'python', 'python.exe');
 const FOLDERS_TO_ADD_TO_PYTHONPATH = [
   paths.GetBackendPath(),
   path.join(paths.GetBackendPath(), 'pyslm'),
   path.join(paths.GetBackendPath(), 'pyslm', 'pyslm')
 ];
-const { optionsData } = require('./generate.js');
+const optionsData = require('./optionsdata');
 
 const getFractionRegex = /\d+\/\d+/g;
 let lastLayer;

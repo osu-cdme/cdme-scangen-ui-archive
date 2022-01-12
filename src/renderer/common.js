@@ -1,3 +1,9 @@
+// Frontend javascript has shared global scope; we essentially keep them as singletons here
+const path = require('path');
+exports.path = path;
+const paths = require('./paths');
+exports.paths = paths;
+
 // Generator which returns segment by segment
 function * getSegmentsFromBuild (build) {
   for (const trajectory of build.trajectories) {
