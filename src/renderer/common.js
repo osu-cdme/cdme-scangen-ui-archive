@@ -86,6 +86,28 @@ exports.getBuildFromFilePath = async function getBuildFromFilePath (filePath) {
     segment.number = num;
     num++;
   }
-
   return build;
 };
+
+// Used to set these from other files
+let currentPath = null;
+function setCurrentPath (path) {
+  console.log('Setting currentPath to ', path);
+  currentPath = path;
+}
+function getCurrentPath () {
+  return currentPath;
+}
+exports.getCurrentPath = getCurrentPath;
+exports.setCurrentPath = setCurrentPath;
+
+let currentBuild = null;
+function setCurrentBuild (build) {
+  console.log('Setting currentBuild to ', build);
+  currentBuild = build;
+}
+function getCurrentBuild () {
+  return currentBuild;
+}
+exports.getCurrentBuild = getCurrentBuild;
+exports.setCurrentBuild = setCurrentBuild;

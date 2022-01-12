@@ -1,11 +1,28 @@
 const { getSegmentsFromBuild, getPointsOfSegment } = require('../common');
+const { getCurrentBuild } = require('../common');
+
+// Handles the SVG click event, which is for selecting the nearest vector
+const pt = document.getElementById('mainsvg').createSVGPoint();
+const svg = document.getElementById('mainsvg');
+svg.addEventListener('click', e => {
+  console.log('Click event fired!');
+  pt.x = e.clientX;
+  pt.y = e.clientY;
+  const cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+  // Search for closest segment and trigger color
+  const closestSegment = getClosestSegment(cursorpt.x, cursorpt.y, getCurrentBuild());
+  RenderSegmentInfo(closestSegment, getCurrentBuild());
+  const closestSegmentHTML = getHTMLSegmentFromNumber(closestSegment.number);
+  toggleSegment(closestSegmentHTML);
+});
 
 // Given a click location on the svg, return the closest segment to that point
-function getClosestSegment (x, y, build) {
+function getClosestSegment (x, y) {
   let closestSegment = null;
   let closestDistance = Infinity;
 
-  for (const segment of getSegmentsFromBuild(build)) {
+  for (const segment of getSegmentsFromBuild(getCurrentBuild())) {
     // TODO: Probably best to scale this based on zoom level or bounding box, as this'll start to get unperformant very quickly with longer vectors
     const INTERVAL = 0.1; // mm
     for (const point of getPointsOfSegment(segment, INTERVAL)) {

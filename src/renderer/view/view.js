@@ -8,7 +8,8 @@ const fs = require('fs');
 const { BoundingBox } = require('../classes');
 
 // Functions used from other classes
-const { getSegmentsFromBuild, getContoursFromBuild, getBuildFromFilePath } = require('../common');
+const { getSegmentsFromBuild, getContoursFromBuild, getBuildFromFilePath, setCurrentBuild, setCurrentPath } = require('../common');
+const { getCurrentPath, getCurrentBuild } = require('../common');
 
 // Event listeners
 
@@ -17,13 +18,13 @@ const { getSegmentsFromBuild, getContoursFromBuild, getBuildFromFilePath } = req
 // We simply save the last render we did and default to that here
 d3.select('#display').on('click', e => {
   e.preventDefault();
-  drawBuild(currentBuild, 'mainsvg');
+  drawBuild(getCurrentBuild(), 'mainsvg');
 });
 
 // "Animate" button event listener
 d3.select('#animate').on('click', e => {
   e.preventDefault();
-  animateBuild(currentBuild);
+  animateBuild();
 });
 
 // Cancels any current animation and wipes the svg
@@ -50,45 +51,33 @@ function queueSegments () {
     clearTimeout(lineQueued);
   }
   let currentTime = 0;
-  currentBuild.trajectories.forEach(trajectory => {
-    if (trajectory.paths === []) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
-    trajectory.paths.forEach(path => {
-      if (path.segments.length === 0) return; // Likely never true, but worth checking
-      path.segments.forEach(segment => {
-        if (segment.animated) return;
-        const velocity = getVelocityOfSegment(segment);
-        currentTime += ((100 / velocity) * 10) / animationSpeed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation
-        linesQueued.push(setTimeout(outputSegment, currentTime, segment, 'mainsvg'));
-      });
-    });
-  });
+  for (const segment of getSegmentsFromBuild(getCurrentBuild())) {
+    if (segment.animated) return;
+    const velocity = getVelocityOfSegment(segment);
+    currentTime += ((100 / velocity) * 10) / animationSpeed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation
+    linesQueued.push(setTimeout(outputSegment, currentTime, segment, 'mainsvg'));
+  }
 }
 
 // We *could* do this recursively, but instead we just iterate through every trajectory and
 // do a setTimeout with 10 ms delay added to each sequential one
 const linesQueued = [];
-function animateBuild (build) {
+function animateBuild () {
   reset();
   let currentTime = 0;
-  build.trajectories.forEach(trajectory => {
-    if (trajectory.paths === []) return; // It's allowed for a Trajectory to be zero-length, in which case it has no path
-    trajectory.paths.forEach(path => {
-      if (path.segments.length === 0) return; // Likely never true, but worth checking
-      path.segments.forEach(segment => {
-        segment.animated = false;
-        const velocity = getVelocityOfSegment(segment);
-        currentTime += ((100 / velocity) * 10) / animationSpeed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation
-        linesQueued.push(setTimeout(outputSegment, currentTime, segment, 'mainsvg'));
-      });
-    });
-  });
+  for (const segment of getSegmentsFromBuild(getCurrentBuild())) {
+    segment.animated = false;
+    const velocity = getVelocityOfSegment(segment);
+    currentTime += ((100 / velocity) * 10) / animationSpeed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation
+    linesQueued.push(setTimeout(outputSegment, currentTime, segment, 'mainsvg'));
+  }
 }
 
 function getVelocityOfSegment (segment) {
-  const segStyle = currentBuild.segmentStyles.find(segmentStyle => {
+  const segStyle = getCurrentBuild().segmentStyles.find(segmentStyle => {
     return segmentStyle.id === segment.segStyle;
   });
-  const velProfile = currentBuild.velocityProfiles.find(velocityProfile => {
+  const velProfile = getCurrentBuild().velocityProfiles.find(velocityProfile => {
     return (velocityProfile.id = segStyle.velocityProfileID);
   });
   if (velProfile === undefined) {
@@ -120,8 +109,8 @@ function populateLayerList () {
       .on('click', async e => {
         e.preventDefault();
         const build = await getBuildFromFilePath(filePath);
-        currentBuild = build;
-        currentPath = filePath;
+        setCurrentBuild(build);
+        setCurrentPath(filePath);
         drawBuild(build, 'mainsvg');
       });
   });
@@ -250,7 +239,7 @@ function outputSegment (segment, svgID) {
 
 const { ExportXML } = require('alsam-xml');
 function SaveChangesToLayer () {
-  const text = ExportXML(currentBuild);
+  const text = ExportXML(getCurrentBuild());
   fs.writeFile(currentPath, text, err => {
     if (err) throw new Error('Error writing file: ' + err);
     alert('Successfully saved changes to layer!');
@@ -258,91 +247,9 @@ function SaveChangesToLayer () {
 }
 document.getElementById('save').addEventListener('click', SaveChangesToLayer);
 
-// Get click coordinates on svg
-const svg = document.getElementById('mainsvg');
-const { getClosestSegment, getHTMLSegmentFromNumber, toggleSegment, RenderSegmentInfo } = require('./vectorquerying.js');
-const pt = svg.createSVGPoint(); // Created once for document
-svg.addEventListener('click', e => {
-  pt.x = e.clientX;
-  pt.y = e.clientY;
-
-  // Get cursor position
-  const cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
-  // console.log("Cursor Pos: (" + cursorpt.x + ", " + cursorpt.y + ")");
-
-  // Get closest segment to that one
-  const closestSegment = getClosestSegment(cursorpt.x, cursorpt.y, currentBuild);
-  RenderSegmentInfo(closestSegment, currentBuild);
-
-  // Backtrack from the same JSON backend to the HTML frontend segment
-  const closestSegmentHTML = getHTMLSegmentFromNumber(closestSegment.number);
-
-  // Toggle it!
-  toggleSegment(closestSegmentHTML);
-  // console.log("Toggled closest segment!");
-});
-
-require('./panning.js');
-
-svg.onwheel = e => {
-  e.preventDefault();
-
-  // Get cursor pos relative to svg coords
-  pt.x = e.clientX;
-  pt.y = e.clientY;
-  const cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
-
-  // Get current viewbox
-  let box = svg.getAttribute('viewBox');
-  box = box.split(/\s+|,/);
-  box[0] = parseFloat(box[0]);
-  box[1] = parseFloat(box[1]);
-  box[2] = parseFloat(box[2]);
-  box[3] = parseFloat(box[3]);
-
-  const width = box[2];
-  const height = box[3];
-  const previousX = box[0] + width / 2;
-  const previousY = box[1] + height / 2;
-
-  // Zoom in
-  let newWidth, newHeight;
-  let newX, newY;
-  if (ScrollDirectionIsUp(e)) {
-    newWidth = width * 0.9;
-    newHeight = height * 0.9;
-
-    // Weighted average; move a little towards the new point, but not by much
-    newX = (-newWidth / 2 + 0.9 * previousX + 0.1 * cursorpt.x).toFixed(2);
-    newY = (-newHeight / 2 + 0.9 * previousY + 0.1 * cursorpt.y).toFixed(2);
-  } else {
-    newWidth = width * 1.1;
-    newHeight = height * 1.1;
-
-    // Don't move the origin when zooming out; it just feels unnatural
-    newX = (-newWidth / 2 + previousX).toFixed(2);
-    newY = (-newHeight / 2 + previousY).toFixed(2);
-  }
-
-  // TODO: Stroke width should be adjusted based on how far we're zoomed in
-  // My brief attempts resulted in way too many iterations and lookups to be efficient
-  // Best approach is probably to store each segment type (contour, hatch, jump) in a separate array which lets us map super quickly to them
-
-  const viewboxStr = '' + newX + ' ' + newY + ' ' + newWidth + ' ' + newHeight;
-  svg.setAttribute('viewBox', viewboxStr); // Basically lets us define our bounds
-};
-
-function ScrollDirectionIsUp (event) {
-  if (event.wheelDelta) {
-    return event.wheelDelta > 0;
-  }
-  return event.deltaY < 0;
-}
-
 // Not really "necessary" to have a main for js, but helps organizationally and to easily enable/disable functionality
 // Leave this at the end; messes with the order of defining things otherwise
-let currentBuild = null;
-let currentPath = null;
+
 main();
 async function main () {
   // If xml directory doesn't exist, create it
@@ -359,9 +266,10 @@ async function main () {
 
   const firstFile = files[0];
   const build = await getBuildFromFilePath(path.join(paths.GetUIPath(), 'xml', firstFile));
-  currentBuild = build;
-  currentPath = path.join(paths.GetUIPath(), 'xml', firstFile);
-  drawBuild(build, 'mainsvg', true);
+  setCurrentBuild(build);
+  console.log('set build to this: ', build);
+  setCurrentPath(path.join(paths.GetUIPath(), 'xml', firstFile));
+  drawBuild(build, 'mainsvg');
 
   // Set this to false to remove the load step; useful for quick debugging stuff
   const DRAW_THUMBNAILS = true;
@@ -371,3 +279,12 @@ async function main () {
     toggleLoading();
   }
 }
+
+// Sets up SVG clicking (queries nearest segment)
+require('./vectorselection.js');
+
+// Sets up SVG panning
+require('./panning.js');
+
+// Sets up SVG scrolling
+require('./scrolling.js');
