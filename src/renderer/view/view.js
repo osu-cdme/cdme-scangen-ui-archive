@@ -38,12 +38,8 @@ function reset () {
 }
 
 let animationSpeed = 1;
-document.getElementById('fasterAnimation').onclick = function () {
-  animationSpeed *= 1.2;
-  queueSegments();
-};
-document.getElementById('slowerAnimation').onclick = function () {
-  animationSpeed *= 0.8;
+document.getElementById('animationSpeed').onchange = e => {
+  animationSpeed = e.target.value;
   queueSegments();
 };
 function queueSegments () {
@@ -52,9 +48,9 @@ function queueSegments () {
   }
   let currentTime = 0;
   for (const segment of getSegmentsFromBuild(getCurrentBuild())) {
-    if (segment.animated) return;
+    if (segment.animated) continue;
     const velocity = getVelocityOfSegment(segment);
-    currentTime += ((100 / velocity) * 10) / animationSpeed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation
+    currentTime += ((300 / velocity) * 100) / animationSpeed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation
     linesQueued.push(setTimeout(outputSegment, currentTime, segment, 'mainsvg'));
   }
 }
@@ -68,7 +64,7 @@ function animateBuild () {
   for (const segment of getSegmentsFromBuild(getCurrentBuild())) {
     segment.animated = false;
     const velocity = getVelocityOfSegment(segment);
-    currentTime += ((100 / velocity) * 10) / animationSpeed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation
+    currentTime += ((300 / velocity) * 100) / animationSpeed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation
     linesQueued.push(setTimeout(outputSegment, currentTime, segment, 'mainsvg'));
   }
 }
@@ -87,6 +83,7 @@ function getVelocityOfSegment (segment) {
 }
 
 const natsort = require('natsort').default;
+const { build } = require('electron-builder');
 function populateLayerList () {
   const files = fs.readdirSync(path.join(paths.GetUIPath(), 'xml'));
   files.sort(natsort()); // See documentation for what this does: https://www.npmjs.com/package/natsort
@@ -116,6 +113,11 @@ function populateLayerList () {
   });
 }
 
+// Calculate percentage between a and b that c is
+function percentage (a, b, c) {
+  return (c - a) / (b - a);
+}
+
 // Canvas is less flexible for zooming and such, but is generally more performant, so we use it for thumbnails
 let numThumbnailsDrawn = 0;
 let numThumbnailsTotal;
@@ -125,11 +127,6 @@ function drawBuildCanvas (build, canvasID) {
   // Calculate bounds
   const PADDING = 2;
   const bbox = GetSvgBoundingBox(build, PADDING);
-
-  // Calculate percentage between a and b that c is
-  function percentage (a, b, c) {
-    return (c - a) / (b - a);
-  }
 
   // Canvas setup
   canvasCtx.fillStyle = 'white';
@@ -179,7 +176,6 @@ function drawBuild (build, svgID) {
   const viewboxStr = `${bbox.minX} ${bbox.minY} ${BOUNDS_WIDTH} ${BOUNDS_HEIGHT}`;
   d3.select('#' + svgID).attr('viewBox', viewboxStr); // Basically lets us define our bounds
 
-  // Actually output
   for (const segment of getSegmentsFromBuild(build)) {
     outputSegment(segment, svgID);
   }
@@ -200,24 +196,71 @@ function GetSvgBoundingBox (build, padding) {
   return bbox;
 }
 
+// Return thermal color for provided 'Power' value
+function getColorFromPower (value) {
+  if (powerMin === powerMax) return '#000000'; // Use black as a default if there's no power variation
+  const green = Math.round(255 * (1 - percentage(powerMin, powerMax, value)));
+  const red = Math.min(Math.round(255 * percentage(powerMin, powerMax, value)), 255);
+  return `rgb(${red}, ${green}, 0)`;
+}
+
 function outputSegment (segment, svgID) {
-  // If this was called as part of animation sequence, remove it from arr so it doesn't get re-drawn if user speeds up or slows down draw
+  if (segment.type === 'jump' && !settings.jumps) return;
+  if (segment.type === 'hatch' && !settings.hatches) return;
+  if (segment.type === 'contour' && !settings.contours) return;
+
+  let color = null;
   segment.animated = true;
   const type = segment.type;
-  let color = null;
   let stripeWidth = null;
   let dash = '';
+  switch (settings.colorprofile) {
+    case 'thermal':
+      switch (segment.type) {
+        case 'jump':
+          color = '#0000FF';
+          break;
+        case 'hatch':
+        case 'contour':
+          color = getColorFromPower(getCurrentBuild().segmentStyles.find(segmentStyle => {
+            return segmentStyle.id === segment.segStyle;
+          }).travelers[0].power);
+          break;
+        case 'default':
+          throw new Error('Unrecognized vector type ' + segment.type);
+      }
+      break;
+    case 'default':
+      switch (segment.type) {
+        case 'contour':
+          color = '#000000'; // Black
+          stripeWidth = 0.05;
+          break;
+        case 'hatch':
+          color = '#BD0000'; // Red
+          stripeWidth = 0.03;
+          break;
+        case 'jump':
+          color = '#0000FF'; // Blue
+          stripeWidth = 0.02;
+          dash = '.3,.3';
+          break;
+        default:
+          throw new Error('Unknown segment type: ' + type);
+      }
+      break;
+    default:
+      throw new Error('Unknown color profile: ' + settings.colorprofile);
+  }
+
   switch (segment.type) {
     case 'contour':
-      color = '#000000'; // Black
       stripeWidth = 0.05;
       break;
     case 'hatch':
-      color = '#BD0000'; // Red
       stripeWidth = 0.03;
       break;
     case 'jump':
-      color = '#0000FF'; // Blue
       stripeWidth = 0.02;
       dash = '.3,.3';
       break;
@@ -240,15 +283,40 @@ function outputSegment (segment, svgID) {
 const { ExportXML } = require('alsam-xml');
 function SaveChangesToLayer () {
   const text = ExportXML(getCurrentBuild());
-  fs.writeFile(currentPath, text, err => {
+  fs.writeFile(getCurrentPath(), text, err => {
     if (err) throw new Error('Error writing file: ' + err);
     alert('Successfully saved changes to layer!');
   });
 }
-document.getElementById('save').addEventListener('click', SaveChangesToLayer);
+
+// Not likely that we change vectors much from this screen specifically, at least short term
+// document.getElementById('save').addEventListener('click', SaveChangesToLayer);
 
 // Not really "necessary" to have a main for js, but helps organizationally and to easily enable/disable functionality
 // Leave this at the end; messes with the order of defining things otherwise
+// Selectively draw different parts based on checfkbox input
+const settings = {
+  contours: true,
+  hatches: true,
+  jumps: true,
+  colorprofile: 'default'
+};
+document.getElementById('drawJumps').addEventListener('change', () => {
+  settings.jumps = document.getElementById('drawJumps').checked;
+  drawBuild(getCurrentBuild(), 'mainsvg');
+});
+document.getElementById('drawHatches').addEventListener('change', () => {
+  settings.hatches = document.getElementById('drawHatches').checked;
+  drawBuild(getCurrentBuild(), 'mainsvg');
+});
+document.getElementById('drawContours').addEventListener('change', () => {
+  settings.contours = document.getElementById('drawContours').checked;
+  drawBuild(getCurrentBuild(), 'mainsvg');
+});
+document.getElementById('colorprofile').addEventListener('change', () => {
+  settings.colorprofile = document.getElementById('colorprofile').value;
+  drawBuild(getCurrentBuild(), 'mainsvg');
+});
 
 main();
 async function main () {
@@ -266,10 +334,20 @@ async function main () {
 
   const firstFile = files[0];
   const build = await getBuildFromFilePath(path.join(paths.GetUIPath(), 'xml', firstFile));
+  for (const segStyle of build.segmentStyles) {
+    if (segStyle.travelers.length) {
+      for (const traveler of segStyle.travelers) {
+        powerMin = Math.min(powerMin, traveler.power);
+        powerMax = Math.max(powerMax, traveler.power);
+      }
+    }
+  }
+  console.log('Power range: ' + powerMin + ' - ' + powerMax);
+
   setCurrentBuild(build);
   console.log('set build to this: ', build);
   setCurrentPath(path.join(paths.GetUIPath(), 'xml', firstFile));
-  drawBuild(build, 'mainsvg');
+  drawBuild(build, 'mainsvg', settings);
 
   // Set this to false to remove the load step; useful for quick debugging stuff
   const DRAW_THUMBNAILS = true;
@@ -279,6 +357,9 @@ async function main () {
     toggleLoading();
   }
 }
+
+// Calculate power bounds, which is used to color segments
+let powerMin = 9999999; let powerMax = -99999999;
 
 // Sets up SVG clicking (queries nearest segment)
 require('./vectorselection.js');

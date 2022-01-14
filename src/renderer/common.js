@@ -18,18 +18,40 @@ function * getSegmentsFromBuild (build) {
 }
 exports.getSegmentsFromBuild = getSegmentsFromBuild;
 
-// Generator which returns .1mm spaced segments along a segment
+// Generator which returns .1mm spaced *points* along a segment
 function * getPointsOfSegment (segment, interval) {
   const length = Math.sqrt(Math.pow(segment.x2 - segment.x1, 2) + Math.pow(segment.y2 - segment.y1, 2));
   for (let i = 0; i < length; i += interval) {
-    const point = {
+    yield {
       x: segment.x1 + i * (segment.x2 - segment.x1) / length,
       y: segment.y1 + i * (segment.y2 - segment.y1) / length
     };
-    yield point;
   }
 }
 exports.getPointsOfSegment = getPointsOfSegment;
+
+// Generator which returns .1mm spaced *segments* along a segment
+function * getSubsegmentsOfSegment (segment, interval) {
+  const length = Math.sqrt(Math.pow(segment.x2 - segment.x1, 2) + Math.pow(segment.y2 - segment.y1, 2));
+  let i;
+  for (i = 0; i < length - interval; i += interval) {
+    yield {
+      x1: segment.x1 + i * (segment.x2 - segment.x1) / length,
+      y1: segment.y1 + i * (segment.y2 - segment.y1) / length,
+      x2: segment.x1 + (i + interval) * (segment.x2 - segment.x1) / length,
+      y2: segment.y1 + (i + interval) * (segment.y2 - segment.y1) / length
+    };
+  }
+
+  // Segment from where iteration ended to the end
+  yield {
+    x1: segment.x1 + i * (segment.x2 - segment.x1) / length,
+    y1: segment.y1 + i * (segment.y2 - segment.y1) / length,
+    x2: segment.x2,
+    y2: segment.y2
+  };
+}
+exports.getSubsegmentsOfSegment = getSubsegmentsOfSegment;
 
 // Generator which returns only hatch segments
 function * getHatchesFromBuild (build) {
@@ -93,6 +115,14 @@ exports.getBuildFromFilePath = async function getBuildFromFilePath (filePath) {
     num++;
   }
   return build;
+};
+
+exports.renumberSegments = function renumberSegments () {
+  let num = 0;
+  for (const segment of getSegmentsFromBuild(getCurrentPath())) {
+    segment.number = num;
+    num++;
+  }
 };
 
 // Used to set these from other files

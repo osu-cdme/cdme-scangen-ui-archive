@@ -1,43 +1,48 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8" />
-        <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
-        <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
-        <link rel="stylesheet" href="../generate/generate.css" />
-        <link rel="stylesheet" href="importexport.css" />
-        <title>Import/Export | Scan Generation - The Ohio State Center for Design & Manufacturing Excellence</title>
-    </head>
-    <body>
-        <!-- TODO: Better to split this into two columns rather than require lots of scrolling -->
-        <nav>
-            <img src="../../../static/logo.jpg" />
-            <ul id="pageList">
-                <li><a href="../generate/generate.html">Generate Vectors</a></li>
-                <li id="ToViewVectorsScreen"><a href="../view/view.html">View Vectors</a></li>
-                <li><a href="../optimize/optimize.html">Optimize Vectors</a></li>
-                <li><a href="importexport.html">Import/Export</a></li>
-            </ul>
-            <h1>CDME Scangen</h1>
-            <div class="bottom">
-                Node.js <span id="node-version"></span><br />
-                Chromium <span id="chrome-version"></span><br />
-                Electron <span id="electron-version"></span>
-            </div>
-        </nav>
-        <div id="rightPart">
-            <div class="half">
-                <h1>Import</h1>
-                <button id="stlImport">STL</button>
-                <button id="scnImport">SCN</button>
-            </div>
-            <div class="half">
-                <h1>Export</h1>
-                <button id="scnExport">SCN</button>
-            </div>
+
+<head>
+    <meta charset="UTF-8" />
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+    <link rel="stylesheet" href="../generate/generate.css" />
+    <link rel="stylesheet" href="importexport.css" />
+    <title>Import/Export | Scan Generation - The Ohio State Center for Design & Manufacturing Excellence</title>
+</head>
+
+<body>
+    <!-- TODO: Better to split this into two columns rather than require lots of scrolling -->
+    <nav>
+        <img src="../../../static/logo.jpg" />
+        <ul id="pageList">
+            <li><a href="../generate/generate.html">Generate Vectors</a></li>
+            <li id="ToViewVectorsScreen"><a href="../view/view.html">View Vectors</a></li>
+            <li><a href="../optimize/optimize.html">Optimize Vectors</a></li>
+            <li><a href="importexport.html">Import/Export</a></li>
+        </ul>
+        <h1>CDME Scangen</h1>
+        <div class="bottom">
+            Node.js <span id="node-version"></span><br />
+            Chromium <span id="chrome-version"></span><br />
+            Electron <span id="electron-version"></span>
         </div>
-        <script src="importexport.js"></script>
-        <script src="../navbar.js"></script>
-    </body>
+    </nav>
+    <div id="rightPart">
+        <div class="half">
+            <h1>Import</h1>
+            <button id="stlImport">STL</button>
+            <button id="scnImport">SCN</button>
+            <button id="thermalModelImport">Thermal Model (Unfinished)</button>
+        </div>
+        <div class="half">
+            <h1>Export</h1>
+            <button id="scnExport">SCN</button>
+            <button id="hdf5Export">HDF5 (Unfinished)</button>
+        </div>
+    </div>
+    <script src="importexport.js"></script>
+    <script src="../navbar.js"></script>
+</body>
+
 </html>
