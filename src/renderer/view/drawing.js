@@ -112,15 +112,12 @@ function outputSegment (segment, svgID) {
       switch (segment.type) {
         case 'contour':
           color = '#000000'; // Black
-          stripeWidth = 0.05;
           break;
         case 'hatch':
           color = '#BD0000'; // Red
-          stripeWidth = 0.03;
           break;
         case 'jump':
           color = '#0000FF'; // Blue
-          stripeWidth = 0.02;
           dash = '.3,.3';
           break;
         default:
@@ -133,13 +130,13 @@ function outputSegment (segment, svgID) {
 
   switch (segment.type) {
     case 'contour':
-      stripeWidth = 0.05;
+      stripeWidth = 1;
       break;
     case 'hatch':
-      stripeWidth = 0.03;
+      stripeWidth = 0.66;
       break;
     case 'jump':
-      stripeWidth = 0.02;
+      stripeWidth = 0.5;
       dash = '.3,.3';
       break;
     default:
@@ -155,7 +152,8 @@ function outputSegment (segment, svgID) {
     .attr('id', 'segment-' + segment.number) // Used as a lookup number for vector querying
     .attr('stroke-dasharray', dash)
     .attr('stroke', color)
-    .attr('stroke-width', stripeWidth);
+    .attr('stroke-width', stripeWidth)
+    .attr('vector-effect', 'non-scaling-stroke');
 }
 exports.outputSegment = outputSegment;
 
