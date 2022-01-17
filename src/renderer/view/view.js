@@ -13,6 +13,7 @@ const { getSettings } = require('./drawing');
 // Leave this at the end; messes with the order of defining things otherwise
 // Selectively draw different parts based on checfkbox input
 
+const glob = require('glob');
 main();
 async function main () {
   // If xml directory doesn't exist, create it
@@ -20,7 +21,8 @@ async function main () {
     fs.mkdirSync(path.join(paths.GetUIPath(), 'xml'));
   }
 
-  const files = fs.readdirSync(path.join(paths.GetUIPath(), 'xml'));
+  // Get all files in directory with .xml ending
+  const files = glob.sync(path.join(paths.GetUIPath(), 'xml', '*.xml'));
   if (files.length === 0) {
     // Send them elsewhere if no .XML files to view
     alert("No scan files found! Generate them first via the 'Generate Vectors' tab on the left.");
@@ -28,7 +30,7 @@ async function main () {
   }
 
   const firstFile = files[0];
-  const build = await getBuildFromFilePath(path.join(paths.GetUIPath(), 'xml', firstFile));
+  const build = await getBuildFromFilePath(firstFile);
   for (const segStyle of build.segmentStyles) {
     if (segStyle.travelers.length) {
       for (const traveler of segStyle.travelers) {
@@ -39,11 +41,11 @@ async function main () {
   }
 
   setCurrentBuild(build);
-  setCurrentPath(path.join(paths.GetUIPath(), 'xml', firstFile));
+  setCurrentPath(firstFile);
   drawBuild(build, 'mainsvg', getSettings());
 
   // Set this to false to remove the load step; useful for quick debugging stuff
-  const DRAW_THUMBNAILS = false;
+  const DRAW_THUMBNAILS = true;
   if (DRAW_THUMBNAILS) {
     require('./load').DrawThumbnails();
   } else {
