@@ -10,7 +10,7 @@ const queuedSegments = [];
 // Click Listeners
 d3.select('#start').on('click', function () {
   if (animating) {
-    d3.select('#start').text('Start');
+    d3.select('#start').text('Animate');
     stopAnimation();
   } else {
     d3.select('#start').text('Stop');
@@ -46,7 +46,7 @@ function startAnimation () {
 function stopAnimation () {
   document.getElementById('pause').classList.add('disabled');
   animating = false;
-  d3.select('#start').text('Start');
+  d3.select('#start').text('Animate');
   paused = false;
   d3.select('#pause').text('Pause');
   for (const timeout of queuedSegments) {

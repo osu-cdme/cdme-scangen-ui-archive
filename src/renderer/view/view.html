@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="../navbar.css" />
     <link rel="stylesheet" href="view.css" />
     <link rel="stylesheet" href="layerlist.css" />
+    <link rel="stylesheet" href="segmentdetails.css" />
     <title>View Vectors | Scan Generation - The Ohio State Center for Design & Manufacturing Excellence</title>
 </head>
 
@@ -25,13 +26,13 @@
         <div id="loading">Loading. Please wait a sec... (Progress: 0%)</div>
         <ul id="layerList"></ul>
         <div id="otherPart">
-            <div class="half">
+            <div id="leftHalf" class="half">
                 <svg id="mainsvg"></svg>
                 <div class="controlsPanel">
-                    <button id="start">Start</button>
+                    <button id="start">Animate</button>
                     <button id="pause" class="disabled">Pause</button>
                     <div>
-                        <span>Animation Speed Multiplier: </span>
+                        <span>Speed Multiplier</span>
                         <input type="number" id="animationSpeed" value="1" size="2" />
                     </div>
                 </div>
@@ -52,11 +53,11 @@
                     </select>
                 </div>
             </div>
-            <div class="half rightHalf">
+            <div id="rightHalf" class="half">
                 <p>Click on a segment to view/edit Segment Style + Velocity Profile information!</p>
                 <div id="segmentDetails">
                     <div>
-                        <h4>Segment Geometry</h4>
+                        <h4>Geometry</h4>
                         <p id="p1"></p>
                         <p id="p2"></p>
                         <p id="segStyle"></p>

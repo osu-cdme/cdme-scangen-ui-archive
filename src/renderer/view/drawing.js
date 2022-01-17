@@ -15,7 +15,7 @@ function getColorFromPower (value) {
 function reset () {
   d3.select('#mainsvg').selectAll('*').remove();
 }
-exports.reset = reset; 
+exports.reset = reset;
 
 // The synchronous part that actually draws the svg on the screen
 function drawBuild (build, svgID) {
