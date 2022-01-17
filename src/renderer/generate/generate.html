@@ -1,48 +1,48 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8" />
-        <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
-        <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
-        <link rel="stylesheet" href="generate.css" />
-        <title>Generate Vectors | Scan Generation - The Ohio State Center for Design & Manufacturing Excellence</title>
-    </head>
-    <body>
-        <!-- TODO: Better to split this into two columns rather than require lots of scrolling -->
-        <nav>
-            <img src="../../../static/logo.jpg" />
-            <ul id="pageList">
-                <li><a href="generate.html">Generate Vectors</a></li>
-                <li id="ToViewVectorsScreen"><a href="../view/view.html">View Vectors</a></li>
-                <li><a href="../optimize/optimize.html">Optimize Vectors</a></li>
-                <li><a href="../importexport/importexport.html">Import/Export</a></li>
-            </ul>
-            <h1>CDME Scangen</h1>
-            <div class="bottom">
-                Node.js <span id="node-version"></span><br />
-                Chromium <span id="chrome-version"></span><br />
-                Electron <span id="electron-version"></span>
-            </div>
-        </nav>
-        <form id="rightPart">
-            <h1>Options</h1>
-            <div id="options">
-                <h2>Segment Styles</h2>
-                <div id="segmentStyles"></div>
-                <h2>Velocity Profiles</h2>
-                <div id="velocityProfiles"></div>
-            </div>
-            <div class="submitButtonDiv"><button type="button" id="start">Start Scanning</button></div>
-            <div id="progress">
-                <p id="progressText">Status: Waiting for user.</p>
-                <div id="done"></div>
-            </div>
-        </form>
 
-        <!-- Browser-side JS we want -->
-        <script src="generate.js"></script>
-        <script src="../navbar.js"></script>
-        <script src="spawning.js"></script>
-    </body>
+<head>
+    <meta charset="UTF-8" />
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+    <link rel="stylesheet" href="../global.css" />
+    <link rel="stylesheet" href="../navbar.css" />
+    <link rel="stylesheet" href="generate.css" />
+    <title>Generate Vectors | Scan Generation - The Ohio State Center for Design & Manufacturing Excellence</title>
+</head>
+
+<body>
+    <!-- TODO: Better to split this into two columns rather than require lots of scrolling -->
+    <nav>
+        <img src="../../../static/logo.jpg" />
+        <h3>CDME Scangen</h3>
+        <ul>
+            <li class="activePage"><a href="generate.html">Generate</a></li>
+            <li id="ToViewVectorsScreen"><a href="../view/view.html">View</a></li>
+            <li><a href="../optimize/optimize.html">Optimize</a></li>
+            <li><a href="../importexport/importexport.html">I/O</a></li>
+        </ul>
+    </nav>
+    <form id="mainsection">
+        <h1>Options</h1>
+        <div id="options">
+            <h2>Segment Styles</h2>
+            <div id="segmentStyles"></div>
+            <h2>Velocity Profiles</h2>
+            <div id="velocityProfiles"></div>
+        </div>
+        <div class="submitButtonDiv"><button type="button" id="start">Start Scanning</button></div>
+        <div id="progress">
+            <p id="progressText">Status: Waiting for user.</p>
+            <div id="done"></div>
+        </div>
+    </form>
+
+    <!-- Browser-side JS we want -->
+    <script src="generate.js"></script>
+    <script src="../navbar.js"></script>
+    <script src="spawning.js"></script>
+</body>
+
 </html>

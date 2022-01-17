@@ -1,3 +1,13 @@
+#mainsection {
+    padding: 0;
+    max-height: calc(100% - 50px); 
+    overflow-y: hidden;
+}
+
+#svgContainer {
+    padding: 15px;
+}
+
 body {
     box-sizing: border-box;
     margin: 0;
@@ -12,25 +22,43 @@ body {
 }
 
 #svgContainer {
-    /* 200px for layer list, 2px for side borders, 5px for I HAVE NO CLUE, BUT IT WORKS */
-    width: calc(100% - 200px - 2px - 5px);
-    max-height: calc(100% - 200px);
+    /* 180px for layer list, 57px for I HAVE NO CLUE, BUT IT WORKS */
+    width: calc(100% - 180px - 57px);
+    max-height: calc(100% - 50px);
+    overflow-y: hidden; 
     display: inline-block;
     vertical-align: top;
     text-align: center;
     /* border: 1px blue solid; */
 }
 
+#actualSVGContainer {
+    width: fit-content; 
+}
+
+.controlsPanel {
+    width: 420px; 
+    height: 30px; 
+    line-height: 30px;
+    text-align: left; 
+}
+.controlsPanel > button {
+    width: 100px; 
+    height: 30px; 
+    line-height: 30px; 
+    background-color: rgb(64, 64, 64);
+    color: white; 
+}
+.controlsPanel > button, 
+.controlsPanel > span, 
+.controlsPanel > input {
+    display: inline-block;
+    vertical-align: top;
+    font-size: 16px; 
+}
+
 #svgContainer > div {
     margin: 5px 0; 
-}
-
-#controlPanel > span {
-    margin-left: 5px; 
-}
-
-#mainsvg {
-    max-height: 100%;
 }
 
 #layerList {
@@ -79,11 +107,20 @@ svg {
 }
 
 #mainsvg {
-    margin-top: 10px; /* 150px is half our svg sizing of 300px; */
     border: 10px black solid;
-    width: 100%;
-    max-width: calc(100% - 20px);
-    max-height: 400px;
+    width: 400px;
+    height: 400px;
+    display: inline-block; 
+    vertical-align: top;
+    /* margin-left: -25px; /* Hacky, but that's fine */
+}
+
+#rightHalf {
+    width: calc(100% - 420px - 40px); /* 420px is our svg width + border */
+    display: inline-block; 
+    text-align: left; 
+    vertical-align: top;    
+    padding: 10px; 
 }
 
 #animationSpeed, #colorprofile {
@@ -93,20 +130,9 @@ svg {
     border: 1px gray solid; 
 }
 
-.controlsPanel {
-    margin: 5px 0;
-}
-
-.controlsPanel > button {
-    background-color: #3b3b3b;
-    color: white;
-    padding: 10px;
-    font-size: 18px;
-    border: 1px black solid;
-}
-
-.controlsPanel > button:hover {
-    background-color: #5d5d5d;
+#layerList, #svgContainer 
+{
+    display: inline-block; 
 }
 
 /* Loading Overlay */
@@ -166,4 +192,17 @@ svg {
 
 #checkboxes > label {
     margin-right: 10px;
+}
+
+#layerList > li:hover {
+    background-color: #791919;
+}
+.selectedLayer {
+    background-color: #660f0f !important;
+}
+
+#disabled 
+{
+    background-color: rgb(80, 80, 80);
+    color: rgb(80, 80, 80);
 }

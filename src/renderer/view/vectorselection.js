@@ -4,6 +4,7 @@ const { getCurrentBuild } = require('../common');
 // Handles the SVG click event, which is for selecting the nearest vector
 const pt = document.getElementById('mainsvg').createSVGPoint();
 const svg = document.getElementById('mainsvg');
+let closestSegment;
 svg.addEventListener('click', e => {
   console.log('Click event fired!');
   pt.x = e.clientX;
@@ -11,7 +12,7 @@ svg.addEventListener('click', e => {
   const cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
 
   // Search for closest segment and trigger color
-  const closestSegment = getClosestSegment(cursorpt.x, cursorpt.y, getCurrentBuild());
+  closestSegment = getClosestSegment(cursorpt.x, cursorpt.y, getCurrentBuild());
   RenderSegmentInfo(closestSegment, getCurrentBuild());
   const closestSegmentHTML = getHTMLSegmentFromNumber(closestSegment.number);
   toggleSegment(closestSegmentHTML);

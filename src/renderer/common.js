@@ -3,6 +3,9 @@ const path = require('path');
 exports.path = path;
 const paths = require('./paths');
 exports.paths = paths;
+const d3 = require(path.join(paths.GetUIPath(), 'static', 'd3.min.js'));
+exports.d3 = d3;
+exports.fs = require('fs');
 
 // Generator which returns segment by segment
 function * getSegmentsFromBuild (build) {
@@ -138,12 +141,37 @@ exports.getCurrentPath = getCurrentPath;
 exports.setCurrentPath = setCurrentPath;
 
 let currentBuild = null;
+let minPower = 99999999; let maxPower = -99999999;
 function setCurrentBuild (build) {
   console.log('Setting currentBuild to ', build);
   currentBuild = build;
+  for (const segmentStyle of currentBuild.segmentStyles) {
+    if (segmentStyle.power > maxPower) maxPower = segmentStyle.power;
+    if (segmentStyle.power < minPower) minPower = segmentStyle.power;
+  }
 }
 function getCurrentBuild () {
   return currentBuild;
 }
 exports.getCurrentBuild = getCurrentBuild;
 exports.setCurrentBuild = setCurrentBuild;
+
+function getVelocityOfSegment (segment) {
+  const segStyle = getCurrentBuild().segmentStyles.find(segmentStyle => {
+    return segmentStyle.id === segment.segStyle;
+  });
+  const velProfile = getCurrentBuild().velocityProfiles.find(velocityProfile => {
+    return (velocityProfile.id = segStyle.velocityProfileID);
+  });
+  if (velProfile === undefined) {
+    throw new Error('Unable to find velocity profile with ID ' + segStyle.velocityProfileID);
+  }
+  return velProfile.velocity;
+}
+exports.getVelocityOfSegment = getVelocityOfSegment;
+
+function getPowerProportion (power) {
+  if (maxPower === minPower) return -1; // Avoid divide by zero
+  return power / (maxPower - minPower);
+}
+exports.getPowerProportion = getPowerProportion;

@@ -1,0 +1,56 @@
+nav {
+    position: fixed; 
+    z-index: 2;
+    width: 100vw;
+    height: 50px; 
+    background-color: #960000;
+    line-height: 50px;
+    border-bottom: 1px black solid; 
+}
+
+nav > h3 {
+    margin: 0;
+    padding: 0;
+    color: white;
+}
+
+nav > img, 
+nav > h3, 
+nav > ul {
+    display: inline-block;
+    vertical-align: top;
+    margin-right: 10px;
+}
+
+nav > ul {
+    list-style-type: none; 
+    padding-left: 0; 
+    margin: 0; 
+    
+}
+
+nav > ul > li {
+    display: inline-block; 
+    vertical-align: top;
+    margin-right: -5px;
+}
+
+nav > ul > li > a {
+    color: white;
+    text-decoration: none;
+    padding: 0 10px; 
+    height: 50px;
+    display: block; /* Needed so it fills height of parent */
+}
+
+nav > ul > li:hover {
+    background-color: #771717; 
+}
+
+nav > img {
+    height: 50px; 
+}
+
+.activePage {
+    background-color: #630c0c !important;
+}

@@ -3,18 +3,8 @@
 
 <head>
     <meta charset="UTF-8" />
-    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <!-- 
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <meta
-      http-equiv="X-Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    -->
-    <link rel="stylesheet" href="../generate/generate.css" /> <!-- Long story... just keep it around -->
+    <link rel="stylesheet" href="../global.css" />
+    <link rel="stylesheet" href="../navbar.css" />
     <link rel="stylesheet" href="view.css" />
     <title>View Vectors | Scan Generation - The Ohio State Center for Design & Manufacturing Excellence</title>
 </head>
@@ -22,80 +12,81 @@
 <body>
     <nav>
         <img src="../../../static/logo.jpg" />
+        <h3>CDME Scangen</h3>
         <ul id="pageList">
-            <li><a href="../generate/generate.html">Generate Vectors</a></li>
-            <li id="ToViewVectorsScreen"><a href="./view.html">View Vectors</a></li>
-            <li><a href="../optimize/optimize.html">Optimize Vectors</a></li>
-            <li><a href="../importexport/importexport.html">Import/Export</a></li>
+            <li><a href="../generate/generate.html">Generate</a></li>
+            <li class="activePage" id="ToViewVectorsScreen"><a href="./view.html">View</a></li>
+            <li><a href="../optimize/optimize.html">Optimize</a></li>
+            <li><a href="../importexport/importexport.html">I/O</a></li>
         </ul>
-        <h1>CDME Scangen</h1>
-        <div class="bottom">
-            Node.js <span id="node-version"></span><br />
-            Chromium <span id="chrome-version"></span><br />
-            Electron <span id="electron-version"></span>
-        </div>
     </nav>
-    <div id="rightPart">
+    <div id="mainsection">
+        <div id="loading">Loading. Please wait a sec... (Progress: 0%)</div>
         <ul id="layerList"></ul>
         <div id="svgContainer">
-            <div id="loading">Loading. Please wait a sec... (Progress: 0%)</div>
-            <svg id="mainsvg"></svg>
-            <div id="checkboxes">
-                <span>Display:</span>
-                <input id="drawJumps" type="checkbox" checked>
-                <label for="drawJumps">Jumps</label>
-                <input id="drawContours" type="checkbox" checked>
-                <label for="drawContours">Contours</label>
-                <input id="drawHatches" type="checkbox" checked>
-                <label for="drawHatches">Hatches</label>
-            </div>
-            <div>
-                <span>Color Profile: </span>
-                <select id="colorprofile">
-                    <option value="default">Default (black contours, red hatches)</option>
-                    <option value="thermal">Thermal (cold = green, hot = red)</option>
-                </select>
-            </div>
-            <!-- 
-            <div class="controlsPanel">
-                <button id="save">Commit Layer Changes</button>
-            </div>
-            -->
-            <div class="controlsPanel">
-                <button id="display">Skip Animation</button>
-                <button id="animate">Animate</button>
-                <span>Animation Speed Multiplier: </span>
-                <input type="number" id="animationSpeed" value="1" size="2" />
-            </div>
-            <div id="segmentDetails">
-                <div>
-                    <h4>Segment Geometry</h4>
-                    <p id="p1"></p>
-                    <p id="p2"></p>
-                    <p id="segStyle"></p>
-                    <p id="segmentID"></p>
+            <div id="actualSVGContainer">
+                <svg id="mainsvg"></svg>
+                <div class="controlsPanel">
+                    <button id="start">Start</button>
+                    <button id="pause">Pause</button>
+                    <div>
+                        <span>Animation Speed Multiplier: </span>
+                        <input type="number" id="animationSpeed" value="1" size="2" />
+                    </div>
                 </div>
-                <div>
-                    <h4>Segment Style</h4>
-                    <p id="segmentStyleID"></p>
-                    <p id="segmentStyleLaserMode"></p>
-                    <ul id="travelersList"></ul>
+                <div id="checkboxes">
+                    <span>Display:</span>
+                    <input id="drawJumps" type="checkbox" checked>
+                    <label for="drawJumps">Jumps</label>
+                    <input id="drawContours" type="checkbox" checked>
+                    <label for="drawContours">Contours</label>
+                    <input id="drawHatches" type="checkbox" checked>
+                    <label for="drawHatches">Hatches</label>
                 </div>
+            </div>
+            <div id="rightHalf">
                 <div>
-                    <h4>Velocity Profile</h4>
-                    <p id="velocityProfileID"></p>
-                    <p id="velocityProfileVelocity"></p>
-                    <p id="velocityProfileMode"></p>
-                    <p id="velocityProfileJumpDelay"></p>
-                    <p id="velocityProfileMarkDelay"></p>
-                    <p id="velocityProfilePolygonDelay"></p>
-                    <p id="velocityProfileLaserOnDelay"></p>
-                    <p id="velocityProfileLaserOffDelay"></p>
+                    <span>Color Profile: </span>
+                    <select id="colorprofile">
+                        <option value="default">Default (black contours, red hatches)</option>
+                        <option value="thermal">Thermal (cold = green, hot = red)</option>
+                    </select>
+                </div>
+                <!-- 
+                            <div class="controlsPanel">
+                                <button id="save">Commit Layer Changes</button>
+                            </div>
+                            -->
+                <p>Click on a segment to view/edit Segment Style + Velocity Profile information!</p>
+                <div id="segmentDetails">
+                    <div>
+                        <h4>Segment Geometry</h4>
+                        <p id="p1"></p>
+                        <p id="p2"></p>
+                        <p id="segStyle"></p>
+                        <p id="segmentID"></p>
+                    </div>
+                    <div>
+                        <h4>Segment Style</h4>
+                        <p id="segmentStyleID"></p>
+                        <p id="segmentStyleLaserMode"></p>
+                        <ul id="travelersList"></ul>
+                    </div>
+                    <div>
+                        <h4>Velocity Profile</h4>
+                        <p id="velocityProfileID"></p>
+                        <p id="velocityProfileVelocity"></p>
+                        <p id="velocityProfileMode"></p>
+                        <p id="velocityProfileJumpDelay"></p>
+                        <p id="velocityProfileMarkDelay"></p>
+                        <p id="velocityProfilePolygonDelay"></p>
+                        <p id="velocityProfileLaserOnDelay"></p>
+                        <p id="velocityProfileLaserOffDelay"></p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- <script src="https://d3js.org/d3.v7.min.js"></script> -->
     <script src="view.js"></script>
     <script src="../navbar.js"></script>
 </body>
