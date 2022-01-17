@@ -5,12 +5,13 @@ const { fs, path, paths, d3 } = require('../common');
 const { drawBuild, drawBuildCanvas } = require('./drawing');
 const { getBuildFromFilePath, setCurrentBuild, setCurrentPath } = require('../common');
 
+const glob = require('glob');
 module.exports.RenderLayerList = () => {
   return new Promise((resolve, reject) => {
-    const files = fs.readdirSync(path.join(paths.GetUIPath(), 'xml')).sort(natsort());
+    const files = glob.sync(path.join(paths.GetUIPath(), 'xml', '*.xml')).sort(natsort());
     let numDrawn = 0;
     files.forEach(async file => {
-      const filePath = path.join(paths.GetUIPath(), 'xml', file);
+      const filePath = file;
       const layerNum = parseInt(file.match(/(\d+)/)[0]); // First part finds the number, second part trims zeroes
 
       const li = d3.select('#layerList').append('li');

@@ -32,17 +32,21 @@
             <h2>Velocity Profiles</h2>
             <div id="velocityProfiles"></div>
         </div>
-        <div class="submitButtonDiv"><button type="button" id="start">Start Scanning</button></div>
-        <div id="progress">
-            <p id="progressText">Status: Waiting for user.</p>
-            <div id="done"></div>
+
+        <div id="progressContainer">
+            <div class="submitButtonDiv"><button type="button" id="start">Generate</button></div>
+            <div id="progress">
+                <p id="progressText">Status: Waiting for user.</p>
+                <div id="done"></div>
+            </div>
         </div>
+
+
     </form>
 
     <!-- Browser-side JS we want -->
     <script src="generate.js"></script>
     <script src="../navbar.js"></script>
-    <script src="spawning.js"></script>
 </body>
 
 </html>

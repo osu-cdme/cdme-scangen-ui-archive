@@ -1,3 +1,2 @@
-const path = require('path');
-const paths = require('../paths');
+const { path, paths } = require('../common');
 module.exports = require(path.join(paths.GetBackendPath(), 'schema.json'));
