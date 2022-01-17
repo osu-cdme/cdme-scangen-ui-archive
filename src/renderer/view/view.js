@@ -43,7 +43,7 @@ async function main () {
   drawBuild(build, 'mainsvg', getSettings());
 
   // Set this to false to remove the load step; useful for quick debugging stuff
-  const DRAW_THUMBNAILS = true;
+  const DRAW_THUMBNAILS = false;
   if (DRAW_THUMBNAILS) {
     require('./load').DrawThumbnails();
   } else {

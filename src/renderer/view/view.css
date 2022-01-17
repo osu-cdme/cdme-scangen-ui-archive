@@ -42,7 +42,7 @@ body {
     line-height: 30px;
     text-align: left; 
 }
-.controlsPanel > button {
+button {
     width: 100px; 
     height: 30px; 
     line-height: 30px; 
@@ -201,8 +201,8 @@ svg {
     background-color: #660f0f !important;
 }
 
-#disabled 
+.disabled 
 {
-    background-color: rgb(80, 80, 80);
-    color: rgb(80, 80, 80);
+    background-color: black;
+    color: black; 
 }

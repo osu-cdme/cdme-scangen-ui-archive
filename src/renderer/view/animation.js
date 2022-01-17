@@ -1,34 +1,40 @@
 const { d3 } = require('../common');
 const { outputSegment, drawBuild } = require('./drawing');
 const { getSegmentsFromBuild, getCurrentBuild, getVelocityOfSegment } = require('../common');
+const { reset } = require('./drawing');
 
 let animating = false;
+let paused = false;
 const queuedSegments = [];
 
 // Click Listeners
-d3.select('start').on('click', function () {
+d3.select('#start').on('click', function () {
   if (animating) {
-    d3.select('start').text('Start');
+    d3.select('#start').text('Start');
     stopAnimation();
   } else {
-    d3.select('start').text('Stop');
+    d3.select('#start').text('Stop');
     startAnimation();
   }
 });
-d3.select('pause').on('click', function () {
-  if (animating) pauseAnimation();
+d3.select('#pause').on('click', function () {
+  if (!animating) return; // Can't pause if we aren't currently animating
+  if (!paused) pauseAnimation();
   else unpauseAnimation();
 });
-d3.select('animationSpeed').on('change', function () {
+d3.select('#animationSpeed').on('change', function () {
   pauseAnimation(); // Simpler way to trigger a requeue of the timing on all the segments
   unpauseAnimation();
 });
 
 // Click Handler Functions
 function startAnimation () {
-  const speed = parseFloat(d3.select('speed').property('value'));
   animating = true;
-  d3.select('animate').text('Stop');
+  reset(); // Clear the screen
+  const speed = parseFloat(d3.select('#animationSpeed').property('value'));
+  document.getElementById('pause').classList.remove('disabled');
+
+  d3.select('#animate').text('Stop');
   let currentTime = 0;
   for (const segment of getSegmentsFromBuild(getCurrentBuild())) {
     segment.animated = false;
@@ -38,37 +44,42 @@ function startAnimation () {
   }
 }
 function stopAnimation () {
+  document.getElementById('pause').classList.add('disabled');
   animating = false;
-  d3.select('animate').text('Start');
+  d3.select('#start').text('Start');
+  paused = false;
+  d3.select('#pause').text('Pause');
   for (const timeout of queuedSegments) {
     clearTimeout(timeout);
   }
   queuedSegments.length = 0; // Clear the array
-  d3.select('#mainsvg')
-    .selectAll('*')
-    .remove();
-  drawBuild(getCurrentBuild());
+  drawBuild(getCurrentBuild(), 'mainsvg');
 }
 
 // We use a wrapper function for the animation code, as it's an architectural decision to not care at all about animation from outputSegment
 function animateSegment (segment) {
+  queuedSegments.shift(); // Remove first segment (one about to animate) from queue
   segment.animated = true;
   outputSegment(segment, 'mainsvg');
+  if (queuedSegments.length === 0) {
+    console.log('Done animating!');
+    stopAnimation();
+  }
 }
 
 function pauseAnimation () {
-  animating = false;
-  d3.select('pause').text('Unpause');
+  paused = true;
+  d3.select('#pause').text('Unpause');
   for (const timeout of queuedSegments) {
     clearTimeout(timeout);
   }
   queuedSegments.length = 0; // Clear the array
 }
 function unpauseAnimation () {
-  animating = true;
-  d3.select('pause').text('Pause');
+  paused = false;
+  d3.select('#pause').text('Pause');
   let currentTime = 0;
-  const speed = parseFloat(d3.select('speed').property('value'));
+  const speed = parseFloat(d3.select('#animationSpeed').property('value'));
   for (const segment of getSegmentsFromBuild(getCurrentBuild())) {
     if (segment.animated) continue; // Skip if already drawn on the screen
     const velocity = getVelocityOfSegment(segment);
