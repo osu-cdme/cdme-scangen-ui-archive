@@ -73,6 +73,7 @@ svg {
     width: 100%; /* 20px is for padding */
     display: inline-block; 
     vertical-align: top;
+    max-height: 500px; 
     /* margin-left: -25px; /* Hacky, but that's fine */
 }
 
@@ -112,7 +113,7 @@ svg {
 }
 
 #rightHalf > p {
-    margin: 0; 
+    margin-top: 10px; 
 }
 
 #animationSpeed, #colorprofile {
