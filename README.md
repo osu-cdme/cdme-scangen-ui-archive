@@ -4,27 +4,49 @@ An Electron application that offers a more streamlined, user-friendly way to set
 
 ## Install
 
-Install instructions can be found on the repo of the main script, [cdme-scangen](https://github.com/osu-cdme/cdme-scangen). The tl;dr is to go through the setup for the other repo, then install this repository parallel to `cdme-scangen` so that paths work correctly.
+Before you install this, first follow the installation instructions in [cdme-scangen](https://github.com/osu-cdme/cdme-scangen). 
 
-You also need to clone [alsam-xml.js](https://github.com/osu-cdme/alsam-xml.js), a library we built, parallel to this library, and rename that folder to `alsam-xml` if it's anything else. In the end, the `cdme-scangen`, `cdme-scangen-ui`, and `alsam-xml` folders should all be parallel to each other.
+You'll need to install the following prior to this: 
+- [Git](https://git-scm.com/downloads), the version control system we use. All the default options are fine. 
+- [Node.js](https://nodejs.org/en/download/), the JavaScript runtime the UI runs off of. 
+- [GitKraken](https://www.gitkraken.com/download), a GUI that makes Git easier to work with. Optional if you're familiar with command-line Git. 
+- A text editor. Most of us recommend [VSCode](https://code.visualstudio.com/download). 
+
+Then, do the following: 
+1. **Set Up Folders.** Create a folder called `cdme` somewhere on your machine - your choice where. If you created this as part of the `cdme-scangen` instructions, simply use that one. The goal is to get all our repositories in one folder next to each other. 
+2. **Clone This Repo.** Use GitKraken to clone this repository into that folder. When you're done, the `cdme-scangen-ui` folder should be inside the `cdme` folder, right beside the `cdme-scangen` folder. 
+3. **Install/Configure Python.** In order to package the application correctly, you need an embedded python version with all the Python dependencies. 
+    - For CDME personnel, you can find this on OneDrive at `CDME Rindler Research Group > Scan Strategy Development > pyslm_embedded_python > python.zip`. Download it. For anyone else trying to use our infrastructure, read the 'Putting together an embedded Python interpreter' section below. 
+    - Unzip that and copy it into this directory such that `cdme-scangen-ui/python/python.exe` is the path to that interpreter. 
+4. **Install JavaScript Dependencies.**
+    - Open a command line and `cd` into this folder. If you're not sure how to do this, google how to navigate a file system in whatever command line you're using (we recommend Git Bash).
+    - Execute `npm install yarn` and wait until it finishes. Yarn is a package manager that works better than npm when it comes to building our application into an executable.
+    - Restart VSCode. The goal here is to propogate `$PATH` environment variable changes.
+    - `cd` into this directory again and execute `yarn`. If you did things correctly, it should recognize the command and install all the project dependencies, as defined in the `package.json` file. 
+
+You should be set! 
+
+### Install alsam-xml
+Our custom library for parsing XML files into JSON, [alsam-xml.js](https://github.com/osu-cdme/alsam-xml.js), doesn't need to be cloned if you aren't planning to do any development on it. It's on npm and will be installed alongside the rest of the JavaScript dependencies, so if you don't know what any of this means, ignore this section and you should be fine. 
+
+If you need to make modifications, you'll need to clone that into the `cdme` folder and alter two file paths in the application (`LoadXML` in `src/renderer/common.js` and `ExportXML` in `src/renderer/view/export.js`) to target that file, instead of using the version that yarn installs into `node_modules`. 
+
+## Run 
+To run the application, open a terminal to this directory and run `yarn start`. 
+
 
 ## Building an Executable
 
-In order to get something usable by a non-developer, you need to package this application into something like a .exe file. To do this, the most common tool is `electron-builder`, which is what we've gone with. Note that `electron-builder` advises you use `yarn` instead of `npm`, so it's recommended to install `yarn` before you try and work with this stuff.
+In order to get something usable by a non-developer, you need to package this application into something like a .exe file. To do this, the most common tool is `electron-builder`, which is what we've gone with. Note that `electron-builder` recommends `yarn` instead of `npm`. 
 
 In order to build:
-
--   Ensure you've run `npm install` or `yarn` in the base directory to install all the Electron dependencies.
--   Ensure you have an embedded Python version with all the [cdme-scangen](https://github.com/osu-cdme/cdme-scangen) requirements inside a folder called `python` in this folder such that `cdme-scangen-ui/python/python.exe` is the valid path to the executable. See below for instructions on how to get a valid executable.
--   Ensure the `cdme-scangen` repository is located such that the `cdme-scangen` and `cdme-scangen-ui` repositories are parallel (in the same folder).
-
-Important things about the build system:
-
--   You will need to switch one variable defined at the top of `renderer.js` depending on whether you're running the app normally or building it. This adjusts certain file paths so everything doesn't crash and burn.
+- Switch the `building` variable in `src/main/paths.js` to `True`. Building changes working directories for some weird reason, so this circumvents that. 
 
 Then, execute `yarn build` from the root directory. This will place the output in the `dist` directory, which will output both a `.zip` and normal folder version of the repository. You should be able to send this `.zip` to someone, they unzip it, then run the .exe file inside, without them needing to download anything else.
 
-### Getting an Embedded Python Executable
+### Putting together an embedded Python interpreter
+
+Note that this section may be minorly out of date.
 
 For convenience for CDME workers, a `python.zip` file is included on OneDrive at `CDME Rindler Research Group > Scan Strategy Development > pyslm_embedded_python > python.zip`, which should work fine for the forseeable future. Simply unzip it and make sure it adheres to the above file structure and you should be fine.
 
