@@ -1,7 +1,12 @@
+:root 
+{
+    color-scheme: dark; 
+}
+
 #layerList {
     display: inline-block;
     vertical-align: top;
-    width: 200px;
+    width: 150px;
     height: 100%;
     list-style-type: none;
     margin-top: 0px;
@@ -16,24 +21,25 @@
 
 #layerList > li {
     text-align: left;
-    width: 180px; /* 50px for thumbnail, 150px for layer name, 20px for scrollbar */
-    height: 50px;
+    width: 130px; /* 30px for thumbnail, 100px for layer name */
+    height: 30px;
     border-bottom: 1px black solid;
     margin-left: 0;
 }
 
 #layerList > li > p {
     display: inline-block;
-    line-height: 50px;
-    width: 130px; /* Scroll bar is 20px */
+    line-height: 30px;
+    width: 100px; /* Scroll bar is 20px */
     box-sizing: border-box;
     vertical-align: top;
-    padding: 0 20px;
+    padding: 0 10px;
     margin: 0;
 }
 
-#layerList > li > img {
-    width: 50px;
+#layerList > li > canvas {
+    width: 30px;
+    height: 30px; 
     height: 100%;
     display: inline-block;
     margin: 0;

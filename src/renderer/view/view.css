@@ -82,9 +82,9 @@ svg {
     display: inline-block; 
     vertical-align: top;
     position: absolute; 
-    left: 200px; 
+    left: 150px; /* 150px for Layer List */
     top: 0; 
-    width: calc(100% - 200px); 
+    width: calc(100% - 450px); /* 300px is b/c styles/profiles are on the right side of the screen */
     height: 100%; 
     margin: 0;
     padding: 0; 
@@ -147,7 +147,7 @@ svg {
 }
 
 #checkboxes > label {
-    margin-right: 10px;
+    margin-right: 20px;
 }
 
 #layerList > li:hover {

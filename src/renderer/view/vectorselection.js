@@ -13,13 +13,18 @@ svg.addEventListener('click', e => {
 
   // Search for closest segment and trigger color
   closestSegment = getClosestSegment(cursorpt.x, cursorpt.y, getCurrentBuild());
+  chosenSegment = closestSegment;
   RenderSegmentInfo(closestSegment, getCurrentBuild());
   const closestSegmentHTML = getHTMLSegmentFromNumber(closestSegment.number);
   toggleSegment(closestSegmentHTML);
 });
 
+let chosenSegment = null;
+
 // Given a click location on the svg, return the closest segment to that point
 function getClosestSegment (x, y) {
+  document.getElementById('segmentDetails').style.display = 'block';
+
   let closestSegment = null;
   let closestDistance = Infinity;
 
@@ -54,6 +59,12 @@ function wipeSelectedSegments () {
   });
 }
 
+document.getElementById('segmentStyleID').addEventListener('change', function () {
+  if (chosenSegment === null) return; // No segment selected
+  chosenSegment.segStyle = this.value;
+  console.log('new segment object: ', chosenSegment);
+});
+
 function RenderSegmentInfo (segment, build) {
   // Render Segment Information
   document.getElementById('p1').textContent = `p1: (${segment.x1}, ${segment.y1})`;
@@ -65,7 +76,7 @@ function RenderSegmentInfo (segment, build) {
   // Render Segment Style Information
   const segmentStyle = build.segmentStyles.find((segStyle) => segStyle.id === segment.segStyle);
   if (segmentStyle === undefined) throw new Error('Segment Style ' + segmentStyle.id + 'not found');
-  document.getElementById('segmentStyleID').textContent = `ID: ${segmentStyle.id}`;
+  document.getElementById('segmentStyleID').value = `${segmentStyle.id}`;
   document.getElementById('segmentStyleLaserMode').textContent = `Laser Mode: ${segmentStyle.laserMode}`;
   document.getElementById('travelersList').textContent = ''; // Need to clear each time we redraw, otherwise they keep getting appended
   if (segmentStyle.travelers.length !== 0) {

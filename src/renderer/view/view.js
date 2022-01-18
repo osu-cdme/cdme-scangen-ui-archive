@@ -73,3 +73,6 @@ require('./scrolling.js');
 
 // Sets up animation
 require('./animation.js');
+
+// Sets up segment styles and profiles behavior
+require('./stylesandprofiles.js');

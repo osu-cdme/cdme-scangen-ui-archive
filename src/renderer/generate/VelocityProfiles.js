@@ -6,8 +6,9 @@ const paths = require('../paths');
 const defaults = require(path.join(paths.GetBackendPath(), 'schema.json'));
 
 class VelocityProfiles {
-  constructor () {
+  constructor (isGenerate) {
     this.profiles = [];
+    this.isGenerate = isGenerate;
     this.New();
   }
 
@@ -49,7 +50,6 @@ class VelocityProfiles {
     }
 
     for (let i = 0; i < this.profiles.length; i++) {
-      document.getElementById('velocityProfiles').append(createElementWithText('h3', 'Velocity Profile #' + (i + 1)));
       document.getElementById('velocityProfiles').append(this.ProfileToHTML(i));
     }
 
@@ -70,6 +70,8 @@ class VelocityProfiles {
     div.classList.toggle('velocityProfile'); // Used to accurately grab the inputs during form submission
     div.classList.toggle('style'); // Used for styling common between Velocity Profiles / Segment Styles
 
+    div.append(createElementWithText('h3', 'Velocity Profile #' + (i + 1)));
+
     // TODO: Lots of repeated code, definitely possible to functionalize / iterate it
     const idInput = createInputWithLabel('ID: ', profile.id, '');
     idInput.onchange = (e) => {
@@ -89,31 +91,31 @@ class VelocityProfiles {
     };
     div.append(modeInput);
 
-    const laserOnDelayInput = createInputWithLabel('Laser On Delay: ', profile.laserOnDelay, '(microseconds)');
+    const laserOnDelayInput = createInputWithLabel('Laser On Delay: ', profile.laserOnDelay, '(μs)');
     laserOnDelayInput.onchange = (e) => {
       profile.laserOnDelay = e.target.value;
     };
     div.append(laserOnDelayInput);
 
-    const laserOffDelayInput = createInputWithLabel('Laser Off Delay: ', profile.laserOffDelay, '(microseconds)');
+    const laserOffDelayInput = createInputWithLabel('Laser Off Delay: ', profile.laserOffDelay, '(μs)');
     laserOffDelayInput.onchange = (e) => {
       profile.laserOffDelay = e.target.value;
     };
     div.append(laserOffDelayInput);
 
-    const jumpDelayInput = createInputWithLabel('Jump Delay: ', profile.jumpDelay, '(microseconds)');
+    const jumpDelayInput = createInputWithLabel('Jump Delay: ', profile.jumpDelay, '(μs)');
     jumpDelayInput.onchange = (e) => {
       profile.jumpDelay = e.target.value;
     };
     div.append(jumpDelayInput);
 
-    const markDelayInput = createInputWithLabel('Mark Delay: ', profile.markDelay, '(microseconds)');
+    const markDelayInput = createInputWithLabel('Mark Delay: ', profile.markDelay, '(μs)');
     markDelayInput.onchange = (e) => {
       profile.markDelay = e.target.value;
     };
     div.append(markDelayInput);
 
-    const polygonDelayInput = createInputWithLabel('Polygon Delay: ', profile.polygonDelay, '(microseconds)');
+    const polygonDelayInput = createInputWithLabel('Polygon Delay: ', profile.polygonDelay, '(μs)');
     polygonDelayInput.onchange = (e) => {
       profile.polygonDelay = e.target.value;
     };

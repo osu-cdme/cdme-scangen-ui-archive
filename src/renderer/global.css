@@ -15,4 +15,5 @@ body {
     height: calc(100% - 50px);
     padding: 15px;
     overflow-y: scroll;
+    background-color: #333333; 
 }

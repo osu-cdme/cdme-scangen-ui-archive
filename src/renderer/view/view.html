@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="view.css" />
     <link rel="stylesheet" href="layerlist.css" />
     <link rel="stylesheet" href="segmentdetails.css" />
+    <link rel="stylesheet" href="stylesandprofiles.css" />
     <title>View Vectors | Scan Generation - The Ohio State Center for Design & Manufacturing Excellence</title>
 </head>
 
@@ -25,6 +26,16 @@
     <div id="mainsection">
         <div id="loading">Loading. Please wait a sec... (Progress: 0%)</div>
         <ul id="layerList"></ul>
+        <div id="stylesandprofiles">
+            <div>
+                <h3 class="centered">Segment Styles</h3>
+                <div id="segmentStyles"></div>
+            </div>
+            <div>
+                <h3 class="centered">Velocity Profiles</h3>
+                <div id="velocityProfiles"></div>
+            </div>
+        </div>
         <div id="otherPart">
             <div id="leftHalf" class="half">
                 <svg id="mainsvg"></svg>
@@ -54,8 +65,8 @@
                 </div>
             </div>
             <div id="rightHalf" class="half">
-                <p>Click on a segment to view/edit Segment Style + Velocity Profile information!</p>
-                <div id="segmentDetails">
+                <p>Click on a segment to view its attributes or assign it a new Segment Style ID!</p>
+                <div id="segmentDetails" style="display: none">
                     <div>
                         <h4>Geometry</h4>
                         <p id="p1"></p>
@@ -65,7 +76,8 @@
                     </div>
                     <div>
                         <h4>Segment Style</h4>
-                        <p id="segmentStyleID"></p>
+                        <label for="segStyle">ID: </label>
+                        <input type="text" id="segmentStyleID" />
                         <p id="segmentStyleLaserMode"></p>
                         <ul id="travelersList"></ul>
                     </div>

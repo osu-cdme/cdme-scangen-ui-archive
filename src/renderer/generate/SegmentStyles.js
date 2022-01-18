@@ -1,15 +1,16 @@
 // Using React or similar would make this much easier, but that's additional technical complexity I don't want to put on whoever's maintaining after me
 // I'm basically reimplementing automatic state updating from React, lol
 const { SegmentStyle, Traveler, Wobble } = require('alsam-xml');
-const { path, paths } = require('../common');
+const { path, paths, getCurrentBuild } = require('../common');
 const defaults = require(path.join(paths.GetBackendPath(), 'schema.json'));
 const { createInputWithLabel, createElementWithText } = require('./utility.js');
 
 class SegmentStyles {
-  constructor () {
+  constructor (isGenerate) {
     this.styles = [];
     this.defaultHatchSegmentStyleID = 'default';
     this.defaultContourSegmentStyleID = 'default';
+    this.isGenerate = isGenerate;
 
     // Add a new segment style, which defaults to the first one in the schema
     this.New();
@@ -77,20 +78,21 @@ class SegmentStyles {
       document.getElementById('segmentStyles').removeChild(document.getElementById('segmentStyles').firstChild);
     }
 
-    const hatchDefaultInput = createInputWithLabel('Default Segment Style ID for Hatches: ', defaults['Hatch Default ID'], '');
-    hatchDefaultInput.onchange = (e) => {
-      this.defaultHatchSegmentStyleID = e.target.value;
-    };
-    document.getElementById('segmentStyles').append(hatchDefaultInput);
+    if (this.isGenerate) {
+      const hatchDefaultInput = createInputWithLabel('Default Segment Style ID for Hatches: ', defaults['Hatch Default ID'], '');
+      hatchDefaultInput.onchange = (e) => {
+        this.defaultHatchSegmentStyleID = e.target.value;
+      };
+      document.getElementById('segmentStyles').append(hatchDefaultInput);
 
-    const contourDefaultInput = createInputWithLabel('Default Segment Style ID for Contours: ', defaults['Contour Default ID'], '');
-    contourDefaultInput.onchange = (e) => {
-      this.defaultContourSegmentStyleID = e.target.value;
-    };
-    document.getElementById('segmentStyles').append(contourDefaultInput);
+      const contourDefaultInput = createInputWithLabel('Default Segment Style ID for Contours: ', defaults['Contour Default ID'], '');
+      contourDefaultInput.onchange = (e) => {
+        this.defaultContourSegmentStyleID = e.target.value;
+      };
+      document.getElementById('segmentStyles').append(contourDefaultInput);
+    }
 
     for (let i = 0; i < this.styles.length; i++) {
-      document.getElementById('segmentStyles').append(createElementWithText('h4', 'Segment Style #' + (i + 1)));
       document.getElementById('segmentStyles').append(this.StyleToHTML(i));
     }
 
@@ -107,9 +109,12 @@ class SegmentStyles {
 
   StyleToHTML (i) {
     const style = this.styles[i];
+    console.log('style: ', style);
     const div = document.createElement('div');
     div.classList.toggle('segmentStyle'); // Used to accurately grab the inputs during form submission
     div.classList.toggle('style'); // Used for styling common between Velocity Profiles / Segment Styles
+
+    div.append(createElementWithText('h4', 'Segment Style #' + (i + 1)));
 
     const idInput = createInputWithLabel('ID: ', style.id, '');
     idInput.onchange = (e) => {
@@ -124,8 +129,8 @@ class SegmentStyles {
     div.append(velocityProfileIDInput);
 
     const laserModeInput = createInputWithLabel(
-      'Laser Mode Select: ',
-      style.velocityProfileID,
+      'Laser Mode: ',
+      style.laserMode,
       " (either 'Independent' or 'FollowMe'; Case Sensitive)"
     );
     laserModeInput.onchange = (e) => {
@@ -147,7 +152,7 @@ class SegmentStyles {
       };
       travelerDiv.append(travelerIDInput);
 
-      const syncDelayInput = createInputWithLabel('Sync Delay: ', traveler.syncDelay, ' (microseconds)');
+      const syncDelayInput = createInputWithLabel('Sync Delay: ', traveler.syncDelay, ' (μs)');
       syncDelayInput.onchange = (e) => {
         traveler.syncDelay = e.target.value;
       };

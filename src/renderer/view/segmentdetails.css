@@ -34,3 +34,8 @@
 #segmentDetails > div > ul > li > h5 {
     margin-top: 5px;
 }
+
+#segmentDetails input {
+    background-color: #222222;
+    color: white; 
+}

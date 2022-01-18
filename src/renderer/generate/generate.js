@@ -88,8 +88,8 @@ function SectionHeaderDOM (text) {
 // Generate and append UI corresponding to the schema
 const { SegmentStyles } = require('./SegmentStyles.js');
 const { VelocityProfiles } = require('./VelocityProfiles.js');
-const styles = new SegmentStyles();
-const profiles = new VelocityProfiles();
+const styles = new SegmentStyles(true);
+const profiles = new VelocityProfiles(true);
 document.getElementById('options').appendChild(generateRemainingDOM());
 
 // Make the contents of the select menu the contents of the 'xml' directory
@@ -199,7 +199,7 @@ function spawnProcess (styles, profiles, defaults) {
       );
       document.getElementById('progressText').textContent = 'Error spawning child process.';
       document.getElementById('done').style.width = '0%';
-      return; 
+      return;
     }
 
     // Wipe all files currently in 'xml' directory, getting rid of whatever build was previously in there (if any)
