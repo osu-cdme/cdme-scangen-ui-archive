@@ -1,12 +1,12 @@
 * {
-    box-sizing: border-box !important; 
+    box-sizing: border-box !important;
 }
 
 .submitButtonDiv {
     width: 115px;
-    height: 100%; 
+    height: 100%;
     text-align: center;
-    margin-bottom: 100px; 
+    margin-bottom: 100px;
 }
 
 .submitButtonDiv > #start {
@@ -15,24 +15,23 @@
     border: 0;
     background-color: #960000;
     cursor: pointer;
-    text-align: center; 
-    padding: 15px; 
-    margin-left: 15px; 
+    text-align: center;
+    padding: 15px;
+    margin-left: 15px;
 }
 
-#options 
-{
-    margin: 0 calc(20% - 40px); 
-    padding: 0 40px; 
-    background-color: #333333; 
-    padding-bottom: 10px; 
-    margin-bottom: -50px; 
+#options {
+    margin: 0 calc(20% - 40px);
+    padding: 0 40px;
+    background-color: #333333;
+    padding-bottom: 10px;
+    margin-bottom: -50px;
 }
 
 #mainsection {
-    background-color: #232323; 
-    padding: 0; 
-    margin: 0; 
+    background-color: #232323;
+    padding: 0;
+    margin: 0;
 }
 
 #rightPart > h1 {
@@ -161,8 +160,7 @@ button {
     background-color: green;
 }
 
-#progressContainer 
-{
+#progressContainer {
     width: 100%;
     position: fixed;
     bottom: 0;
@@ -173,38 +171,38 @@ button {
     line-height: 50px;
 }
 
-#progressContainer 
-{
-    text-align: left; 
+#progressContainer {
+    text-align: left;
 }
 #progressContainer > .submitButtonDiv {
-    vertical-align: top; 
-    width: 115px; 
-    display: inline-block; 
+    vertical-align: top;
+    width: 115px;
+    display: inline-block;
 }
 
 #progress {
-    position: absolute; 
-    left: 115px; /* To the right of the button */ 
-    vertical-align: top; 
-    width: calc(100% - 115px); 
-    display: inline-block; 
-    height: 50px; 
+    position: absolute;
+    left: 130px; /* To the right of the button */
+    vertical-align: top;
+    width: calc(100% - 130px);
+    display: inline-block;
+    height: 50px;
 }
 #progressText {
-    width: 100%; 
-    text-align: center; 
+    width: 100%;
+    text-align: center;
 }
 
 #start {
-    width: 115px; 
+    width: 115px;
+    text-align: center;
 }
 
 #options > div:last-of-type {
-    margin-bottom: 100px; 
+    margin-bottom: 100px;
 }
 
 h1 {
-    padding-top: 20px; 
-    margin-top: 0; 
+    padding-top: 20px;
+    margin-top: 0;
 }
