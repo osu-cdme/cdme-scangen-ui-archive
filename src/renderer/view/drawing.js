@@ -107,7 +107,8 @@ function outputSegment(segment, svgID) {
                     );
                     break;
                 case "default":
-                    throw new Error("Unrecognized vector type " + segment.type);
+                    alert("ERROR: Unknown segment type " + segment.type);
+                    throw new Error("Unrecognized segment type " + segment.type);
             }
             break;
         case "default":
@@ -123,10 +124,12 @@ function outputSegment(segment, svgID) {
                     dash = ".3,.3";
                     break;
                 default:
+                    alert("ERROR: Unknown segment type: " + segment.type);
                     throw new Error("Unknown segment type: " + type);
             }
             break;
         default:
+            alert("ERROR: Unknown color profile: " + settings.colorprofile);
             throw new Error("Unknown color profile: " + settings.colorprofile);
     }
 
@@ -142,6 +145,7 @@ function outputSegment(segment, svgID) {
             dash = ".3,.3";
             break;
         default:
+            alert("ERROR: Unknown segment type: " + segment.type);
             throw new Error("Unknown segment type: " + type);
     }
 

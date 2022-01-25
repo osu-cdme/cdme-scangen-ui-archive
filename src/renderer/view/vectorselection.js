@@ -63,6 +63,7 @@ document.getElementById("segmentStyleID").addEventListener("change", function ()
     if (chosenSegment === null) return; // No segment selected
     chosenSegment.segStyle = this.value;
     console.log("new segment object: ", chosenSegment);
+    console.log("currentBuild: ", getCurrentBuild());
 });
 
 function RenderSegmentInfo(segment, build) {
@@ -75,7 +76,10 @@ function RenderSegmentInfo(segment, build) {
 
     // Render Segment Style Information
     const segmentStyle = build.segmentStyles.find((segStyle) => segStyle.id === segment.segStyle);
-    if (segmentStyle === undefined) throw new Error("Segment Style " + segmentStyle.id + "not found");
+    if (segmentStyle === undefined) {
+        alert("ERROR: Segment Style " + segmentStyle.id + "not found");
+        throw new Error("Segment Style " + segmentStyle.id + "not found");
+    }
     document.getElementById("segmentStyleID").value = `${segmentStyle.id}`;
     document.getElementById("segmentStyleLaserMode").textContent = `Laser Mode: ${segmentStyle.laserMode}`;
     document.getElementById("travelersList").textContent = ""; // Need to clear each time we redraw, otherwise they keep getting appended

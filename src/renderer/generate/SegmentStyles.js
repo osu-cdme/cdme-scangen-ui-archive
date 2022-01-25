@@ -6,24 +6,33 @@ const defaults = require(path.join(paths.GetBackendPath(), "schema.json"));
 const { createInputWithLabel, createElementWithText } = require("./utility.js");
 
 class SegmentStyles {
-    constructor(isGenerate) {
-        this.styles = [];
-        this.defaultHatchSegmentStyleID = "default";
-        this.defaultContourSegmentStyleID = "default";
+    constructor(isGenerate, build) {
         this.isGenerate = isGenerate;
 
-        // Add a new segment style, which defaults to the first one in the schema
-        this.New();
+        // If generating, construct with all default values
+        if (isGenerate) {
+            this.styles = [];
+            this.New(); // New style defaults to first in the schema
 
-        // Manually add the second one from the schema
-        this.styles.push(
-            new SegmentStyle({
-                id: defaults["Segment Styles"][1].id,
-                velocityProfileID: defaults["Segment Styles"][1].velocityProfileID,
-                laserMode: defaults["Segment Styles"][1].laserMode,
-                travelers: [],
-            })
-        );
+            // Manually add the second one from the schema
+            this.styles.push(
+                new SegmentStyle({
+                    id: defaults["Segment Styles"][1].id,
+                    velocityProfileID: defaults["Segment Styles"][1].velocityProfileID,
+                    laserMode: defaults["Segment Styles"][1].laserMode,
+                    travelers: [],
+                })
+            );
+        }
+
+        // Otherwise, load from passed-in build object
+        else {
+            this.styles = build.segmentStyles;
+        }
+
+        this.defaultHatchSegmentStyleID = "default";
+        this.defaultContourSegmentStyleID = "default";
+
         this.Refresh();
     }
 

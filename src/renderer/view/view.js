@@ -1,10 +1,10 @@
 // PURPOSE: High-level control of all the JavaScript bells and whistles of the 'view.html' page
 
 // Functions used from other classes
-const { getBuildFromFilePath, setCurrentBuild, setCurrentPath } = require('../common');
-const { path, paths, fs } = require('../common');
-const { drawBuild } = require('./drawing');
-const { getSettings } = require('./drawing');
+const { getBuildFromFilePath, setCurrentBuild, setCurrentPath } = require("../common");
+const { path, paths, fs } = require("../common");
+const { drawBuild } = require("./drawing");
+const { getSettings } = require("./drawing");
 
 // Not likely that we change vectors much from this screen specifically, at least short term
 // document.getElementById('save').addEventListener('click', SaveChangesToLayer);
@@ -13,66 +13,70 @@ const { getSettings } = require('./drawing');
 // Leave this at the end; messes with the order of defining things otherwise
 // Selectively draw different parts based on checfkbox input
 
-const glob = require('glob');
+const glob = require("glob");
 main();
-async function main () {
-  // If xml directory doesn't exist, create it
-  if (!fs.existsSync(path.join(paths.GetUIPath(), 'xml'))) {
-    fs.mkdirSync(path.join(paths.GetUIPath(), 'xml'));
-  }
-
-  // Get all files in directory with .xml ending
-  const files = glob.sync(path.join(paths.GetUIPath(), 'xml', '*.xml'));
-  if (files.length === 0) {
-    // Send them elsewhere if no .XML files to view
-    alert("No scan files found! Generate them first via the 'Generate Vectors' tab on the left.");
-    return;
-  }
-
-  const firstFile = files[0];
-  const build = await getBuildFromFilePath(firstFile);
-  for (const segStyle of build.segmentStyles) {
-    if (segStyle.travelers.length) {
-      for (const traveler of segStyle.travelers) {
-        powerMin = Math.min(powerMin, traveler.power);
-        powerMax = Math.max(powerMax, traveler.power);
-      }
+async function main() {
+    // If xml directory doesn't exist, create it
+    if (!fs.existsSync(path.join(paths.GetUIPath(), "xml"))) {
+        fs.mkdirSync(path.join(paths.GetUIPath(), "xml"));
     }
-  }
 
-  setCurrentBuild(build);
-  setCurrentPath(firstFile);
-  drawBuild(build, 'mainsvg', getSettings());
+    // Get all files in directory with .xml ending
+    const files = glob.sync(path.join(paths.GetUIPath(), "xml", "*.xml"));
+    if (files.length === 0) {
+        // Send them elsewhere if no .XML files to view
+        alert("No scan files found! Generate them first via the 'Generate Vectors' tab on the left.");
+        return;
+    }
 
-  // Set this to false to remove the load step; useful for quick debugging stuff
-  const DRAW_THUMBNAILS = true;
-  if (DRAW_THUMBNAILS) {
-    require('./load').DrawThumbnails();
-  } else {
-    document.getElementById('loading').style.display = 'none';
-  }
+    const firstFile = files[0];
+    const build = await getBuildFromFilePath(firstFile);
+    for (const segStyle of build.segmentStyles) {
+        if (segStyle.travelers.length) {
+            for (const traveler of segStyle.travelers) {
+                powerMin = Math.min(powerMin, traveler.power);
+                powerMax = Math.max(powerMax, traveler.power);
+            }
+        }
+    }
+
+    setCurrentBuild(build);
+    setCurrentPath(firstFile);
+    drawBuild(build, "mainsvg", getSettings());
+
+    // Set this to false to remove the load step; useful for quick debugging stuff
+    const DRAW_THUMBNAILS = true;
+    if (DRAW_THUMBNAILS) {
+        require("./load").DrawThumbnails();
+    } else {
+        document.getElementById("loading").style.display = "none";
+    }
 }
 
 // Calculate power bounds, which is used to color segments
-let powerMin = 9999999; let powerMax = -99999999;
+let powerMin = 9999999;
+let powerMax = -99999999;
 
 // Initiates page load
-require('./load.js');
+require("./load.js");
 
 // Handles actual drawing code
-require('./drawing.js');
+require("./drawing.js");
 
 // Sets up SVG clicking (queries nearest segment)
-require('./vectorselection.js');
+require("./vectorselection.js");
 
 // Sets up SVG panning
-require('./panning.js');
+require("./panning.js");
 
 // Sets up SVG scrolling
-require('./scrolling.js');
+require("./scrolling.js");
 
 // Sets up animation
-require('./animation.js');
+require("./animation.js");
 
 // Sets up segment styles and profiles behavior
-require('./stylesandprofiles.js');
+require("./stylesandprofiles.js");
+
+// Sets up "save current build to file" functionality
+require("./export.js");
