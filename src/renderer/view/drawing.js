@@ -25,10 +25,17 @@ function drawBuild(build, svgID) {
     // Very good writeup on how viewBox, etc. works here: https://pandaqitutorials.com/Website/svg-coordinates-viewports
     const PADDING = 2;
     const bbox = GetSvgBoundingBox(build, PADDING);
-    const BOUNDS_WIDTH = bbox.maxX - bbox.minX;
-    const BOUNDS_HEIGHT = bbox.maxY - bbox.minY;
-    const viewboxStr = `${bbox.minX} ${bbox.minY} ${BOUNDS_WIDTH} ${BOUNDS_HEIGHT}`;
-    d3.select("#" + svgID).attr("viewBox", viewboxStr); // Basically lets us define our bounds
+
+    // If bbox gets sets to some unrealistic value, means there's no vectors on this layer and we should just set it to something that won't give us an error
+    if (Math.abs(bbox.maxX - 500000) > 500000) {
+        const viewboxStr = `-20 -20 40 40`;
+        d3.select("#" + svgID).attr("viewBox", viewboxStr); // Basically lets us define our bounds
+    } else {
+        const BOUNDS_WIDTH = bbox.maxX - bbox.minX;
+        const BOUNDS_HEIGHT = bbox.maxY - bbox.minY;
+        const viewboxStr = `${bbox.minX} ${bbox.minY} ${BOUNDS_WIDTH} ${BOUNDS_HEIGHT}`;
+        d3.select("#" + svgID).attr("viewBox", viewboxStr); // Basically lets us define our bounds
+    }
 
     for (const segment of getSegmentsFromBuild(build)) {
         outputSegment(segment, svgID);
