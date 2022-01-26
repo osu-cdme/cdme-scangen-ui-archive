@@ -13,6 +13,7 @@ svg.addEventListener("click", (e) => {
 
     // Search for closest segment and trigger color
     closestSegment = getClosestSegment(cursorpt.x, cursorpt.y, getCurrentBuild());
+    if (closestSegment === null) return; // Either no segments on that layer or no view options toggled
     chosenSegment = closestSegment;
     RenderSegmentInfo(closestSegment, getCurrentBuild());
     const closestSegmentHTML = getHTMLSegmentFromNumber(closestSegment.number);
@@ -28,7 +29,16 @@ function getClosestSegment(x, y) {
     let closestSegment = null;
     let closestDistance = Infinity;
 
+    const drawHatches = document.getElementById("drawHatches").checked;
+    const drawContours = document.getElementById("drawContours").checked;
+    const drawJumps = document.getElementById("drawJumps").checked;
+    const segmentsToCheck = [];
     for (const segment of getSegmentsFromBuild(getCurrentBuild())) {
+        // Don't query vectors that aren't being drawn on the screen
+        if (segment.type === "hatch" && !drawHatches) continue;
+        if (segment.type === "contour" && !drawContours) continue;
+        if (segment.type === "jump" && !drawJumps) continue;
+
         // TODO: Probably best to scale this based on zoom level or bounding box, as this'll start to get unperformant very quickly with longer vectors
         const INTERVAL = 0.01; // mm
         for (const point of getPointsOfSegment(segment, INTERVAL)) {
