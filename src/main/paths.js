@@ -1,5 +1,5 @@
 const path = require("path");
-const building = false;
+const building = true;
 module.exports.GetUIPath = () => {
     if (building) return path.join(__dirname, "..", "..", "..");
     return path.join(__dirname, "..", "..");

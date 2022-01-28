@@ -19,6 +19,7 @@ class VelocityProfiles {
         else {
             this.profiles = build.velocityProfiles;
         }
+        this.Refresh();
     }
 
     Get() {
