@@ -1,4 +1,4 @@
-const { path, paths, fs } = require("../common");
+const { path, paths, fs, wipe, cacheThumbnails, cacheBuilds, getLayerFromFilePath } = require("../common");
 
 // Load data; requires cdme-scangen repository to be in parallel folder to cdme-scangen-ui, for now
 const optionsData = require("./optionsdata");
@@ -163,7 +163,7 @@ function parseStderr(chunkBuf) {
                 document.getElementById("progressText").textContent = "Done!";
             } else {
                 document.getElementById("done").style.width = number;
-                document.getElementById("progressText").textContent = `(Step 1 of 2) Processing Layers (${currentLayer} / ${lastLayer})`;
+                document.getElementById("progressText").textContent = `(Step 1 of 4) Processing Layers (${currentLayer} / ${lastLayer})`;
             }
         }
     }
@@ -181,10 +181,9 @@ function parseStdout(chunkBuf) {
             const number = finishText.match(numberRegex)[0];
             if (number === lastLayer.toString()) {
                 document.getElementById("done").style.width = "100%";
-                document.getElementById("progressText").textContent = "Please wait a moment for some finishing operations.";
             } else {
                 document.getElementById("done").style.width = (number / lastLayer) * 100 + "%";
-                document.getElementById("progressText").textContent = `(Step 2 of 2) Generating XML Files (${number}/${lastLayer})`;
+                document.getElementById("progressText").textContent = `(Step 2 of 4) Generating XML Files (${number}/${lastLayer})`;
             }
         }
     }
@@ -199,6 +198,13 @@ function spawnProcess(styles, profiles, defaults) {
         return;
     }
     running = true;
+
+    // Wipe everything in 'xml' directory just to ensure we have a fresh start on caching, etc.
+    if (!fs.existsSync(path.join(paths.GetUIPath(), "xml"))) {
+        fs.mkdirSync(path.join(paths.GetUIPath(), "xml"));
+    }
+    wipe();
+
     // console.log("styles: ", styles);
     // console.log("profiles: ", profiles);
     document.getElementById("progressText").textContent = "Spawning child process.";
@@ -243,7 +249,7 @@ function spawnProcess(styles, profiles, defaults) {
     process.stderr.on("data", (chunk) => {
         parseStderr(chunk);
     });
-    process.on("close", (code) => {
+    process.on("close", async (code) => {
         running = false;
         console.log("Child process exited with code " + code + ".");
         if (code !== 0) {
@@ -255,25 +261,24 @@ function spawnProcess(styles, profiles, defaults) {
             return;
         }
 
-        // Wipe all files currently in 'xml' directory, getting rid of whatever build was previously in there (if any)
-        const fs = require("fs");
-        const path = require("path");
-        if (!fs.existsSync(path.join(paths.GetUIPath(), "xml"))) {
-            fs.mkdirSync(path.join(paths.GetUIPath(), "xml"));
-        }
-        const xmlFiles = fs.readdirSync(path.join(paths.GetUIPath(), "xml"));
-        xmlFiles.forEach((file) => {
-            fs.unlinkSync(path.join(paths.GetUIPath(), "xml", file));
-        });
-
         // Copy over the XML files produced by `cdme-scangen` to the directory read from by `cdme-scangen-ui`
         const files = fs.readdirSync(path.join(paths.GetBackendPath(), "XMLOutput"));
         files.forEach((file) => {
             if (file.includes(".xml")) {
                 // Ignore the .SCN file
-                fs.copyFileSync(path.join(paths.GetBackendPath(), "XMLOutput", file), path.join(paths.GetUIPath(), "xml", file));
+                fs.copyFileSync(
+                    path.join(paths.GetBackendPath(), "XMLOutput", file),
+                    path.join(paths.GetUIPath(), "xml", getLayerFromFilePath(file).toString() + ".xml") // Trim to just layer num
+                );
             }
         });
+
+        // Cache 'Build' objects
+        await cacheBuilds();
+
+        // Cache 'svg' thumbnails
+        await cacheThumbnails();
+
         alert('Build complete! Files can now be viewed under the "View Vectors" tab.');
         document.getElementById("progressText").textContent = "Build complete!";
         document.getElementById("done").style.width = "100%";

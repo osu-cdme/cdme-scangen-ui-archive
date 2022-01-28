@@ -44,4 +44,6 @@ python/
 
 # .XML files are just input and output and shouldn't be added to Git; Second one is just a test file
 xml/*.xml
+xml/*.json
+xml/*.png
 output.xml

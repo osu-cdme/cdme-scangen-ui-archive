@@ -7,6 +7,9 @@ const { BrowserWindow } = require("@electron/remote/main");
 require("@electron/remote/main").initialize();
 const { app, BrowserWindow, BrowserView, ipcMain } = require("electron");
 
+// See https://stackoverflow.com/q/60106922/6402548 for the error I was running into; this line fixes it
+app.allowRendererProcessReuse = false;
+
 function createWindow() {
     const win = new BrowserWindow({
         width: 800,

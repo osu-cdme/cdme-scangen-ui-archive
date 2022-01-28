@@ -1,7 +1,8 @@
 // Using React or similar would make this much easier, but that's additional technical complexity I don't want to put on whoever's maintaining after me
 // I'm basically reimplementing automatic state updating from React, lol
 const { SegmentStyle, Traveler, Wobble } = require("alsam-xml");
-const { path, paths, getCurrentBuild } = require("../common");
+const path = require("path");
+const paths = require("../paths");
 const defaults = require(path.join(paths.GetBackendPath(), "schema.json"));
 const { createInputWithLabel, createElementWithText } = require("./utility.js");
 

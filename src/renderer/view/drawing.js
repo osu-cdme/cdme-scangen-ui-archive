@@ -38,7 +38,7 @@ function drawBuild(build, svgID) {
     }
 
     for (const segment of getSegmentsFromBuild(build)) {
-        outputSegment(segment, svgID);
+        outputSegment(segment, document.getElementById("mainsvg"));
     }
 }
 exports.drawBuild = drawBuild;
@@ -46,6 +46,7 @@ exports.drawBuild = drawBuild;
 function percentage(a, b, c) {
     return (c - a) / (b - a);
 }
+exports.percentage = percentage;
 // Canvas is less flexible for zooming and such, but is generally more performant, so we use it for thumbnails
 function drawBuildCanvas(build, canvasID) {
     const canvasCtx = document.getElementById(canvasID).getContext("2d");
@@ -90,7 +91,9 @@ function GetSvgBoundingBox(build, padding) {
 }
 exports.GetSvgBoundingBox = GetSvgBoundingBox;
 
-function outputSegment(segment, svgID) {
+// If second element is not null, append to something with that ID
+// Otherwise, assume svgReference is an svg node reference we can directly append to
+function outputSegment(segment, svgRef) {
     if (segment.type === "jump" && !settings.jumps) return;
     if (segment.type === "hatch" && !settings.hatches) return;
     if (segment.type === "contour" && !settings.contours) return;
@@ -156,7 +159,7 @@ function outputSegment(segment, svgID) {
             throw new Error("Unknown segment type: " + type);
     }
 
-    d3.select("#" + svgID)
+    d3.select(svgRef)
         .append("line")
         .attr("x1", segment.x1)
         .attr("y1", segment.y1)
@@ -178,19 +181,23 @@ const settings = {
 };
 exports.getSettings = () => settings;
 
-document.getElementById("drawJumps").addEventListener("change", () => {
-    settings.jumps = document.getElementById("drawJumps").checked;
-    drawBuild(getCurrentBuild(), "mainsvg");
-});
-document.getElementById("drawHatches").addEventListener("change", () => {
-    settings.hatches = document.getElementById("drawHatches").checked;
-    drawBuild(getCurrentBuild(), "mainsvg");
-});
-document.getElementById("drawContours").addEventListener("change", () => {
-    settings.contours = document.getElementById("drawContours").checked;
-    drawBuild(getCurrentBuild(), "mainsvg");
-});
-document.getElementById("colorprofile").addEventListener("change", () => {
-    settings.colorprofile = document.getElementById("colorprofile").value;
-    drawBuild(getCurrentBuild(), "mainsvg");
-});
+// Null checks will only pass if we're on the 'View' page
+const drawJumps = document.getElementById("drawJumps");
+if (drawJumps !== null) {
+    document.getElementById("drawJumps").addEventListener("change", () => {
+        settings.jumps = document.getElementById("drawJumps").checked;
+        drawBuild(getCurrentBuild(), "mainsvg");
+    });
+    document.getElementById("drawHatches").addEventListener("change", () => {
+        settings.hatches = document.getElementById("drawHatches").checked;
+        drawBuild(getCurrentBuild(), "mainsvg");
+    });
+    document.getElementById("drawContours").addEventListener("change", () => {
+        settings.contours = document.getElementById("drawContours").checked;
+        drawBuild(getCurrentBuild(), "mainsvg");
+    });
+    document.getElementById("colorprofile").addEventListener("change", () => {
+        settings.colorprofile = document.getElementById("colorprofile").value;
+        drawBuild(getCurrentBuild(), "mainsvg");
+    });
+}

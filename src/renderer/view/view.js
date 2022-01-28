@@ -1,7 +1,7 @@
 // PURPOSE: High-level control of all the JavaScript bells and whistles of the 'view.html' page
 
 // Functions used from other classes
-const { getBuildFromFilePath, setCurrentBuild, setCurrentPath } = require("../common");
+const { getBuildFromFilePath, setCurrentBuild, setCurrentPath, getLayerFromFilePath } = require("../common");
 const { path, paths, fs } = require("../common");
 const { drawBuild } = require("./drawing");
 const { getSettings } = require("./drawing");
@@ -30,7 +30,8 @@ async function main() {
     }
 
     const firstFile = files[0];
-    const build = await getBuildFromFilePath(firstFile);
+    let layerNum = getLayerFromFilePath(firstFile);
+    const build = await getBuildFromFilePath(layerNum);
     for (const segStyle of build.segmentStyles) {
         if (segStyle.travelers.length) {
             for (const traveler of segStyle.travelers) {

@@ -1,7 +1,7 @@
 // PURPOSE: Handle everything about the Layer List
 
 const natsort = require("natsort").default;
-const { fs, path, paths, d3 } = require("../common");
+const { fs, path, paths, d3, getLayerFromFilePath } = require("../common");
 const { drawBuild, drawBuildCanvas } = require("./drawing");
 const { getBuildFromFilePath, setCurrentBuild, setCurrentPath } = require("../common");
 
@@ -13,18 +13,13 @@ module.exports.RenderLayerList = () => {
         files.forEach(async (file) => {
             const filePath = file;
 
-            // Just to make sure we don't match numbers in the filepath or something, we do what's essentially a nested regex search
-            const endpart = file.match(/scan_\d+/g)[0];
-            const layerNum = parseInt(endpart.match(/\d+/g)[0]);
-
+            const layerNum = getLayerFromFilePath(file);
             const li = d3.select("#layerList").append("li");
 
-            li.append("canvas")
-                .attr("id", "canvas_" + layerNum)
-                .attr("width", 50)
-                .attr("height", 50);
-            const build = await getBuildFromFilePath(filePath);
-            drawBuildCanvas(build, "canvas_" + layerNum);
+            li.append("img")
+                .attr("src", path.join(paths.GetUIPath(), "xml", `${layerNum}.png`))
+                .attr("width", 30)
+                .attr("height", 30);
 
             if (layerNum === 1) {
                 li.classed("selectedLayer", true);
@@ -36,7 +31,8 @@ module.exports.RenderLayerList = () => {
                     wipeSelectedLayers();
                     li.classed("selectedLayer", true);
                     e.preventDefault();
-                    const build = await getBuildFromFilePath(filePath);
+                    const layerNum = getLayerFromFilePath(filePath);
+                    const build = await getBuildFromFilePath(layerNum);
                     setCurrentBuild(build);
                     setCurrentPath(filePath);
                     drawBuild(build, "mainsvg");
