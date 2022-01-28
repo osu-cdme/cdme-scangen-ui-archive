@@ -153,6 +153,7 @@ function parseStderr(chunkBuf) {
     console.log("stderr: " + chunkStr);
     if (chunkStr.includes("Processing Layers")) {
         const fraction = chunkStr.match(getFractionRegex)[0];
+        const currentLayer = parseInt(fraction.match(/\d+/g)[0]);
         lastLayer = parseInt(fraction.match(/\d+/g)[1]);
         console.log("lastLayer: " + lastLayer);
         const number = regex.exec(chunkStr)[0]; // Exec used rather than string.match() b/c exec only returns the first match by default
@@ -162,7 +163,7 @@ function parseStderr(chunkBuf) {
                 document.getElementById("progressText").textContent = "Done!";
             } else {
                 document.getElementById("done").style.width = number;
-                document.getElementById("progressText").textContent = `(1/2) Processing Layers (${number})`;
+                document.getElementById("progressText").textContent = `(Step 1 of 2) Processing Layers (${currentLayer} / ${lastLayer})`;
             }
         }
     }
@@ -178,15 +179,26 @@ function parseStdout(chunkBuf) {
         if (chunkStr.match(finishRegex)) {
             const finishText = chunkStr.match(finishRegex)[0];
             const number = finishText.match(numberRegex)[0];
-            document.getElementById("done").style.width = (number / lastLayer) * 100 + "%";
-            document.getElementById("progressText").textContent = `(2/2) Generating XML Files (${number}/${lastLayer})`;
+            if (number === lastLayer.toString()) {
+                document.getElementById("done").style.width = "100%";
+                document.getElementById("progressText").textContent = "Please wait a moment for some finishing operations.";
+            } else {
+                document.getElementById("done").style.width = (number / lastLayer) * 100 + "%";
+                document.getElementById("progressText").textContent = `(Step 2 of 2) Generating XML Files (${number}/${lastLayer})`;
+            }
         }
     }
 }
 
 // Launch the application when they hit the button
 const spawn = require("child_process").spawn;
+let running = false;
 function spawnProcess(styles, profiles, defaults) {
+    if (running) {
+        alert("Already running!");
+        return;
+    }
+    running = true;
     // console.log("styles: ", styles);
     // console.log("profiles: ", profiles);
     document.getElementById("progressText").textContent = "Spawning child process.";
@@ -232,10 +244,11 @@ function spawnProcess(styles, profiles, defaults) {
         parseStderr(chunk);
     });
     process.on("close", (code) => {
+        running = false;
         console.log("Child process exited with code " + code + ".");
         if (code !== 0) {
             alert(
-                "Build process did not work correctly! Please send the .STL file you were using and screenshots of your generation settings to the developers of this application."
+                "Build process did not work correctly! If you were using Island/Striping, please lower Island/Stripe size and try again. Otherwise, please consider sending some information regarding what you were doing to developers of this application if you'd like it fixed."
             );
             document.getElementById("progressText").textContent = "Error spawning child process.";
             document.getElementById("done").style.width = "0%";
@@ -262,5 +275,7 @@ function spawnProcess(styles, profiles, defaults) {
             }
         });
         alert('Build complete! Files can now be viewed under the "View Vectors" tab.');
+        document.getElementById("progressText").textContent = "Build complete!";
+        document.getElementById("done").style.width = "100%";
     });
 }
