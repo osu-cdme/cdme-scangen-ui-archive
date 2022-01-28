@@ -27,7 +27,7 @@ function drawBuild(build, svgID) {
     const bbox = GetSvgBoundingBox(build, PADDING);
 
     // If bbox gets sets to some unrealistic value, means there's no vectors on this layer and we should just set it to something that won't give us an error
-    if (Math.abs(bbox.maxX - 500000) > 500000) {
+    if (Math.abs(bbox.maxX) > 500000) {
         const viewboxStr = `-20 -20 40 40`;
         d3.select("#" + svgID).attr("viewBox", viewboxStr); // Basically lets us define our bounds
     } else {
