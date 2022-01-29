@@ -4,7 +4,9 @@ const { getCurrentBuild } = require("../common");
 // Handles the SVG click event, which is for selecting the nearest vector
 const pt = document.getElementById("mainsvg").createSVGPoint();
 const svg = document.getElementById("mainsvg");
-let closestSegment;
+
+let selectedSegments = [];
+let selectedSegmentsDOM = [];
 svg.addEventListener("click", (e) => {
     console.log("Click event fired!");
     pt.x = e.clientX;
@@ -17,10 +19,16 @@ svg.addEventListener("click", (e) => {
     chosenSegment = closestSegment;
     RenderSegmentInfo(closestSegment, getCurrentBuild());
     const closestSegmentHTML = getHTMLSegmentFromNumber(closestSegment.number);
-    toggleSegment(closestSegmentHTML);
-});
 
-let chosenSegment = null;
+    if (!e.shiftKey) {
+        selectedSegments = [];
+        selectedSegmentsDOM = [];
+    }
+
+    selectedSegments.push(closestSegment);
+    selectedSegmentsDOM.push(closestSegmentHTML);
+    refreshEnabledSegments();
+});
 
 // Given a click location on the svg, return the closest segment to that point
 function getClosestSegment(x, y) {
@@ -56,24 +64,20 @@ function getHTMLSegmentFromNumber(number) {
     return document.getElementById(`segment-${number}`);
 }
 
-// When the user clicks on a segment, update the segment's style
-function toggleSegment(segment) {
-    wipeSelectedSegments();
-    segment.classList.toggle("selected");
-}
-
-function wipeSelectedSegments() {
+function refreshEnabledSegments() {
     const segments = document.querySelectorAll(".selected");
     segments.forEach((segment) => {
         segment.classList.remove("selected");
     });
+    for (const segment of selectedSegmentsDOM) {
+        segment.classList.add("selected");
+    }
 }
 
 document.getElementById("segmentStyleID").addEventListener("change", function () {
-    if (chosenSegment === null) return; // No segment selected
-    chosenSegment.segStyle = this.value;
-    console.log("new segment object: ", chosenSegment);
-    console.log("currentBuild: ", getCurrentBuild());
+    for (const segment of selectedSegments) {
+        segment.segStyle = this.value;
+    }
 });
 
 function RenderSegmentInfo(segment, build) {
@@ -152,4 +156,3 @@ function RenderSegmentInfo(segment, build) {
 exports.RenderSegmentInfo = RenderSegmentInfo;
 exports.getClosestSegment = getClosestSegment;
 exports.getHTMLSegmentFromNumber = getHTMLSegmentFromNumber;
-exports.toggleSegment = toggleSegment;
