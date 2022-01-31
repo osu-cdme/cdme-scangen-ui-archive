@@ -1,12 +1,15 @@
 // Functions that actually draw on the SVG
 const { d3, getCurrentBuild } = require("../common");
-const { getSegmentsFromBuild, getContoursFromBuild, getPowerProportion } = require("../common");
+const { getSegmentsFromBuild, getContoursFromBuild } = require("../common");
 const { BoundingBox } = require("../classes");
 
 // Return thermal color for provided 'Power' value
-function getColorFromPower(value) {
-    const proportion = getPowerProportion(value);
-    if (proportion === -1) return "#ffcc00"; // If every segment is the same power, use a dark yellow as default
+function getColorFromPower(build, value) {
+    function getPowerProportion(power) {
+        return;
+    }
+    if (build.minPower === build.maxPower) return "#8B8000"; // Intermediate shade of yellow is our default
+    const proportion = (power - build.minPower) / (build.maxPower - build.minPower);
     const green = Math.max(0, Math.round(255 * (1 - proportion)));
     const red = Math.min(Math.round(255 * proportion), 255);
     return `rgb(${red}, ${green}, 0)`;

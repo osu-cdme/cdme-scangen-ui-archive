@@ -13,6 +13,10 @@ const { getSettings } = require("./drawing");
 // Leave this at the end; messes with the order of defining things otherwise
 // Selectively draw different parts based on checfkbox input
 
+// Calculate power bounds, which is used to color segments
+let powerMin = 9999999;
+let powerMax = -99999999;
+
 const glob = require("glob");
 main();
 async function main() {
@@ -32,14 +36,6 @@ async function main() {
     const firstFile = files[0];
     let layerNum = getLayerFromFilePath(firstFile);
     const build = await getBuildFromFilePath(layerNum);
-    for (const segStyle of build.segmentStyles) {
-        if (segStyle.travelers.length) {
-            for (const traveler of segStyle.travelers) {
-                powerMin = Math.min(powerMin, traveler.power);
-                powerMax = Math.max(powerMax, traveler.power);
-            }
-        }
-    }
 
     setCurrentBuild(build);
     setCurrentPath(firstFile);
@@ -53,10 +49,6 @@ async function main() {
         document.getElementById("loading").style.display = "none";
     }
 }
-
-// Calculate power bounds, which is used to color segments
-let powerMin = 9999999;
-let powerMax = -99999999;
 
 // Initiates page load
 require("./load.js");
