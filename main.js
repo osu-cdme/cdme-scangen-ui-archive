@@ -10,6 +10,19 @@ const { app, BrowserWindow, BrowserView, ipcMain } = require("electron");
 // See https://stackoverflow.com/q/60106922/6402548 for the error I was running into; this line fixes it
 app.allowRendererProcessReuse = false;
 
+const ipc = require("electron").ipcMain;
+const paths = require("./src/main/paths.js");
+ipc.on("get-ui-path", (event) => {
+    event.returnValue = paths.GetUIPath();
+});
+
+ipc.on("get-backend-path", (event) => {
+    event.returnValue = paths.GetBackendPath();
+});
+
+// Implements IPC signals and functionality for Imports/Exports
+require("./src/main/io.js").Setup();
+
 function createWindow() {
     const win = new BrowserWindow({
         width: 800,
@@ -38,16 +51,3 @@ app.on("window-all-closed", function () {
 app.whenReady().then(() => {
     createWindow();
 });
-
-const ipc = require("electron").ipcMain;
-const paths = require("./src/main/paths.js");
-ipc.on("get-ui-path", (event) => {
-    event.returnValue = paths.GetUIPath();
-});
-
-ipc.on("get-backend-path", (event) => {
-    event.returnValue = paths.GetBackendPath();
-});
-
-// Implements IPC signals and functionality for Imports/Exports
-require("./src/main/io.js").Setup();

@@ -83,14 +83,17 @@ exports.getJumpsFromBuild = getJumpsFromBuild;
 const { LoadXML } = require("alsam-xml");
 const { SegmentStyles } = require("./generate/SegmentStyles");
 const { VelocityProfiles } = require("./generate/VelocityProfiles");
-async function getBuildFromFilePath(layerNum) {
+async function getBuildFromFilePath(layerNum, needsHTML) {
     // If we have a build cached, simply load that object. We assume it already has the below extra fields set up.
+    const fs = require("fs");
     if (fs.existsSync(path.join(paths.GetUIPath(), "xml", `${layerNum}.json`))) {
         const build = JSON.parse(fs.readFileSync(path.join(paths.GetUIPath(), "xml", `${layerNum}.json`), "utf8"));
-        let segmentStyles = new SegmentStyles(false, build); // Essentially just aliasing these, which is 'good enough'
-        let velocityProfiles = new VelocityProfiles(false, build);
-        build.segmentStyles = segmentStyles.Get();
-        build.velocityProfiles = velocityProfiles.Get();
+        if (needsHTML) {
+            let segmentStyles = new SegmentStyles(false, build); // Essentially just aliasing these, which is 'good enough'
+            let velocityProfiles = new VelocityProfiles(false, build);
+            build.segmentStyles = segmentStyles.Get();
+            build.velocityProfiles = velocityProfiles.Get();
+        }
         return build;
     }
 
@@ -98,10 +101,12 @@ async function getBuildFromFilePath(layerNum) {
     const response = await fetch(path.join(paths.GetUIPath(), "xml", `${layerNum}.xml`));
     const text = await response.text();
     const build = LoadXML(text);
-    let segmentStyles = new SegmentStyles(false, build); // Essentially just aliasing these, which, while it isn't particularly clean, is 'good enough'
-    let velocityProfiles = new VelocityProfiles(false, build);
-    build.segmentStyles = segmentStyles.Get();
-    build.velocityProfiles = velocityProfiles.Get();
+    if (needsHTML) {
+        let segmentStyles = new SegmentStyles(false, build); // Essentially just aliasing these, which, while it isn't particularly clean, is 'good enough'
+        let velocityProfiles = new VelocityProfiles(false, build);
+        build.segmentStyles = segmentStyles.Get();
+        build.velocityProfiles = velocityProfiles.Get();
+    }
 
     // --------------------------------------------------------------------------------
     // Make some additions to the base alsam-xml.js structure, which simplifies some stuff
@@ -196,17 +201,20 @@ function GetSvgBoundingBox(build, padding) {
 
 // Saves a .svg file corresponding to each given layer to file at folder 'xml/_X.svg' where X is the layer number
 // Source for much of the code is https://stackoverflow.com/a/23218877/6402548
-async function cacheThumbnails() {
+async function cacheThumbnails(needsHTML) {
     return new Promise(async (resolve, reject) => {
         // Read all files in 'xml' folder
         const progressText = document.getElementById("progressText");
         let numDone = 0;
         const glob = require("glob");
+        console.log("Querying for files at ", path.join(paths.GetUIPath(), "xml"));
         const files = glob.sync(path.join(paths.GetUIPath(), "xml", "*.xml"));
         for (const file of files) {
             // Generate segment with all our things
             const layerNum = getLayerFromFilePath(file);
-            const build = await getBuildFromFilePath(layerNum);
+            let build;
+            if (needsHTML) build = await getBuildFromFilePath(layerNum, true);
+            else build = await getBuildFromFilePath(layerNum);
 
             const canvas = document.createElement("canvas");
             const THUMBNAIL_SIZE = 30;
@@ -239,6 +247,7 @@ async function cacheThumbnails() {
             // Write canvas to png file
             const url = canvas.toDataURL("image/png", 1.0);
             const base64Data = url.replace(/^data:image\/png;base64,/, "");
+            const fs = require("fs");
             fs.writeFile(path.join(paths.GetUIPath(), "xml", `${layerNum}.png`), base64Data, "base64", function (err) {
                 if (err) {
                     console.log(err);
@@ -263,16 +272,20 @@ exports.getLayerFromFilePath = getLayerFromFilePath;
 
 // Save build objects to file
 const glob = require("glob");
-async function cacheBuilds() {
+async function cacheBuilds(needsHTML) {
     return new Promise(async (resolve, reject) => {
         const progressText = document.getElementById("progressText");
         let numDone = 0;
 
+        console.log("Reading from this folder: " + path.join(paths.GetUIPath(), "xml"));
         const files = glob.sync(path.join(paths.GetUIPath(), "xml", "*.xml"));
         console.log("files: ", files);
         for (const file of files) {
             let layerNum = getLayerFromFilePath(file);
-            const build = await getBuildFromFilePath(layerNum);
+            let build;
+            if (needsHTML) build = await getBuildFromFilePath(layerNum, true);
+            else build = await getBuildFromFilePath(layerNum);
+            const fs = require("fs");
             fs.writeFileSync(path.join(paths.GetUIPath(), "xml", build.header.layerNum + ".json"), JSON.stringify(build));
             numDone++;
             if (progressText !== null) {

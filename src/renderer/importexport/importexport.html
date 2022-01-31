@@ -30,11 +30,18 @@
             <button id="stlImport">STL</button>
             <button id="scnImport">SCN</button>
             <button id="thermalModelImport">Thermal Model (Unfinished)</button>
+            <p>Importing an SCN takes a bit. Please wait a minute or two until you get a confirmation popup to do anything!</p>
         </div>
         <div class="half">
             <h1>Export</h1>
             <button id="scnExport">SCN</button>
             <button id="hdf5Export">HDF5 (Unfinished)</button>
+        </div>
+        <div id="progressContainer">
+            <div id="progress">
+                <p id="progressText">Status: Waiting for user.</p>
+                <div id="done"></div>
+            </div>
         </div>
     </div>
     <script src="importexport.js"></script>

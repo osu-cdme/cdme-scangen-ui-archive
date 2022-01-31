@@ -17,51 +17,64 @@ module.exports.Setup = () => {
 function SetupSCNImport() {
     const JSZip = require("jszip");
     const fs = require("fs");
-    ipc.on("import-scn", (e) => {
-        if (!fs.existsSync(path.join(paths.GetUIPath(), "xml"))) {
-            fs.mkdirSync(path.join(paths.GetUIPath(), "xml"));
-        } else {
-            // Wipe 'xml' directory
-            fs.readdirSync(path.join(paths.GetUIPath(), "xml")).forEach((file) => {
-                fs.unlinkSync(path.join(paths.GetUIPath(), "xml", file));
-            });
-        }
-        dialog
-            .showOpenDialog({
-                title: "Select .SCN File",
-                filters: [{ name: ".SCN File", extensions: ["scn"] }],
-            })
-            .then((fileSelection) => {
-                // Verify they didn't cancel
-                if (fileSelection.canceled) return;
 
-                // Unzip, wipe `xml` dir, then copy all files over
-                const filePath = fileSelection.filePaths[0];
-                fs.readFile(filePath, (err, data) => {
-                    if (err) {
-                        e.reply("alert", `Error importing .SCN file from ${filePath}: ${err}`);
-                        return;
+    // We use handle() here because we want to use invoke() on the frontend so we can work with Promises
+    ipc.handle("import-scn", (e) => {
+        return new Promise((resolve, reject) => {
+            if (!fs.existsSync(path.join(paths.GetUIPath(), "xml"))) {
+                fs.mkdirSync(path.join(paths.GetUIPath(), "xml"));
+            } else {
+                // Wipe 'xml' directory
+                fs.readdirSync(path.join(paths.GetUIPath(), "xml")).forEach((file) => {
+                    fs.unlinkSync(path.join(paths.GetUIPath(), "xml", file));
+                });
+            }
+            dialog
+                .showOpenDialog({
+                    title: "Select .SCN File",
+                    filters: [{ name: ".SCN File", extensions: ["scn"] }],
+                })
+                .then((fileSelection) => {
+                    // Verify they didn't cancel
+                    if (fileSelection.canceled) {
+                        return reject("User canceled import.");
                     }
 
-                    // Wipe Directory
-                    console.log("Reading directory " + path.join(paths.GetUIPath(), "xml"));
-                    const files = fs.readdirSync(path.join(paths.GetUIPath(), "xml"));
-                    files.forEach((file) => {
-                        fs.unlinkSync(path.join(paths.GetUIPath(), "xml", file));
-                    });
+                    // Unzip, wipe `xml` dir, then copy all files over
+                    const filePath = fileSelection.filePaths[0];
+                    fs.readFile(filePath, async (err, data) => {
+                        if (err) {
+                            return reject("Unable to read file.");
+                        }
 
-                    // Load zip (that we already verified existed before wiping)
-                    JSZip.loadAsync(data).then((zip) => {
-                        const keys = Object.keys(zip.files);
-                        keys.forEach((key) => {
-                            zip.files[key].async("string").then((data) => {
-                                fs.writeFileSync(path.join(paths.GetUIPath(), "xml", key), data);
+                        // Load zip (that we already verified existed before wiping)
+                        await JSZip.loadAsync(data).then((zip) => {
+                            const keys = Object.keys(zip.files);
+                            let promises = [];
+                            keys.forEach((key) => {
+                                promises.push(
+                                    new Promise(async (resolve, reject) => {
+                                        const data = await zip.files[key].async("string");
+                                        promises.push(data);
+                                        let layerNum = parseInt(key.match(/\d+.xml/)[0].match(/\d+/)[0]);
+                                        fs.writeFileSync(path.join(paths.GetUIPath(), "xml", layerNum + ".xml"), data);
+                                        resolve();
+                                    })
+                                );
                             });
+
+                            // Have to do some weird promises stuff to make sure we don't return before all the async operations are done
+                            Promise.all(promises)
+                                .then(() => {
+                                    return resolve("SCN file successfully imported!");
+                                })
+                                .catch((err) => {
+                                    return reject(err);
+                                });
                         });
                     });
-                    e.reply("alert", "SCN file successfully imported!");
                 });
-            });
+        });
     });
 }
 

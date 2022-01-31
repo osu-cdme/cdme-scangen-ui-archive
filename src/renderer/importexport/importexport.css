@@ -1,4 +1,47 @@
 .half {
     width: 300px;
     display: inline-block;
+    vertical-align: top;
+}
+
+#mainsection {
+    padding: 15px;
+    box-sizing: border-box;
+    width: 100%;
+    height: calc(100% - 51px);
+    padding: 0;
+}
+
+#progressContainer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    height: 50px;
+    width: 100%;
+    text-align: center;
+}
+
+/* This progress bar doesn't have the button on the left */
+#progress {
+    width: 100%;
+    height: 100%;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+}
+
+#progressText {
+    position: relative;
+    margin: 0;
+    line-height: 50px;
+    z-index: 3;
+}
+
+#done {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50px;
+    z-index: 2;
 }
