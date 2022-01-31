@@ -1,5 +1,13 @@
+button {
+    background-color: #232323;
+    color: white;
+    padding: 5px;
+    border: 1px gray solid;
+}
+
 .half {
-    width: 300px;
+    width: calc(50% - 150px);
+    margin-right: 100px;
     display: inline-block;
     vertical-align: top;
 }
@@ -9,7 +17,6 @@
     box-sizing: border-box;
     width: 100%;
     height: calc(100% - 51px);
-    padding: 0;
 }
 
 #progressContainer {
