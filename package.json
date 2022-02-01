@@ -5,26 +5,19 @@
   "main": "main.js",
   "dependencies": {
     "@electron/remote": "^2.0.1",
-    "acorn": "^8.7.0",
     "alsam-xml": "^1.2.4",
-    "canvas": "^2.9.0",
     "deepcopy": "^2.1.0",
-    "file-saver": "^2.0.5",
+    "glob": "^7.2.0",
     "js2xmlparser": "^4.0.2",
-    "json5": "^2.2.0",
     "jszip": "^3.7.1",
-    "mkdirp": "^1.0.4",
-    "natsort": "^2.0.3",
-    "semistandard": "^16.0.1"
+    "natsort": "^2.0.3"
   },
   "devDependencies": {
     "electron": "^13.1.5",
     "electron-builder": "^22.11.7",
-    "electron-rebuild": "^3.2.7",
-    "madge": "^5.0.1"
+    "semistandard": "^16.0.1"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron .",
     "build": "electron-builder build"
   },
@@ -64,6 +57,5 @@
       ],
       "icon": "static/logo.png"
     },
-    "icon": "static/logo.png"
   }
 }
