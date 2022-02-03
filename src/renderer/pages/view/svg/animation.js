@@ -1,7 +1,6 @@
 const { d3 } = require("../../../imports");
-const { outputSegment, drawBuild } = require("./drawing");
+const { outputSegment, drawBuild, reset } = require("./drawing");
 const { getSegmentsFromBuild, getCurrentBuild } = require("../../../Build");
-const { reset } = require("../drawing");
 
 let animating = false;
 let paused = false;

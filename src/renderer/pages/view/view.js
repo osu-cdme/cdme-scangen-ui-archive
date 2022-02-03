@@ -49,22 +49,22 @@ async function main() {
 require("./load.js");
 
 // Handles actual drawing code
-require("./drawing.js");
+require("./svg/drawing.js");
 
 // Sets up SVG clicking (queries nearest segment)
-require("./vectorselection.js");
+require("./querying/vectorselection.js");
 
 // Sets up SVG panning
-require("./panning.js");
+require("./svg/panning.js");
 
 // Sets up SVG scrolling
-require("./scrolling.js");
+require("./svg/scrolling.js");
 
 // Sets up animation
-require("./animation.js");
+require("./svg/animation.js");
 
 // Sets up segment styles and profiles behavior
-require("./stylesandprofiles.js");
+// require("./stylesandprofiles.js");
 
 // Sets up "save current build to file" functionality
 require("./export.js");

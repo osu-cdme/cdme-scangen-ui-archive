@@ -3,7 +3,6 @@ const fs = require("fs");
 const path = require("path");
 const paths = require("./paths");
 
-/* global __static */
 const d3 = require("../../static/d3.min.js");
 
 module.exports = {
