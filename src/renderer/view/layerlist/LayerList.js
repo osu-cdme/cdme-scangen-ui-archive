@@ -1,9 +1,9 @@
 // PURPOSE: Handle everything about the Layer List
 
 const natsort = require("natsort").default;
-const { fs, path, paths, d3, getLayerFromFilePath } = require("../common");
-const { drawBuild, drawBuildCanvas } = require("./drawing");
-const { getBuildFromFilePath, setCurrentBuild, setCurrentPath } = require("../common");
+const { path, paths, d3, getLayerFromFilePath } = require("../../common");
+const { drawBuild } = require("../drawing");
+const { getBuildFromFilePath, setCurrentBuild, setCurrentPath } = require("../../common");
 
 const glob = require("glob");
 module.exports.RenderLayerList = () => {
@@ -32,7 +32,7 @@ module.exports.RenderLayerList = () => {
                     li.classed("selectedLayer", true);
                     e.preventDefault();
                     const layerNum = getLayerFromFilePath(filePath);
-                    const build = await getBuildFromFilePath(layerNum);
+                    const build = await getBuildFromFilePath(layerNum, true);
                     setCurrentBuild(build);
                     setCurrentPath(filePath);
                     drawBuild(build, "mainsvg");

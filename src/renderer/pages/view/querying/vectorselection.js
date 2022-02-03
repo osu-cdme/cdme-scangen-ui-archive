@@ -1,5 +1,5 @@
-const { getSegmentsFromBuild, getPointsOfSegment } = require("../common");
-const { getCurrentBuild } = require("../common");
+const { getSegmentsFromBuild, getPointsOfSegment } = require("../../common");
+const { getCurrentBuild } = require("../../common");
 
 // Handles the SVG click event, which is for selecting the nearest vector
 const pt = document.getElementById("mainsvg").createSVGPoint();
@@ -14,9 +14,8 @@ svg.addEventListener("click", (e) => {
     const cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
 
     // Search for closest segment and trigger color
-    closestSegment = getClosestSegment(cursorpt.x, cursorpt.y, getCurrentBuild());
-    if (closestSegment === null) return; // Either no segments on that layer or no view options toggled
-    chosenSegment = closestSegment;
+    const closestSegment = getClosestSegment(cursorpt.x, cursorpt.y, getCurrentBuild());
+    if (closestSegment === null) return; // Either no segments on that
     RenderSegmentInfo(closestSegment, getCurrentBuild());
     const closestSegmentHTML = getHTMLSegmentFromNumber(closestSegment.number);
 
@@ -91,13 +90,27 @@ function RenderSegmentInfo(segment, build) {
     // Render Segment Style Information
     const segmentStyle = build.segmentStyles.find((segStyle) => segStyle.id === segment.segStyle);
     if (segmentStyle === undefined) {
-        alert("ERROR: Segment Style " + segmentStyle.id + "not found");
-        throw new Error("Segment Style " + segmentStyle.id + "not found");
+        alert("ERROR: Segment Style " + segment.segStyle + "not found");
+        throw new Error("Segment Style " + segment.segStyle + "not found");
     }
     document.getElementById("segmentStyleID").value = `${segmentStyle.id}`;
+    document.getElementById("segmentStyleID").onchange = function () {
+        segment.segStyle = this.value;
+    };
+    document.getElementById("segmentStyleID").onblur = function () {
+        if (!build.segmentStyles.find((segStyle) => segStyle.id === this.value)) {
+            console.log("build: ", build);
+            const err = new Error("Segment Style " + this.value + "not found. Rolling back to original. Please create the segment style first.");
+            alert(err.message);
+            segment.segStyle = segment.originalSegStyle;
+            document.getElementById("segmentStyleID").value = segment.originalSegStyle;
+            throw err;
+        }
+    };
+
     document.getElementById("segmentStyleLaserMode").textContent = `Laser Mode: ${segmentStyle.laserMode}`;
     document.getElementById("travelersList").textContent = ""; // Need to clear each time we redraw, otherwise they keep getting appended
-    if (segmentStyle.travelers.length !== 0) {
+    if (segmentStyle !== undefined && segmentStyle.travelers.length !== 0) {
         for (let i = 0; i < segmentStyle.travelers.length; i++) {
             const traveler = segmentStyle.travelers[i];
             const li = document.createElement("li");

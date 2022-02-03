@@ -4,10 +4,7 @@ const { getSegmentsFromBuild, getContoursFromBuild } = require("../common");
 const { BoundingBox } = require("../classes");
 
 // Return thermal color for provided 'Power' value
-function getColorFromPower(build, value) {
-    function getPowerProportion(power) {
-        return;
-    }
+function getColorFromPower(build, power) {
     if (build.minPower === build.maxPower) return "#8B8000"; // Intermediate shade of yellow is our default
     const proportion = (power - build.minPower) / (build.maxPower - build.minPower);
     const green = Math.max(0, Math.round(255 * (1 - proportion)));
@@ -51,8 +48,8 @@ function percentage(a, b, c) {
 }
 exports.percentage = percentage;
 // Canvas is less flexible for zooming and such, but is generally more performant, so we use it for thumbnails
-function drawBuildCanvas(build, canvasID) {
-    const canvasCtx = document.getElementById(canvasID).getContext("2d");
+function drawBuildCanvas(build, canvasRef) {
+    const canvasCtx = canvasRef.getContext("2d");
 
     // Calculate bounds
     const PADDING = 2;

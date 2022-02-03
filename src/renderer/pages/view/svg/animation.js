@@ -1,7 +1,7 @@
-const { d3 } = require("../common");
-const { outputSegment, drawBuild } = require("./drawing");
-const { getSegmentsFromBuild, getCurrentBuild, getVelocityOfSegment } = require("../common");
-const { reset } = require("./drawing");
+const { d3 } = require("../../common");
+const { outputSegment, drawBuild } = require("../drawing");
+const { getSegmentsFromBuild, getCurrentBuild, getVelocityOfSegment } = require("../../common");
+const { reset } = require("../drawing");
 
 let animating = false;
 let paused = false;

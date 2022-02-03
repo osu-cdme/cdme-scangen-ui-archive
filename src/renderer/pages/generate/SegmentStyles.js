@@ -9,6 +9,7 @@ const { createInputWithLabel, createElementWithText } = require("./utility.js");
 class SegmentStyles {
     constructor(isGenerate, build) {
         this.isGenerate = isGenerate;
+        this.build = build;
 
         // If generating, construct with all default values
         if (isGenerate) {
@@ -83,6 +84,9 @@ class SegmentStyles {
     }
 
     Refresh() {
+        console.log("Refresh!");
+        console.log("Build: ", this.build);
+
         // Wipe segmentStyles section
         while (document.getElementById("segmentStyles").firstChild) {
             document.getElementById("segmentStyles").removeChild(document.getElementById("segmentStyles").firstChild);

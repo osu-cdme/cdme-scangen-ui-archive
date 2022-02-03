@@ -35,7 +35,7 @@ async function main() {
 
     const firstFile = files[0];
     let layerNum = getLayerFromFilePath(firstFile);
-    const build = await getBuildFromFilePath(layerNum);
+    const build = await getBuildFromFilePath(layerNum, true);
 
     setCurrentBuild(build);
     setCurrentPath(firstFile);
