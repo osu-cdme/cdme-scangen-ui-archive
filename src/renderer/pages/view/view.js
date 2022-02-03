@@ -1,10 +1,9 @@
 // PURPOSE: High-level control of all the JavaScript bells and whistles of the 'view.html' page
 
 // Functions used from other classes
-const { getBuildFromFilePath, setCurrentBuild, setCurrentPath, getLayerFromFilePath } = require("../common");
-const { path, paths, fs } = require("../common");
-const { drawBuild } = require("./drawing");
-const { getSettings } = require("./drawing");
+const { getBuildFromLayerNum, getLayerFromFilePath, setCurrentBuild, setCurrentPath } = require("../../Build");
+const { path, paths, fs } = require("../../imports");
+const { drawBuild } = require("./svg/drawing");
 
 // Not likely that we change vectors much from this screen specifically, at least short term
 // document.getElementById('save').addEventListener('click', SaveChangesToLayer);
@@ -12,10 +11,6 @@ const { getSettings } = require("./drawing");
 // Not really "necessary" to have a main for js, but helps organizationally and to easily enable/disable functionality
 // Leave this at the end; messes with the order of defining things otherwise
 // Selectively draw different parts based on checfkbox input
-
-// Calculate power bounds, which is used to color segments
-let powerMin = 9999999;
-let powerMax = -99999999;
 
 const glob = require("glob");
 main();
@@ -35,11 +30,11 @@ async function main() {
 
     const firstFile = files[0];
     let layerNum = getLayerFromFilePath(firstFile);
-    const build = await getBuildFromFilePath(layerNum, true);
+    const build = await getBuildFromLayerNum(layerNum);
 
     setCurrentBuild(build);
     setCurrentPath(firstFile);
-    drawBuild(build, "mainsvg", getSettings());
+    drawBuild(build, "mainsvg");
 
     // Set this to false to remove the load step; useful for quick debugging stuff
     const DRAW_THUMBNAILS = true;

@@ -1,10 +1,8 @@
-const path = require("path");
-const paths = require("../../paths");
-const fs = require("fs");
+const { fs, path, paths } = require("../../imports");
 const clone = require("just-clone");
 
 const { ExportXML } = require("alsam-xml");
-const { getSegmentsFromBuild } = require("../../common.js");
+const { getSegmentsFromBuild } = require("../../Build");
 
 /* MAIN FUNCTION WE'LL INTERFACE WITH
     Param 1: Build object representing this layer. 

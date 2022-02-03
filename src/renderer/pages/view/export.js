@@ -1,6 +1,6 @@
 const { ExportXML } = require("alsam-xml");
-const { getCurrentBuild, getCurrentPath, getSegmentsFromBuild } = require("../common");
-const { fs } = require("../common");
+const { getCurrentBuild, getCurrentPath, getSegmentsFromBuild } = require("../../Build");
+const { fs } = require("../../imports");
 
 document.getElementById("saveLayer").addEventListener("click", SaveChangesToLayer);
 function SaveChangesToLayer() {

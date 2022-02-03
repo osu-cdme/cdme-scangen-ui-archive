@@ -1,6 +1,6 @@
 // Functions that actually draw on the SVG
-const { d3, getCurrentBuild } = require("../common");
-const { getSegmentsFromBuild, getContoursFromBuild } = require("../../../Build");
+const { d3 } = require("../../../imports");
+const { getCurrentBuild, getSegmentsFromBuild, getContoursFromBuild } = require("../../../Build");
 
 // Return thermal color for provided 'Power' value
 function getColorFromPower(build, power) {

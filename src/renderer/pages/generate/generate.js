@@ -1,4 +1,6 @@
-const { path, paths, fs, wipe, cacheThumbnails, cacheBuilds, getLayerFromFilePath } = require("../common");
+const { path, paths, fs } = require("../../imports");
+const { cacheThumbnails, cacheBuilds } = require("../../caching");
+const { getLayerFromFilePath } = require("../../Build");
 
 // Load data; requires cdme-scangen repository to be in parallel folder to cdme-scangen-ui, for now
 const optionsData = require("./optionsdata");

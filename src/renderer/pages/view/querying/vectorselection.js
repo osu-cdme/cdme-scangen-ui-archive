@@ -1,5 +1,5 @@
-const { getSegmentsFromBuild, getPointsOfSegment } = require("../../common");
-const { getCurrentBuild } = require("../../common");
+const { getCurrentBuild, getHatchesFromBuild, getContoursFromBuild, getJumpsFromBuild } = require("../../../Build");
+const { getPointsOfSegment } = require("../../../segments");
 
 // Handles the SVG click event, which is for selecting the nearest vector
 const pt = document.getElementById("mainsvg").createSVGPoint();
@@ -29,35 +29,48 @@ svg.addEventListener("click", (e) => {
     refreshEnabledSegments();
 });
 
-// Given a click location on the svg, return the closest segment to that point
-function getClosestSegment(x, y) {
-    document.getElementById("segmentDetails").style.display = "block";
+// Primarily-segment-related functionality
+// Given a point, essentially continually narrows down segments in question until it finds the closest one
+// Goal: Much more efficient than searching at like a ~.1mm interval along every single one on the layer
+function getClosestSegment(point) {
+    // closeSegments = Segments before we filter them using the current interval
+    // closerSegments = Segments AFTER we filter them using the current interval
+    let closeSegments = new Set();
+    let closerSegments = new Set();
 
-    let closestSegment = null;
-    let closestDistance = Infinity;
+    // Only search among those that are actually drawn on the screen, which is much more intuitive for users
+    if (document.getElementById("drawHatches").checked) closeSegments = new Set(...closeSegments, getHatchesFromBuild(getCurrentBuild()));
+    if (document.getElementById("drawContours").checked) closeSegments = new Set(...closeSegments, ...getContoursFromBuild(getCurrentBuild()));
+    if (document.getElementById("drawJumps").checked) closeSegments = new Set(...closeSegments, ...getJumpsFromBuild(getCurrentBuild()));
 
-    const drawHatches = document.getElementById("drawHatches").checked;
-    const drawContours = document.getElementById("drawContours").checked;
-    const drawJumps = document.getElementById("drawJumps").checked;
-    const segmentsToCheck = [];
-    for (const segment of getSegmentsFromBuild(getCurrentBuild())) {
-        // Don't query vectors that aren't being drawn on the screen
-        if (segment.type === "hatch" && !drawHatches) continue;
-        if (segment.type === "contour" && !drawContours) continue;
-        if (segment.type === "jump" && !drawJumps) continue;
+    // Interval = Distance we sample each point at
+    let interval = 5;
 
-        // TODO: Probably best to scale this based on zoom level or bounding box, as this'll start to get unperformant very quickly with longer vectors
-        const INTERVAL = 0.01; // mm
-        for (const point of getPointsOfSegment(segment, INTERVAL)) {
-            const distance = Math.hypot(x - point.x, y - point.y);
-            if (distance < closestDistance) {
-                closestSegment = segment;
-                closestDistance = distance;
+    // Samples all segments at INTERVAL = 5, narrowing down to only segments having at least one sampled point within 5*2=10mm
+    // Then, we sample all segments at INTERVAL = 2.5, narrowing down to only segments having at least one sampled point within 2.5*2=5mm
+    // This keeps going onward until we've narrowed it down to only one close segment
+    while (closeSegments.length > 1) {
+        for (const segment of closeSegments) {
+            for (const subpoint of getPointsOfSegment(segment, interval)) {
+                if (Math.pow(subpoint.x - point.x, 2) + Math.pow(subpoint.y - point.y, 2) < Math.pow(interval, 2)) {
+                    closerSegments.add(segment);
+                    break; // Break out of the subpoint loop, moving onto next segment
+                }
             }
         }
+        closeSegments = closerSegments; // Just copies the reference, which is fine seeing as we reinitialize closerSegments immediately afterward
+        closerSegments = new Set();
+
+        // TODO: No conceptual "best" ideal number scaling factor that I can think of, so I can/should do some benchmarking to see what generally results in best performance
+        // Dividing by lower number means less computation per round but we filter fewer segments out each round
+        // Dividnig by higher number means more computation per round but we filter more segments out each round
+        interval /= 1.5;
     }
-    return closestSegment;
+
+    // closeSegments only has one segment at this point
+    return closeSegments.values().next().value;
 }
+exports.getClosestSegment = getClosestSegment;
 
 function getHTMLSegmentFromNumber(number) {
     return document.getElementById(`segment-${number}`);

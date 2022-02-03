@@ -128,3 +128,8 @@ function getCurrentBuild() {
 }
 exports.getCurrentBuild = getCurrentBuild;
 exports.setCurrentBuild = setCurrentBuild;
+
+function getLayerFromFilePath(filePath) {
+    return parseInt(filePath.match(/\d+.xml/)[0].match(/\d+/)[0]);
+}
+exports.getLayerFromFilePath = getLayerFromFilePath;

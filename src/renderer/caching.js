@@ -1,4 +1,5 @@
 const { path, paths } = require("./imports");
+const { getLayerFromFilePath } = require("./Build");
 
 // Saves a .svg file corresponding to each given layer to file at folder 'xml/_X.svg' where X is the layer number
 // Source for much of the code is https://stackoverflow.com/a/23218877/6402548
@@ -44,11 +45,6 @@ async function cacheThumbnails(needsHTML) {
     return true;
 }
 exports.cacheThumbnails = cacheThumbnails;
-
-function getLayerFromFilePath(filePath) {
-    return parseInt(filePath.match(/\d+.xml/)[0].match(/\d+/)[0]);
-}
-exports.getLayerFromFilePath = getLayerFromFilePath;
 
 // Save build objects to file
 const glob = require("glob");

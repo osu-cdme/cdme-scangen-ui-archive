@@ -1,6 +1,6 @@
-const { d3 } = require("../../common");
-const { outputSegment, drawBuild } = require("../drawing");
-const { getSegmentsFromBuild, getCurrentBuild, getVelocityOfSegment } = require("../../common");
+const { d3 } = require("../../../imports");
+const { outputSegment, drawBuild } = require("./drawing");
+const { getSegmentsFromBuild, getCurrentBuild } = require("../../../Build");
 const { reset } = require("../drawing");
 
 let animating = false;
@@ -86,4 +86,17 @@ function unpauseAnimation() {
         currentTime += ((300 / velocity) * 100) / speed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation
         queuedSegments.push(setTimeout(animateSegment, currentTime, segment));
     }
+}
+
+function getVelocityOfSegment(segment) {
+    const segStyle = getCurrentBuild().segmentStyles.find((segmentStyle) => {
+        return segmentStyle.id === segment.segStyle;
+    });
+    const velProfile = getCurrentBuild().velocityProfiles.find((velocityProfile) => {
+        return (velocityProfile.id = segStyle.velocityProfileID);
+    });
+    if (velProfile === undefined) {
+        throw new Error("Unable to find velocity profile with ID " + segStyle.velocityProfileID);
+    }
+    return velProfile.velocity;
 }

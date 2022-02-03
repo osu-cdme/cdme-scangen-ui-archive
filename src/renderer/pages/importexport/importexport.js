@@ -1,5 +1,5 @@
 const ipc = require("electron").ipcRenderer;
-const { cacheBuilds, cacheThumbnails } = require("../common");
+const { cacheBuilds, cacheThumbnails } = require("../../caching");
 
 // Imports
 document.getElementById("stlImport").addEventListener("click", (e) => {
