@@ -1,7 +1,6 @@
 // Functions that actually draw on the SVG
 const { d3, getCurrentBuild } = require("../common");
-const { getSegmentsFromBuild, getContoursFromBuild } = require("../common");
-const { BoundingBox } = require("../classes");
+const { getSegmentsFromBuild, getContoursFromBuild } = require("../../../Build");
 
 // Return thermal color for provided 'Power' value
 function getColorFromPower(build, power) {
@@ -75,18 +74,26 @@ function drawBuildCanvas(build, canvasRef) {
 }
 exports.drawBuildCanvas = drawBuildCanvas;
 
-function GetSvgBoundingBox(build, padding) {
-    const bbox = new BoundingBox();
+// NOTE: Automatically adds a little bit of padding onto the outside as well
+function GetSvgBoundingBox(build) {
+    const bbox = {
+        minX: 99999999, // Using Number.MAX_VALUE just doesn't work right for comparisons, for whatever reason
+        minY: 99999999,
+        maxX: -99999999,
+        maxY: -99999999,
+    };
     for (const segment of getSegmentsFromBuild(build)) {
         bbox.minX = Math.min(bbox.minX, segment.x1, segment.x2);
         bbox.minY = Math.min(bbox.minY, segment.y1, segment.y2);
         bbox.maxX = Math.max(bbox.maxX, segment.x1, segment.x2);
         bbox.maxY = Math.max(bbox.maxY, segment.y1, segment.y2);
     }
-    bbox.minX = (bbox.minX - padding).toFixed(4); // Apply padding and truncate huge precision, which viewBox has issues with
-    bbox.minY = (bbox.minY - padding).toFixed(4);
-    bbox.maxX = (bbox.maxX + padding).toFixed(4);
-    bbox.maxY = (bbox.maxY + padding).toFixed(4);
+    const xRange = bbox.maxX - bbox.minX,
+        yRange = bbox.maxY - bbox.minY;
+    bbox.minX = (bbox.minX - xRange * 0.1).toFixed(4); // Apply padding and truncate huge precision, which viewBox has issues with
+    bbox.minY = (bbox.minY - yRange * 0.1).toFixed(4);
+    bbox.maxX = (bbox.maxX + xRange * 0.1).toFixed(4);
+    bbox.maxY = (bbox.maxY + yRange * 0.1).toFixed(4);
     return bbox;
 }
 exports.GetSvgBoundingBox = GetSvgBoundingBox;
