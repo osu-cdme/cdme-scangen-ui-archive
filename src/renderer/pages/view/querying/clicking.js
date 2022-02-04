@@ -113,14 +113,20 @@ function RenderSegmentInfo(segment, build) {
     }
     document.getElementById("segmentStyleID").value = `${segmentStyle.id}`;
     document.getElementById("segmentStyleID").onchange = function () {
-        segment.segStyle = this.value;
+        for (const segment in selectedSegments) {
+            // Change ALL selected segments
+            segment.segStyle = segment.originalSegStyle;
+        }
     };
     document.getElementById("segmentStyleID").onblur = function () {
         if (!build.segmentStyles.find((segStyle) => segStyle.id === this.value)) {
             console.log("build: ", build);
-            const err = new Error("Segment Style " + this.value + "not found. Rolling back to original. Please create the segment style first.");
+            const err = new Error("Segment Style " + this.value + " not found. Rolling back to original. Please create the segment style first.");
             alert(err.message);
-            segment.segStyle = segment.originalSegStyle;
+            for (const segment in selectedSegments) {
+                // Retroact ALL selected segments
+                segment.segStyle = segment.originalSegStyle;
+            }
             document.getElementById("segmentStyleID").value = segment.originalSegStyle;
             throw err;
         }
