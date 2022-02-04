@@ -132,6 +132,10 @@ input {
 #segmentStyles > h4 {
     margin-bottom: 5px;
 }
+#segmentStyles input,
+#velocityProfiles input {
+    padding: 5px;
+}
 .traveler {
     margin: 5px 0;
 }
@@ -145,4 +149,7 @@ button {
     color: white;
     padding: 5px;
     border: 1px gray solid;
+}
+#post-options {
+    margin-top: 20px;
 }

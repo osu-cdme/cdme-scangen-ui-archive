@@ -97,10 +97,11 @@ function getOptionHTML(data) {
 }
 
 // Handles generating UI inputs for the rest, which is generalizable
-const specialElements = new Set(["Hatch Default ID", "Contour Default ID", "Segment Styles", "Velocity Profiles", "Strategy Specific"]);
+const specialElements = new Set(["Segment Styles", "Velocity Profiles", "Strategy Specific"]);
 function generateRemainingDOM() {
     const preDiv = document.getElementById("pre-options");
     const postDiv = document.getElementById("post-options");
+
     // div.id = "options-nonsegorvelocity";
     for (const key in optionsData) {
         if (specialElements.has(key)) continue;
@@ -228,8 +229,6 @@ function spawnProcess(styles, profiles) {
             fields[optionsData["Strategy Specific"][key][key2].name] = formData.get(optionsData["Strategy Specific"][key][key2].name);
         }
     }
-    fields["Hatch Default ID"] = "default";
-    fields["Contour Default ID"] = "default";
     fields["Segment Styles"] = styles;
     fields["Velocity Profiles"] = profiles;
 
@@ -266,6 +265,7 @@ function spawnProcess(styles, profiles) {
         }
 
         // Copy over the XML files produced by `cdme-scangen` to the directory read from by `cdme-scangen-ui`
+        document.getElementById("progressText").textContent = "(Step 2 of 3) Finalizing some operations.";
         const files = fs.readdirSync(path.join(paths.GetBackendPath(), "XMLOutput"));
         files.forEach((file) => {
             if (file.includes(".xml")) {
@@ -292,7 +292,7 @@ function spawnProcess(styles, profiles) {
                     document.getElementById(
                         "progressText"
                     ).textContent = `(Step 3 of 3) Caching Thumbnails & 'Build' Objects (${numDone}/${xmlFiles.length})`;
-                    document.getElementById("done").style.width = `${numDone / xmlFiles.length}%`;
+                    document.getElementById("done").style.width = `${(numDone / xmlFiles.length) * 100}%`;
                     console.log("Percentage: " + numDone / xmlFiles.length);
                 }
 
@@ -306,18 +306,3 @@ function spawnProcess(styles, profiles) {
         }
     });
 }
-
-// TODO: Work these into the page rather than baking them into SegmentStyles.js
-/* 
-const hatchDefaultInput = createInputWithLabel("Default Segment Style ID for Hatches: ", defaults["Hatch Default ID"], "");
-hatchDefaultInput.onchange = (e) => {
-    this.defaultHatchSegmentStyleID = e.target.value;
-};
-document.getElementById("segmentStyles").append(hatchDefaultInput);
-
-const contourDefaultInput = createInputWithLabel("Default Segment Style ID for Contours: ", defaults["Contour Default ID"], "");
-contourDefaultInput.onchange = (e) => {
-    this.defaultContourSegmentStyleID = e.target.value;
-};
-document.getElementById("segmentStyles").append(contourDefaultInput);
-*/
