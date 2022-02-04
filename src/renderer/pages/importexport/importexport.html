@@ -6,8 +6,8 @@
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
     <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
-    <link rel="stylesheet" href="../global.css" />
-    <link rel="stylesheet" href="../navbar.css" />
+    <link rel="stylesheet" href="../../global.css" />
+    <link rel="stylesheet" href="../../navbar.css" />
     <link rel="stylesheet" href="importexport.css" />
     <title>Import/Export | Scan Generation - The Ohio State Center for Design & Manufacturing Excellence</title>
 </head>
@@ -15,7 +15,7 @@
 <body>
     <!-- TODO: Better to split this into two columns rather than require lots of scrolling -->
     <nav>
-        <img src="../../../static/logo.jpg" />
+        <img src="../../../../static/logo.jpg" />
         <h3>CDME Scangen</h3>
         <ul id="pageList">
             <li><a href="../generate/generate.html">Generate</a></li>
@@ -29,12 +29,12 @@
             <h1>Import</h1>
             <button id="stlImport">STL</button>
             <button id="scnImport">SCN</button>
-            <button id="thermalModelImport">Thermal Model (Unfinished)</button>
+            <button id="thermalModelImport">Thermal Model (Unimplemented)</button>
         </div>
         <div class="half">
             <h1>Export</h1>
             <button id="scnExport">SCN</button>
-            <button id="hdf5Export">HDF5 (Unfinished)</button>
+            <button id="hdf5Export">HDF5 (Unimplemented)</button>
         </div>
         <div id="progressContainer">
             <div id="progress">
@@ -44,7 +44,7 @@
         </div>
     </div>
     <script src="importexport.js"></script>
-    <script src="../navbar.js"></script>
+    <script src="../../navbar.js"></script>
 </body>
 
 </html>
