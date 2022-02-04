@@ -8,10 +8,13 @@ const { BrowserWindow } = require("@electron/remote/main");
 require("@electron/remote/main").initialize();
 const { app, BrowserWindow } = require("electron");
 
-const electronReload = require("electron-reload");
-electronReload(__dirname, {
-    electron: path.join(__dirname, "node_modules", ".bin", "electron"),
-});
+if (!app.isPackaged) {
+    // Hot reloading using electron-reload framework
+    require("electron-reload")(__dirname),
+        {
+            electron: path.join(__dirname, "node_modules", ".bin", "electron"),
+        };
+}
 
 // See https://stackoverflow.com/q/60106922/6402548 for the error I was running into; this line fixes it
 app.allowRendererProcessReuse = false;

@@ -1,17 +1,16 @@
-const { fs, path, paths } = require("./imports");
-
 // Contains all the functionality for working with the Build class
-// function* = Generator function that returns once at a time, google it if you don't know what it is
-function* getSegmentsFromBuild(build) {
+function getSegmentsFromBuild(build) {
+    const segments = [];
     for (const trajectory of build.trajectories) {
         if (trajectory.paths === []) return;
         for (const path of trajectory.paths) {
             if (path.length === 0) return;
             for (const segment of path.segments) {
-                yield segment;
+                segments.push(segment);
             }
         }
     }
+    return segments;
 }
 
 const { LoadXML } = require("alsam-xml");
@@ -115,7 +114,6 @@ exports.getCurrentBuild = getCurrentBuild;
 exports.setCurrentBuild = setCurrentBuild;
 
 function getLayerFromFilePath(filePath) {
-    console.log("getLayerFromFilePath: ", filePath);
     return parseInt(filePath.match(/\d+.xml/)[0].match(/\d+/)[0]);
 }
 exports.getLayerFromFilePath = getLayerFromFilePath;

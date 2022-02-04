@@ -6,7 +6,6 @@
   "dependencies": {
     "@electron/remote": "^2.0.1",
     "alsam-xml": "^1.2.4",
-    "electron-reload": "^2.0.0-alpha.1",
     "glob": "^7.2.0",
     "js2xmlparser": "^4.0.2",
     "jszip": "^3.7.1",
@@ -17,6 +16,7 @@
     "copyfiles": "^2.4.1",
     "electron": "^13.1.5",
     "electron-builder": "^22.11.7",
+    "electron-reload": "^2.0.0-alpha.1",
     "eslint": "^8.8.0",
     "semistandard": "^16.0.1"
   },

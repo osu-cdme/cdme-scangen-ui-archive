@@ -57,7 +57,7 @@ function drawBuildCanvas(build, canvasRef) {
     // Canvas setup
     canvasCtx.fillStyle = "white";
     canvasCtx.lineWidth = 0.25;
-    const THUMBNAIL_SIZE = 50;
+    const THUMBNAIL_SIZE = 30;
     canvasCtx.fillRect(0, 0, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
 
     // Draw contours

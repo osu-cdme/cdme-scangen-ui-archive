@@ -1,4 +1,4 @@
-// Generator which returns INTERVAL spaced points along a segment
+// Generator which returns 'interval' spaced *points* along a segment
 // Guaranteed to return at least segment.x1 and segment.x2
 function* getPointsOfSegment(segment, INTERVAL) {
     const length = Math.sqrt(Math.pow(segment.x2 - segment.x1, 2) + Math.pow(segment.y2 - segment.y1, 2));
@@ -17,7 +17,7 @@ function* getPointsOfSegment(segment, INTERVAL) {
 }
 exports.getPointsOfSegment = getPointsOfSegment;
 
-// Generator which returns .1mm spaced *segments* along a segment
+// Generator which returns 'interval' spaced *segments* along a segment
 
 function* getSubsegmentsOfSegment(segment, interval) {
     const length = Math.sqrt(Math.pow(segment.x2 - segment.x1, 2) + Math.pow(segment.y2 - segment.y1, 2));

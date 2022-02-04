@@ -1,5 +1,5 @@
 const { path, paths, fs } = require("../../imports");
-const { cacheThumbnails, cacheBuilds, cache } = require("../../caching");
+const { cache } = require("../../caching");
 const { getLayerFromFilePath } = require("../../Build");
 const glob = require("glob");
 
@@ -154,20 +154,18 @@ let lastLayer;
 function parseStderr(chunkBuf) {
     const chunkStr = chunkBuf.toString("utf8");
     const regex = /(\d+(\.\d+)?%)/g; // Matches a number and a percent
-    console.log("stderr: " + chunkStr);
+    // console.log("stderr: " + chunkStr);
     if (chunkStr.includes("Processing Layers")) {
         const fraction = chunkStr.match(getFractionRegex)[0];
         const currentLayer = parseInt(fraction.match(/\d+/g)[0]);
         lastLayer = parseInt(fraction.match(/\d+/g)[1]);
-        console.log("lastLayer: " + lastLayer);
         const number = regex.exec(chunkStr)[0]; // Exec used rather than string.match() b/c exec only returns the first match by default
-        console.log("number: " + number);
         if (number) {
             if (number.includes("100")) {
                 document.getElementById("progressText").textContent = "Done!";
             } else {
                 document.getElementById("done").style.width = number;
-                document.getElementById("progressText").textContent = `(Step 1 of 3) Processing Layers (${currentLayer} / ${lastLayer})`;
+                document.getElementById("progressText").textContent = `(Step 1 of 3) Processing Layers (${currentLayer}/${lastLayer})`;
             }
         }
     }
@@ -177,8 +175,7 @@ const finishRegex = /XML Layer # \d+ Complete/g;
 const numberRegex = /\d+/g;
 function parseStdout(chunkBuf) {
     const chunkStr = chunkBuf.toString("utf8");
-    console.log("chunkStr: " + chunkStr);
-
+    // console.log("chunkStr: " + chunkStr);
     if (chunkStr.includes("XML Layer")) {
         if (chunkStr.match(finishRegex)) {
             const finishText = chunkStr.match(finishRegex)[0];
@@ -213,8 +210,6 @@ function spawnProcess(styles, profiles) {
         }
     }
 
-    // console.log("styles: ", styles);
-    // console.log("profiles: ", profiles);
     document.getElementById("progressText").textContent = "Spawning child process.";
     const formEl = document.forms.mainsection;
     const formData = new FormData(formEl);
@@ -257,7 +252,7 @@ function spawnProcess(styles, profiles) {
     process.stderr.on("data", (chunk) => {
         parseStderr(chunk);
     });
-    process.on("close", async (code) => {
+    process.on("close", (code) => {
         running = false;
         console.log("Child process exited with code " + code + ".");
         if (code !== 0) {
@@ -282,9 +277,11 @@ function spawnProcess(styles, profiles) {
         });
 
         // Cache builds and thumbnails
-        // Using Promise.all() would make this more readable, but the counter lets us update the progress bar
-        let numDone = 0;
+        // Using Promise.all() would make this more readable, but we use a counter and invididual callbacks, which lets us keep a progress bar
         const xmlFiles = glob.sync(path.join(paths.GetUIPath(), "xml", "*.xml"));
+        document.getElementById("progressText").textContent = `(Step 3 of 3) Caching Thumbnails & 'Build' Objects (0/${xmlFiles.length})`;
+        document.getElementById("done").style.width = "0%";
+        let numDone = 0;
         for (const file of xmlFiles) {
             cache(getLayerFromFilePath(file)).then(() => {
                 numDone++;
@@ -293,8 +290,9 @@ function spawnProcess(styles, profiles) {
                 if (numDone < xmlFiles.length) {
                     document.getElementById(
                         "progressText"
-                    ).textContent = `(Step 3 of 3) Caching Thumbnails & 'Build' Objects (Layer ${numDone} of ${xmlFiles.length})!`;
+                    ).textContent = `(Step 3 of 3) Caching Thumbnails & 'Build' Objects (${numDone}/${xmlFiles.length})`;
                     document.getElementById("done").style.width = `${numDone / xmlFiles.length}%`;
+                    console.log("Percentage: " + numDone / xmlFiles.length);
                 }
 
                 // All done

@@ -49,19 +49,17 @@ function getClosestSegment(point, radius = 1) {
     if (segments.size === 0) return null;
 
     // Filter segments to only those within radius of the point
-    console.log("Pre-filter: ", segments.size);
     const segmentsInRadius = new Set();
     for (const segment of segments) {
         for (const subpoint of getPointsOfSegment(segment, radius)) {
             const distance = Math.hypot(subpoint.x - point.x, subpoint.y - point.y);
-            if (distance < radius * 1.5) {
+            if (distance <= radius * 1.5) {
                 segmentsInRadius.add(segment);
                 break;
             }
         }
     }
     segments = segmentsInRadius;
-    console.log("Post-filter: ", segments.size);
 
     let closestSegment = null;
     let closestDistance = Infinity;
