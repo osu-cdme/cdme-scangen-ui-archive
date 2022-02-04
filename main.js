@@ -8,7 +8,8 @@ const { BrowserWindow } = require("@electron/remote/main");
 require("@electron/remote/main").initialize();
 const { app, BrowserWindow } = require("electron");
 
-require("electron-reload")(__dirname, {
+const electronReload = require("electron-reload");
+electronReload(__dirname, {
     electron: path.join(__dirname, "node_modules", ".bin", "electron"),
 });
 
