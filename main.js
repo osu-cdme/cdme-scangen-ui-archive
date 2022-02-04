@@ -8,12 +8,15 @@ const { BrowserWindow } = require("@electron/remote/main");
 require("@electron/remote/main").initialize();
 const { app, BrowserWindow } = require("electron");
 
+/* 
 if (!app.isPackaged) {
     // Hot reloading using electron-reload framework
-    require("electron-reload")(path.join(__dirname, "src", "*"), {
-        electron: path.join(__dirname, "node_modules", ".bin", "electron"),
-    });
+    require("electron-reload")(__dirname),
+        {
+            electron: path.join(__dirname, "node_modules", ".bin", "electron"),
+        };
 }
+*/
 
 // See https://stackoverflow.com/q/60106922/6402548 for the error I was running into; this line fixes it
 app.allowRendererProcessReuse = false;
@@ -31,11 +34,17 @@ ipc.on("get-backend-path", (event) => {
 // Implements IPC signals and functionality for Imports/Exports
 require("./src/main/io.js").Setup();
 
-function createWindow() {
+// Makes it so hitting the "X" button actually quits the process (...usually)
+app.on("window-all-closed", function () {
+    if (process.platform !== "darwin") app.quit();
+});
+
+app.whenReady().then(() => {
     const win = new BrowserWindow({
         icon: "/static/logo.jpg",
         width: 800,
         height: 600,
+        backgroundColor: "#333333",
 
         // Note that nodeIntegration is very hacky, but we aren't working with confidential data or anything like that
         // so there's nothing anyone really gains from trying to exploit any security issues
@@ -48,16 +57,6 @@ function createWindow() {
         },
     });
 
-    win.loadFile("src/renderer/pages/generate/generate.html");
+    win.loadFile("src/renderer/pages/view/view.html");
     win.maximize();
-    win.webContents.openDevTools();
-}
-
-// Makes it so hitting the "X" button actually quits the process (...usually)
-app.on("window-all-closed", function () {
-    if (process.platform !== "darwin") app.quit();
-});
-
-app.whenReady().then(() => {
-    createWindow();
 });
