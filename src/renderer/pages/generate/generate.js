@@ -99,19 +99,20 @@ function getOptionHTML(data) {
 // Handles generating UI inputs for the rest, which is generalizable
 const specialElements = new Set(["Hatch Default ID", "Contour Default ID", "Segment Styles", "Velocity Profiles", "Strategy Specific"]);
 function generateRemainingDOM() {
-    const div = document.createElement("div");
-    div.id = "options-nonsegorvelocity";
+    const preDiv = document.getElementById("pre-options");
+    const postDiv = document.getElementById("post-options");
+    // div.id = "options-nonsegorvelocity";
     for (const key in optionsData) {
         if (specialElements.has(key)) continue;
-        div.appendChild(SectionHeaderDOM(key));
+
+        const divToAppendTo = key === "Input" || key === "General" ? preDiv : postDiv;
+        divToAppendTo.appendChild(SectionHeaderDOM(key));
         for (const key2 in optionsData[key]) {
             // Overall append
             const option = getOptionHTML(optionsData[key][key2]);
-            div.appendChild(option);
+            divToAppendTo.appendChild(option);
         }
     }
-
-    return div;
 }
 
 function SectionHeaderDOM(text) {
@@ -125,7 +126,7 @@ const { SegmentStyles } = require("../../SegmentStyles.js");
 const { VelocityProfiles } = require("../../VelocityProfiles.js");
 const styles = new SegmentStyles();
 const profiles = new VelocityProfiles();
-document.getElementById("options").appendChild(generateRemainingDOM());
+generateRemainingDOM();
 
 // Make the contents of the select menu the contents of the 'xml' directory
 const files = fs.readdirSync(path.join(paths.GetBackendPath(), "geometry"));
