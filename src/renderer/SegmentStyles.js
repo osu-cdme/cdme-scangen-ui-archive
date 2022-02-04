@@ -68,6 +68,7 @@ class SegmentStyles {
                 ],
             })
         );
+        console.log("new Build: ", this.build);
         this.Refresh();
     }
 

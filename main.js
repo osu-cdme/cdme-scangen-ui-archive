@@ -10,10 +10,9 @@ const { app, BrowserWindow } = require("electron");
 
 if (!app.isPackaged) {
     // Hot reloading using electron-reload framework
-    require("electron-reload")(__dirname),
-        {
-            electron: path.join(__dirname, "node_modules", ".bin", "electron"),
-        };
+    require("electron-reload")(path.join(__dirname, "src", "*"), {
+        electron: path.join(__dirname, "node_modules", ".bin", "electron"),
+    });
 }
 
 // See https://stackoverflow.com/q/60106922/6402548 for the error I was running into; this line fixes it

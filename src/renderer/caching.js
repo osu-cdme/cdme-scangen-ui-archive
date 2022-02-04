@@ -5,9 +5,9 @@ const { getLayerFromFilePath, getBuildFromLayerNum } = require("./Build");
 // Likely better to just convert it to one function and have the caller call it for every layer
 
 // Regenerates thumbnail images and saved .json Build object representations for the given layer number
-async function cache(layerNum) {
+async function cache(layerNum, build) {
     await cacheThumbnail(layerNum);
-    await cacheBuild(layerNum);
+    await cacheBuild(layerNum, build);
 }
 exports.cache = cache;
 
@@ -35,8 +35,8 @@ async function cacheThumbnail(layerNum) {
 }
 
 // Save build objects to file
-const glob = require("glob");
-async function cacheBuild(layerNum) {
-    let build = await getBuildFromLayerNum(layerNum);
+// Optionally, if a build parameter is passed, regenerate it from the .XML file
+async function cacheBuild(layerNum, build) {
+    if (!build) build = await getBuildFromLayerNum(layerNum);
     fs.writeFileSync(path.join(paths.GetUIPath(), "xml", build.header.layerNum + ".json"), JSON.stringify(build));
 }

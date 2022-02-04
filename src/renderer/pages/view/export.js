@@ -1,9 +1,10 @@
 const { ExportXML } = require("alsam-xml");
 const { getCurrentBuild, getCurrentPath } = require("../../Build");
+const { cache } = require("../../caching");
 const { fs } = require("../../imports");
 
 document.getElementById("saveLayer").addEventListener("click", SaveChangesToLayer);
-function SaveChangesToLayer() {
+async function SaveChangesToLayer() {
     const build = getCurrentBuild();
 
     // Verify all velocity profiles on segment styles exist
@@ -31,12 +32,13 @@ function SaveChangesToLayer() {
 
     console.log("Exporting this build: ", build);
     const text = ExportXML(build);
-    console.log("text: ", text);
-    console.log("Saving to this file: ", getCurrentPath());
     fs.writeFile(getCurrentPath(), text, (err) => {
         if (err) {
             alert("An error ocurred creating the file: " + err);
         }
         alert("Saved successfully!");
     });
+
+    // As we changed the .XML file, we have to regenerate thumbnails and the cached 'Build' object
+    await cache(build.header.layerNum, build);
 }

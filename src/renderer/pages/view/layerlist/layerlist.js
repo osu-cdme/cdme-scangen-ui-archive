@@ -4,6 +4,7 @@ const natsort = require("natsort").default;
 const { path, paths, d3 } = require("../../../imports");
 const { getBuildFromLayerNum, getLayerFromFilePath, setCurrentBuild, setCurrentPath } = require("../../../Build");
 const { drawBuild } = require("../svg/drawing");
+const { refreshSegmentStyles, refreshVelocityProfiles } = require("../stylesandprofiles");
 
 const glob = require("glob");
 module.exports.RenderLayerList = () => {
@@ -33,6 +34,9 @@ module.exports.RenderLayerList = () => {
                     e.preventDefault();
                     const layerNum = getLayerFromFilePath(filePath);
                     const build = await getBuildFromLayerNum(layerNum);
+                    refreshSegmentStyles(build);
+                    refreshVelocityProfiles(build);
+
                     setCurrentBuild(build);
                     setCurrentPath(filePath);
                     drawBuild(build, "mainsvg");
