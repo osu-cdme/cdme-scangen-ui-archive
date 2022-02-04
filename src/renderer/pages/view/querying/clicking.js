@@ -14,7 +14,7 @@ svg.addEventListener("click", (e) => {
     const cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
 
     // Search for closest segment and trigger color
-    const closestSegment = getClosestSegment(cursorpt.x, cursorpt.y, getCurrentBuild());
+    const closestSegment = getClosestSegment({ x: cursorpt.x, y: cursorpt.y });
     if (closestSegment === null) return; // Either no segments on that
     RenderSegmentInfo(closestSegment, getCurrentBuild());
     const closestSegmentHTML = getHTMLSegmentFromNumber(closestSegment.number);
@@ -32,50 +32,50 @@ svg.addEventListener("click", (e) => {
 // Primarily-segment-related functionality
 // Given a point, essentially continually narrows down segments in question until it finds the closest one
 // Goal: Much more efficient than searching at like a ~.1mm interval along every single one on the layer
-function getClosestSegment(point) {
-    // closeSegments = Segments before we filter them using the current interval
-    // closerSegments = Segments AFTER we filter them using the current interval
-    let closeSegments = new Set();
-    let closerSegments = new Set();
-
+// radius: Maximum distance at which we'll latch onto a near segment. Lets us optimize some by initially filtering out segments that are 1.5 * radius away (the theoretical max at which we should never incorrectly profile something out - .5 to a midpoint between samples and 1 to the actual point). It might be possible to just hardcode this as 1mm or something, which will make it scale well even on large parts, which is likely also okay because people will zoom in before they are selecting.
+// TODO: It's likely feasible to progressively lower the interval to something more precise, but that's borderline not worth the effort
+function getClosestSegment(point, radius = 1) {
     // Only search among those that are actually drawn on the screen, which is much more intuitive for users
+    let segments = new Set();
     if (document.getElementById("drawHatches").checked) {
-        console.log("getCurrentBuild().hatches: ", getCurrentBuild().hatches);
-        for (const seg of getCurrentBuild().hatches) closeSegments.add(seg);
+        for (const seg of getCurrentBuild().hatches) segments.add(seg);
     }
     if (document.getElementById("drawContours").checked) {
-        for (const seg of getCurrentBuild().contours) closeSegments.add(seg);
+        for (const seg of getCurrentBuild().contours) segments.add(seg);
     }
     if (document.getElementById("drawJumps").checked) {
-        for (const seg of getCurrentBuild().jumps) closeSegments.add(seg);
+        for (const seg of getCurrentBuild().jumps) segments.add(seg);
     }
+    if (segments.size === 0) return null;
 
-    // Interval = Distance we sample each point at
-    let interval = 5;
-
-    // Samples all segments at INTERVAL = 5, narrowing down to only segments having at least one sampled point within 5*2=10mm
-    // Then, we sample all segments at INTERVAL = 2.5, narrowing down to only segments having at least one sampled point within 2.5*2=5mm
-    // This keeps going onward until we've narrowed it down to only one close segment
-    while (closeSegments.length > 1) {
-        for (const segment of closeSegments) {
-            for (const subpoint of getPointsOfSegment(segment, interval)) {
-                if (Math.pow(subpoint.x - point.x, 2) + Math.pow(subpoint.y - point.y, 2) < Math.pow(interval, 2)) {
-                    closerSegments.add(segment);
-                    break; // Break out of the subpoint loop, moving onto next segment
-                }
+    // Filter segments to only those within radius of the point
+    console.log("Pre-filter: ", segments.size);
+    const segmentsInRadius = new Set();
+    for (const segment of segments) {
+        for (const subpoint of getPointsOfSegment(segment, radius)) {
+            const distance = Math.hypot(subpoint.x - point.x, subpoint.y - point.y);
+            if (distance < radius * 1.5) {
+                segmentsInRadius.add(segment);
+                break;
             }
         }
-        closeSegments = closerSegments; // Just copies the reference, which is fine seeing as we reinitialize closerSegments immediately afterward
-        closerSegments = new Set();
-
-        // TODO: No conceptual "best" ideal number scaling factor that I can think of, so I can/should do some benchmarking to see what generally results in best performance
-        // Dividing by lower number means less computation per round but we filter fewer segments out each round
-        // Dividnig by higher number means more computation per round but we filter more segments out each round
-        interval /= 1.5;
     }
+    segments = segmentsInRadius;
+    console.log("Post-filter: ", segments.size);
 
-    // closeSegments only has one segment at this point
-    return closeSegments.values().next().value;
+    let closestSegment = null;
+    let closestDistance = Infinity;
+    for (const segment of segments) {
+        const INTERVAL = 0.01; // mm
+        for (const subpoint of getPointsOfSegment(segment, INTERVAL)) {
+            const distance = Math.hypot(subpoint.x - point.x, subpoint.y - point.y);
+            if (distance < closestDistance) {
+                closestSegment = segment;
+                closestDistance = distance;
+            }
+        }
+    }
+    return closestSegment;
 }
 exports.getClosestSegment = getClosestSegment;
 
