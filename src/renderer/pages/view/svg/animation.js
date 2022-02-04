@@ -1,6 +1,6 @@
 const { d3 } = require("../../../imports");
 const { outputSegment, drawBuild, reset } = require("./drawing");
-const { getSegmentsFromBuild, getCurrentBuild } = require("../../../Build");
+const { getCurrentBuild } = require("../../../Build");
 
 let animating = false;
 let paused = false;
@@ -35,7 +35,7 @@ function startAnimation() {
 
     d3.select("#animate").text("Stop");
     let currentTime = 0;
-    for (const segment of getSegmentsFromBuild(getCurrentBuild())) {
+    for (const segment of getCurrentBuild().segments) {
         segment.animated = false;
         const velocity = getVelocityOfSegment(segment);
         currentTime += ((300 / velocity) * 100) / speed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation
@@ -79,7 +79,7 @@ function unpauseAnimation() {
     d3.select("#pause").text("Pause");
     let currentTime = 0;
     const speed = parseFloat(d3.select("#animationSpeed").property("value"));
-    for (const segment of getSegmentsFromBuild(getCurrentBuild())) {
+    for (const segment of getCurrentBuild().segments) {
         if (segment.animated) continue; // Skip if already drawn on the screen
         const velocity = getVelocityOfSegment(segment);
         currentTime += ((300 / velocity) * 100) / speed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation

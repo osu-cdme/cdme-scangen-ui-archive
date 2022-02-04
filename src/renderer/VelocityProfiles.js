@@ -1,23 +1,23 @@
+// Manages DOM updating for the Segment Styles / Velocity Profiles section
+// Also updates a build object, if passed into the constructor
+
 const { VelocityProfile } = require("alsam-xml");
-const { createInputWithLabel, createElementWithText } = require("./utility.js");
-const path = require("path");
-const paths = require("../paths");
+const { createInputWithLabel, createElementWithText } = require("./pages/generate/utility");
+const { path, paths } = require("./imports");
 
 const defaults = require(path.join(paths.GetBackendPath(), "schema.json"));
 
 class VelocityProfiles {
-    constructor(isGenerate, build) {
-        this.isGenerate = isGenerate;
-
-        // If generating, use the defaults
-        if (isGenerate) {
-            this.profiles = [];
-            this.New();
+    constructor(build) {
+        // If build passed in, use the velocityProfiles it has
+        if (build) {
+            this.profiles = build.velocityProfiles;
         }
 
-        // Otherwise, use passed-in build
+        // Else, use passed-in build
         else {
-            this.profiles = build.velocityProfiles;
+            this.profiles = [];
+            this.New();
         }
         this.Refresh();
     }

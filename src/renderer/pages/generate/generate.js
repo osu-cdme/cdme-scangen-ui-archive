@@ -1,6 +1,7 @@
 const { path, paths, fs } = require("../../imports");
-const { cacheThumbnails, cacheBuilds } = require("../../caching");
+const { cacheThumbnails, cacheBuilds, cache } = require("../../caching");
 const { getLayerFromFilePath } = require("../../Build");
+const glob = require("glob");
 
 // Load data; requires cdme-scangen repository to be in parallel folder to cdme-scangen-ui, for now
 const optionsData = require("./optionsdata");
@@ -120,10 +121,10 @@ function SectionHeaderDOM(text) {
 }
 
 // Generate and append UI corresponding to the schema
-const { SegmentStyles } = require("./SegmentStyles.js");
-const { VelocityProfiles } = require("./VelocityProfiles.js");
-const styles = new SegmentStyles(true);
-const profiles = new VelocityProfiles(true);
+const { SegmentStyles } = require("../../SegmentStyles.js");
+const { VelocityProfiles } = require("../../VelocityProfiles.js");
+const styles = new SegmentStyles();
+const profiles = new VelocityProfiles();
 document.getElementById("options").appendChild(generateRemainingDOM());
 
 // Make the contents of the select menu the contents of the 'xml' directory
@@ -135,8 +136,9 @@ for (const file of files) {
     document.getElementsByName("Part File Name")[0].appendChild(option);
 }
 
-document.getElementById("start").addEventListener("click", () => {
-    spawnProcess(styles.Get(), profiles.Get(), styles.GetDefaults());
+document.getElementById("start").addEventListener("click", (e) => {
+    e.preventDefault();
+    spawnProcess(styles.styles, profiles.profiles);
 });
 
 // Functionality to spawn the pyslm child process and interface correctly with it
@@ -165,7 +167,7 @@ function parseStderr(chunkBuf) {
                 document.getElementById("progressText").textContent = "Done!";
             } else {
                 document.getElementById("done").style.width = number;
-                document.getElementById("progressText").textContent = `(Step 1 of 4) Processing Layers (${currentLayer} / ${lastLayer})`;
+                document.getElementById("progressText").textContent = `(Step 1 of 3) Processing Layers (${currentLayer} / ${lastLayer})`;
             }
         }
     }
@@ -185,7 +187,7 @@ function parseStdout(chunkBuf) {
                 document.getElementById("done").style.width = "100%";
             } else {
                 document.getElementById("done").style.width = (number / lastLayer) * 100 + "%";
-                document.getElementById("progressText").textContent = `(Step 2 of 4) Generating XML Files (${number}/${lastLayer})`;
+                document.getElementById("progressText").textContent = `(Step 2 of 3) Generating XML Files (${number}/${lastLayer})`;
             }
         }
     }
@@ -194,18 +196,22 @@ function parseStdout(chunkBuf) {
 // Launch the application when they hit the button
 const spawn = require("child_process").spawn;
 let running = false;
-function spawnProcess(styles, profiles, defaults) {
+function spawnProcess(styles, profiles) {
     if (running) {
         alert("Already running!");
         return;
     }
     running = true;
 
-    // Wipe everything in 'xml' directory just to ensure we have a fresh start on caching, etc.
+    // Either create the folder, or wipe whatever's in it, just to make sure we're starting fresh
     if (!fs.existsSync(path.join(paths.GetUIPath(), "xml"))) {
         fs.mkdirSync(path.join(paths.GetUIPath(), "xml"));
+    } else {
+        const files = fs.readdirSync(path.join(paths.GetUIPath(), "xml"));
+        for (const file of files) {
+            fs.unlinkSync(path.join(paths.GetUIPath(), "xml", file));
+        }
     }
-    wipe();
 
     // console.log("styles: ", styles);
     // console.log("profiles: ", profiles);
@@ -226,8 +232,8 @@ function spawnProcess(styles, profiles, defaults) {
             fields[optionsData["Strategy Specific"][key][key2].name] = formData.get(optionsData["Strategy Specific"][key][key2].name);
         }
     }
-    fields["Hatch Default ID"] = defaults.hatchID;
-    fields["Contour Default ID"] = defaults.contourID;
+    fields["Hatch Default ID"] = "default";
+    fields["Contour Default ID"] = "default";
     fields["Segment Styles"] = styles;
     fields["Velocity Profiles"] = profiles;
 
@@ -275,14 +281,44 @@ function spawnProcess(styles, profiles, defaults) {
             }
         });
 
-        // Cache 'Build' objects
-        await cacheBuilds();
+        // Cache builds and thumbnails
+        // Using Promise.all() would make this more readable, but the counter lets us update the progress bar
+        let numDone = 0;
+        const xmlFiles = glob.sync(path.join(paths.GetUIPath(), "xml", "*.xml"));
+        for (const file of xmlFiles) {
+            cache(getLayerFromFilePath(file)).then(() => {
+                numDone++;
 
-        // Cache 'svg' thumbnails
-        await cacheThumbnails();
+                // General case
+                if (numDone < xmlFiles.length) {
+                    document.getElementById(
+                        "progressText"
+                    ).textContent = `(Step 3 of 3) Caching Thumbnails & 'Build' Objects (Layer ${numDone} of ${xmlFiles.length})!`;
+                    document.getElementById("done").style.width = `${numDone / xmlFiles.length}%`;
+                }
 
-        alert('Build complete! Files can now be viewed under the "View Vectors" tab.');
-        document.getElementById("progressText").textContent = "Build complete!";
-        document.getElementById("done").style.width = "100%";
+                // All done
+                else {
+                    alert('Build complete! Files can now be viewed under the "View Vectors" tab.');
+                    document.getElementById("progressText").textContent = "Build complete!";
+                    document.getElementById("done").style.width = "100%";
+                }
+            });
+        }
     });
 }
+
+// TODO: Work these into the page rather than baking them into SegmentStyles.js
+/* 
+const hatchDefaultInput = createInputWithLabel("Default Segment Style ID for Hatches: ", defaults["Hatch Default ID"], "");
+hatchDefaultInput.onchange = (e) => {
+    this.defaultHatchSegmentStyleID = e.target.value;
+};
+document.getElementById("segmentStyles").append(hatchDefaultInput);
+
+const contourDefaultInput = createInputWithLabel("Default Segment Style ID for Contours: ", defaults["Contour Default ID"], "");
+contourDefaultInput.onchange = (e) => {
+    this.defaultContourSegmentStyleID = e.target.value;
+};
+document.getElementById("segmentStyles").append(contourDefaultInput);
+*/

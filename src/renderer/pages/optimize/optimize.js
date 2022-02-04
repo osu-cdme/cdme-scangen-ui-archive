@@ -2,12 +2,11 @@ const { fs, path, paths } = require("../../imports");
 const clone = require("just-clone");
 
 const { ExportXML } = require("alsam-xml");
-const { getSegmentsFromBuild } = require("../../Build");
 
 /* MAIN FUNCTION WE'LL INTERFACE WITH
     Param 1: Build object representing this layer. 
     Param 2: 'vectors': List of Integer indices of vectors from this layer we want to tweak.
-    Param 3: 'multipliers': List of multipliers, of same cardinality as getSegmentsFromBuild(), that we want to multiply by. 
+    Param 3: 'multipliers': List of multipliers, of same cardinality as build.segments, that we want to multiply by. 
 
     I think retaining segment style ids across the optimization process isn't worth it. We will only use this to make automated changes, then run it on the model again; we don't need to keep it human-readable or make it easy to change a segment style that targets additional vectors. 
 */
@@ -19,7 +18,7 @@ function optimize(build, vectors, multipliers) {
     });
 
     // Tweak segments
-    const segments = getSegmentsFromBuild(build);
+    const segments = build.segments;
     for (const index in vectors) {
         // Retrieve segment
         const segment = segments[vectors[index]]; // Actual segment we're modifying

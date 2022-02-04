@@ -5,10 +5,14 @@
         "es2021": true,
         "node": true
     },
-    "extends": "eslint:recommended",
+    "extends": [
+        "eslint:recommended",
+        "prettier"
+    ],
+    "parser": "babel-eslint",
     "parserOptions": {
         "ecmaVersion": "latest"
     },
     "rules": {
-    }
+    }, 
 }

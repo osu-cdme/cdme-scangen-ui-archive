@@ -1,5 +1,5 @@
 const { ExportXML } = require("alsam-xml");
-const { getCurrentBuild, getCurrentPath, getSegmentsFromBuild } = require("../../Build");
+const { getCurrentBuild, getCurrentPath } = require("../../Build");
 const { fs } = require("../../imports");
 
 document.getElementById("saveLayer").addEventListener("click", SaveChangesToLayer);
@@ -20,7 +20,7 @@ function SaveChangesToLayer() {
     // Verify all Segment Styles on segments exist
     // TODO: Probably belongs better in ExportXML
     const SegmentStyleIDs = new Set(build.segmentStyles.map((segmentStyle) => segmentStyle.id));
-    for (const segment of getSegmentsFromBuild(build)) {
+    for (const segment of build.segments) {
         if (!SegmentStyleIDs.has(segment.segStyle)) {
             const error =
                 "Segment style " + segment.segStyle + " not found! Please either remove it from the segment or add it to the segment styles list.";

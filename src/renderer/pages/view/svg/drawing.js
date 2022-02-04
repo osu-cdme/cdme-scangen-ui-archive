@@ -1,6 +1,6 @@
 // Functions that actually draw on the SVG
 const { d3 } = require("../../../imports");
-const { getCurrentBuild, getSegmentsFromBuild, getContoursFromBuild } = require("../../../Build");
+const { getCurrentBuild } = require("../../../Build");
 
 // Return thermal color for provided 'Power' value
 function getColorFromPower(build, power) {
@@ -36,7 +36,7 @@ function drawBuild(build, svgID) {
         d3.select("#" + svgID).attr("viewBox", viewboxStr); // Basically lets us define our bounds
     }
 
-    for (const segment of getSegmentsFromBuild(build)) {
+    for (const segment of build.segments) {
         outputSegment(segment, document.getElementById("mainsvg"));
     }
 }
@@ -62,7 +62,7 @@ function drawBuildCanvas(build, canvasRef) {
 
     // Draw contours
     canvasCtx.beginPath();
-    for (const segment of getContoursFromBuild(build)) {
+    for (const segment of build.contours) {
         const x1 = percentage(bbox.minX, bbox.maxX, segment.x1) * THUMBNAIL_SIZE;
         const y1 = percentage(bbox.minY, bbox.maxY, segment.y1) * THUMBNAIL_SIZE;
         const x2 = percentage(bbox.minX, bbox.maxX, segment.x2) * THUMBNAIL_SIZE;
@@ -82,7 +82,7 @@ function GetSvgBoundingBox(build) {
         maxX: -99999999,
         maxY: -99999999,
     };
-    for (const segment of getSegmentsFromBuild(build)) {
+    for (const segment of build.segments) {
         bbox.minX = Math.min(bbox.minX, segment.x1, segment.x2);
         bbox.minY = Math.min(bbox.minY, segment.y1, segment.y2);
         bbox.maxX = Math.max(bbox.maxX, segment.x1, segment.x2);

@@ -1,11 +1,11 @@
-const { getCurrentBuild } = require("../common.js");
-const { SegmentStyles } = require("../generate/SegmentStyles.js");
-const { VelocityProfiles } = require("../generate/VelocityProfiles.js");
+const { getCurrentBuild } = require("../../Build");
+const { SegmentStyles } = require("../../SegmentStyles.js");
+const { VelocityProfiles } = require("../../VelocityProfiles.js");
 
-/* 
-const segmentStyles = new SegmentStyles(false);
-exports.getSegmentStyles = () => segmentStyles;
-
-const velocityProfiles = new VelocityProfiles(false);
-exports.getVelocityProfiles = () => velocityProfiles;
-*/
+// Manages the HTML; these modify the Build object as well
+const build = getCurrentBuild();
+console.log("build: ", build);
+const segmentStyles = new SegmentStyles(build);
+module.exports.segmentStyles = segmentStyles;
+const velocityProfiles = new VelocityProfiles(build);
+module.exports.velocityProfiles = velocityProfiles;

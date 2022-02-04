@@ -2,7 +2,7 @@
 
 const natsort = require("natsort").default;
 const { path, paths, d3 } = require("../../../imports");
-const { getBuildFromFilePath, getLayerFromFilePath, setCurrentBuild, setCurrentPath } = require("../../../Build");
+const { getBuildFromLayerNum, getLayerFromFilePath, setCurrentBuild, setCurrentPath } = require("../../../Build");
 const { drawBuild } = require("../svg/drawing");
 
 const glob = require("glob");
@@ -32,7 +32,7 @@ module.exports.RenderLayerList = () => {
                     li.classed("selectedLayer", true);
                     e.preventDefault();
                     const layerNum = getLayerFromFilePath(filePath);
-                    const build = await getBuildFromFilePath(layerNum, true);
+                    const build = await getBuildFromLayerNum(layerNum);
                     setCurrentBuild(build);
                     setCurrentPath(filePath);
                     drawBuild(build, "mainsvg");

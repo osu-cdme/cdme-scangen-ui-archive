@@ -13,21 +13,15 @@ const { drawBuild } = require("./svg/drawing");
 // Selectively draw different parts based on checfkbox input
 
 const glob = require("glob");
-main();
+
+// If XML directory doesn't exist, or is empty, they need to either generate or import
+if (!fs.existsSync(path.join(paths.GetUIPath(), "xml")))
+    alert("No scan files found! Generate them first via the 'Generate Vectors' tab on the left.");
+const files = glob.sync(path.join(paths.GetUIPath(), "xml", "*.xml"));
+if (files.length === 0) alert("No scan files found! Generate them first via the 'Generate Vectors' tab on the left.");
+
+// Otherwise, load files!
 async function main() {
-    // If xml directory doesn't exist, create it
-    if (!fs.existsSync(path.join(paths.GetUIPath(), "xml"))) {
-        fs.mkdirSync(path.join(paths.GetUIPath(), "xml"));
-    }
-
-    // Get all files in directory with .xml ending
-    const files = glob.sync(path.join(paths.GetUIPath(), "xml", "*.xml"));
-    if (files.length === 0) {
-        // Send them elsewhere if no .XML files to view
-        alert("No scan files found! Generate them first via the 'Generate Vectors' tab on the left.");
-        return;
-    }
-
     const firstFile = files[0];
     let layerNum = getLayerFromFilePath(firstFile);
     const build = await getBuildFromLayerNum(layerNum);
@@ -43,28 +37,23 @@ async function main() {
     } else {
         document.getElementById("loading").style.display = "none";
     }
+
+    // Does everything related to "loading" (basically just the Layer List)
+    require("./load.js");
+
+    // Handles all the code that actually puts segments on a Canvas/SVG
+    require("./svg/drawing.js");
+
+    // SVG Clicking, Panning, Scrolling, Animation
+    require("./querying/clicking.js");
+    require("./svg/panning.js");
+    require("./svg/scrolling.js");
+    require("./svg/animation.js");
+
+    // Sets up segment styles and profiles behavior
+    require("./stylesandprofiles.js");
+
+    // Sets up "save current build to file" functionality
+    require("./export.js");
 }
-
-// Initiates page load
-require("./load.js");
-
-// Handles actual drawing code
-require("./svg/drawing.js");
-
-// Sets up SVG clicking (queries nearest segment)
-require("./querying/vectorselection.js");
-
-// Sets up SVG panning
-require("./svg/panning.js");
-
-// Sets up SVG scrolling
-require("./svg/scrolling.js");
-
-// Sets up animation
-require("./svg/animation.js");
-
-// Sets up segment styles and profiles behavior
-// require("./stylesandprofiles.js");
-
-// Sets up "save current build to file" functionality
-require("./export.js");
+main();

@@ -1,4 +1,4 @@
-const { getCurrentBuild, getHatchesFromBuild, getContoursFromBuild, getJumpsFromBuild } = require("../../../Build");
+const { getCurrentBuild } = require("../../../Build");
 const { getPointsOfSegment } = require("../../../segments");
 
 // Handles the SVG click event, which is for selecting the nearest vector
@@ -39,9 +39,16 @@ function getClosestSegment(point) {
     let closerSegments = new Set();
 
     // Only search among those that are actually drawn on the screen, which is much more intuitive for users
-    if (document.getElementById("drawHatches").checked) closeSegments = new Set(...closeSegments, getHatchesFromBuild(getCurrentBuild()));
-    if (document.getElementById("drawContours").checked) closeSegments = new Set(...closeSegments, ...getContoursFromBuild(getCurrentBuild()));
-    if (document.getElementById("drawJumps").checked) closeSegments = new Set(...closeSegments, ...getJumpsFromBuild(getCurrentBuild()));
+    if (document.getElementById("drawHatches").checked) {
+        console.log("getCurrentBuild().hatches: ", getCurrentBuild().hatches);
+        for (const seg of getCurrentBuild().hatches) closeSegments.add(seg);
+    }
+    if (document.getElementById("drawContours").checked) {
+        for (const seg of getCurrentBuild().contours) closeSegments.add(seg);
+    }
+    if (document.getElementById("drawJumps").checked) {
+        for (const seg of getCurrentBuild().jumps) closeSegments.add(seg);
+    }
 
     // Interval = Distance we sample each point at
     let interval = 5;

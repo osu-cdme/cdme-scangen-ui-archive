@@ -1,17 +1,23 @@
-// Using React or similar would make this much easier, but that's additional technical complexity I don't want to put on whoever's maintaining after me
-// I'm basically reimplementing automatic state updating from React, lol
+// Manages DOM updating for the Segment Styles / Velocity Profiles section
+// Also updates a build object, if passed into the constructor
+
 const { SegmentStyle, Traveler, Wobble } = require("alsam-xml");
-const { path, paths } = require("../../imports");
+const { path, paths } = require("./imports");
 const defaults = require(path.join(paths.GetBackendPath(), "schema.json"));
-const { createInputWithLabel, createElementWithText } = require("./utility.js");
+const { createInputWithLabel, createElementWithText } = require("./pages/generate/utility.js");
 
 class SegmentStyles {
-    constructor(isGenerate, build) {
-        this.isGenerate = isGenerate;
+    constructor(build) {
         this.build = build;
 
+        // If a build was passed in, assume this isn't the generate page and load everything from that Build
+        if (build) {
+            this.styles = build.segmentStyles;
+        }
+
+        // Otherwise, load defaults from the schema and populate/manage HTML fields
         // If generating, construct with all default values
-        if (isGenerate) {
+        else {
             this.styles = [];
             this.New(); // New style defaults to first in the schema
 
@@ -26,24 +32,7 @@ class SegmentStyles {
             );
         }
 
-        // Otherwise, load from passed-in build object
-        else {
-            this.styles = build.segmentStyles;
-        }
-
-        this.defaultHatchSegmentStyleID = "default";
-        this.defaultContourSegmentStyleID = "default";
-
         this.Refresh();
-    }
-
-    Get() {
-        // Used during form input to super easily handle these
-        return this.styles;
-    }
-
-    GetDefaults() {
-        return { hatchID: this.defaultHatchSegmentStyleID, contourID: this.defaultContourSegmentStyleID };
     }
 
     Add(style) {
@@ -83,26 +72,9 @@ class SegmentStyles {
     }
 
     Refresh() {
-        console.log("Refresh!");
-        console.log("Build: ", this.build);
-
         // Wipe segmentStyles section
         while (document.getElementById("segmentStyles").firstChild) {
             document.getElementById("segmentStyles").removeChild(document.getElementById("segmentStyles").firstChild);
-        }
-
-        if (this.isGenerate) {
-            const hatchDefaultInput = createInputWithLabel("Default Segment Style ID for Hatches: ", defaults["Hatch Default ID"], "");
-            hatchDefaultInput.onchange = (e) => {
-                this.defaultHatchSegmentStyleID = e.target.value;
-            };
-            document.getElementById("segmentStyles").append(hatchDefaultInput);
-
-            const contourDefaultInput = createInputWithLabel("Default Segment Style ID for Contours: ", defaults["Contour Default ID"], "");
-            contourDefaultInput.onchange = (e) => {
-                this.defaultContourSegmentStyleID = e.target.value;
-            };
-            document.getElementById("segmentStyles").append(contourDefaultInput);
         }
 
         for (let i = 0; i < this.styles.length; i++) {
