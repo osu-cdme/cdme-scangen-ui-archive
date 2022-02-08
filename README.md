@@ -1,4 +1,4 @@
-# cdme-scangen-ui
+# cdme-scangen-ui (archive)
 
 Old, archive version of [this repo](https://github.com/osu-cdme/cdme-scangen-ui) before I rewrote everything in TypeScript and React.
 
