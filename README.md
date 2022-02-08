@@ -1,5 +1,7 @@
 # cdme-scangen-ui
 
+Old, archive version of [this repo](https://github.com/osu-cdme/cdme-scangen-ui) before I rewrote everything in TypeScript and React.
+
 An Electron application that offers a more streamlined, user-friendly way to set input options to the main `cdme-scangen` script.
 
 ## Install
