@@ -1,5 +1,7 @@
 const ipc = require("electron").ipcRenderer;
-const { cacheBuilds, cacheThumbnails } = require("../../caching");
+const { cacheBuilds, cacheThumbnails, cache } = require("../../caching");
+const { fs, path, paths } = require("../../imports");
+const { getLayerFromFilePath } = require("../../Build");
 
 // Imports
 document.getElementById("stlImport").addEventListener("click", (e) => {
@@ -17,9 +19,27 @@ document.getElementById("scnImport").addEventListener("click", async (e) => {
         alert("Error importing .SCN file!");
         throw new Error("Error importing .SCN file!");
     }
-    await cacheBuilds(false);
-    await cacheThumbnails(false);
-    alert("Successfully Imported!");
+
+    // TODO: Essentially duplicate code of generate.html; source them from one place
+    let numDone = 0;
+    const glob = require("glob");
+    const xmlFiles = glob.sync(path.join(paths.GetUIPath(), "xml", "*.xml"));
+    for (const file of xmlFiles) {
+        cache(getLayerFromFilePath(file)).then(() => {
+            numDone++;
+
+            // General case
+            if (numDone < xmlFiles.length) {
+                document.getElementById("progressText").textContent = `Caching Thumbnails & 'Build' Objects (${numDone}/${xmlFiles.length})`;
+            }
+
+            // All done
+            else {
+                alert('Successfully imported! Files can now be viewed under the "View Vectors" tab.');
+                document.getElementById("progressText").textContent = "Importing complete!";
+            }
+        });
+    }
 });
 
 // Exports

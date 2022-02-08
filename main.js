@@ -57,6 +57,6 @@ app.whenReady().then(() => {
         },
     });
 
-    win.loadFile("src/renderer/pages/view/view.html");
+    win.loadFile("src/renderer/pages/generate/generate.html");
     win.maximize();
 });

@@ -38,5 +38,6 @@ async function cacheThumbnail(layerNum) {
 // Optionally, if a build parameter is passed, regenerate it from the .XML file
 async function cacheBuild(layerNum, build) {
     if (!build) build = await getBuildFromLayerNum(layerNum);
+    console.log("build: ", build);
     fs.writeFileSync(path.join(paths.GetUIPath(), "xml", build.header.layerNum + ".json"), JSON.stringify(build));
 }

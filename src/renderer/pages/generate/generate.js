@@ -32,13 +32,13 @@ function getOptionHTML(data) {
                     // We update our record then re-render the Strategy Specific part of the schema
                     // Re-rendering live is necessary because on first run-through, it'll just be set to Default
                     selectedScanStrategy = select.value;
-                    let div = document.getElementById("options-nonsegorvelocity");
-                    let thingsToDelete = div.querySelectorAll(".options-nonsegorvelocity-setting");
+                    let div = document.getElementById("scanpath-specific");
+                    let thingsToDelete = div.querySelectorAll(".scanpath-specific-setting");
                     thingsToDelete.forEach((thing) => {
                         thing.remove();
                     });
                     let subDiv = document.createElement("div");
-                    subDiv.classList.toggle("options-nonsegorvelocity-setting");
+                    subDiv.classList.toggle("scanpath-specific-setting");
                     for (const key in optionsData) {
                         if (key === "Strategy Specific") {
                             subDiv.appendChild(SectionHeaderDOM("Strategy Specific"));
@@ -102,7 +102,6 @@ function generateRemainingDOM() {
     const preDiv = document.getElementById("pre-options");
     const postDiv = document.getElementById("post-options");
 
-    // div.id = "options-nonsegorvelocity";
     for (const key in optionsData) {
         if (specialElements.has(key)) continue;
 
@@ -138,9 +137,23 @@ for (const file of files) {
     document.getElementsByName("Part File Name")[0].appendChild(option);
 }
 
+let running = false;
 document.getElementById("start").addEventListener("click", (e) => {
+    console.log("Event listener fired!");
     e.preventDefault();
-    spawnProcess(styles.styles, profiles.profiles);
+
+    if (running) {
+        if (child !== null) {
+            child.kill();
+            child = null;
+        }
+        running = false;
+        document.getElementById("start").textContent = "Generate";
+    } else {
+        running = true;
+        document.getElementById("start").textContent = "Cancel";
+        spawnProcess(styles.styles, profiles.profiles);
+    }
 });
 
 // Functionality to spawn the pyslm child process and interface correctly with it
@@ -194,14 +207,8 @@ function parseStdout(chunkBuf) {
 
 // Launch the application when they hit the button
 const spawn = require("child_process").spawn;
-let running = false;
+let child = null;
 function spawnProcess(styles, profiles) {
-    if (running) {
-        alert("Already running!");
-        return;
-    }
-    running = true;
-
     // Either create the folder, or wipe whatever's in it, just to make sure we're starting fresh
     if (!fs.existsSync(path.join(paths.GetUIPath(), "xml"))) {
         fs.mkdirSync(path.join(paths.GetUIPath(), "xml"));
@@ -236,7 +243,7 @@ function spawnProcess(styles, profiles) {
     console.log("Passing as second cmd line parameter: ", FOLDERS_TO_ADD_TO_PYTHONPATH);
     console.log("Running script " + path.join(paths.GetBackendPath(), "main.py") + " using interpreter " + pythonPath);
 
-    const process = spawn(
+    child = spawn(
         pythonPath,
         [
             "-u", // Don't buffer output, we want that live
@@ -246,21 +253,35 @@ function spawnProcess(styles, profiles) {
         ], // Serialize the data and feed it in as a command line argument],
         { cwd: paths.GetBackendPath() }
     ); // Python interpreter needs run from the other directory b/c relative paths
-    process.stdout.on("data", (chunk) => {
+    child.stdout.on("data", (chunk) => {
         parseStdout(chunk);
     });
-    process.stderr.on("data", (chunk) => {
+    child.stderr.on("data", (chunk) => {
         parseStderr(chunk);
     });
-    process.on("close", (code) => {
+    child.on("close", (code) => {
         running = false;
         console.log("Child process exited with code " + code + ".");
-        if (code !== 0) {
+
+        // More complicated to cancel at this point now that it's back in this progress, so just don't bother
+        document.getElementById("start").textContent = "Please wait.";
+        document.getElementById("start").style.fontSize = ".8rem";
+
+        // Occurs when child_process.kill() is used, as occurs when the user clicks the cancel button
+        if (code === null) {
+            document.getElementById("progressText").textContent = "Waiting for user.";
+            document.getElementById("done").style.width = "0%";
+            document.getElementById("start").textContent = "Start";
+            document.getElementById("start").style.fontSize = "1.2rem";
+            return;
+        } else if (code !== 0) {
             alert(
                 "Build process did not work correctly! If you were using Island/Striping, please lower Island/Stripe size and try again. Otherwise, please consider sending some information regarding what you were doing to developers of this application if you'd like it fixed."
             );
             document.getElementById("progressText").textContent = "Error spawning child process.";
             document.getElementById("done").style.width = "0%";
+            document.getElementById("start").textContent = "Start";
+            document.getElementById("start").style.fontSize = "1.2rem";
             return;
         }
 
@@ -293,7 +314,6 @@ function spawnProcess(styles, profiles) {
                         "progressText"
                     ).textContent = `(Step 3 of 3) Caching Thumbnails & 'Build' Objects (${numDone}/${xmlFiles.length})`;
                     document.getElementById("done").style.width = `${(numDone / xmlFiles.length) * 100}%`;
-                    console.log("Percentage: " + numDone / xmlFiles.length);
                 }
 
                 // All done
@@ -301,6 +321,8 @@ function spawnProcess(styles, profiles) {
                     alert('Build complete! Files can now be viewed under the "View Vectors" tab.');
                     document.getElementById("progressText").textContent = "Build complete!";
                     document.getElementById("done").style.width = "100%";
+                    document.getElementById("start").textContent = "Start";
+                    document.getElementById("start").style.fontSize = "1.2rem";
                 }
             });
         }
