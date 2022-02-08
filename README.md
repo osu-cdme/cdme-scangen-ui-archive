@@ -63,3 +63,7 @@ Unfortunately, this file is too large to include via Git due to GitHub's file si
 We've gotten building working, but with some limitations:
 
 -   The `triangle` library, which higher `pyslm` versions will eventually require (adding supports - see [this issue](https://github.com/drlukeparry/pyslm/issues/11)) is more complicated to get working. The library doesn't need it for now, so we simply don't include it in the embedded Python version.
+
+## Attributions
+
+This infrastucture makes heavy use of the [pyslm](https://github.com/drlukeparry/pyslm/) library written by [@drlukeparry](https://github.com/drlukeparry) for all the difficult slicing and hatching. Many thanks to him. 
