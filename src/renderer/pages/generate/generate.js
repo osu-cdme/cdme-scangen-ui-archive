@@ -164,44 +164,28 @@ const FOLDERS_TO_ADD_TO_PYTHONPATH = [
     path.join(paths.GetBackendPath(), "pyslm", "pyslm"),
 ];
 
-const getFractionRegex = /\d+\/\d+/g;
-let lastLayer;
-function parseStderr(chunkBuf) {
-    const chunkStr = chunkBuf.toString("utf8");
-    const regex = /(\d+(\.\d+)?%)/g; // Matches a number and a percent
-    // console.log("stderr: " + chunkStr);
-    if (chunkStr.includes("Processing Layers")) {
-        const fraction = chunkStr.match(getFractionRegex)[0];
-        const currentLayer = parseInt(fraction.match(/\d+/g)[0]);
-        lastLayer = parseInt(fraction.match(/\d+/g)[1]);
-        const number = regex.exec(chunkStr)[0]; // Exec used rather than string.match() b/c exec only returns the first match by default
-        if (number) {
-            if (number.includes("100")) {
-                document.getElementById("progressText").textContent = "Done!";
-            } else {
-                document.getElementById("done").style.width = number;
-                document.getElementById("progressText").textContent = `(Step 1 of 3) Processing Layers (${currentLayer}/${lastLayer})`;
-            }
-        }
-    }
-}
+// Matches TQDM progress bar,
+// using capture groups to "save" each section's value so we don't have to do another regex to extract it
+// See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/match if you're confused
+const tqdmRegex = /(\(Step \d+\/\d+\) .*): *(\d+%).*(\d+:\d+)/;
 
-const finishRegex = /XML Layer # \d+ Complete/g;
-const numberRegex = /\d+/g;
-function parseStdout(chunkBuf) {
-    const chunkStr = chunkBuf.toString("utf8");
-    // console.log("chunkStr: " + chunkStr);
-    if (chunkStr.includes("XML Layer")) {
-        if (chunkStr.match(finishRegex)) {
-            const finishText = chunkStr.match(finishRegex)[0];
-            const number = finishText.match(numberRegex)[0];
-            if (number === lastLayer.toString()) {
-                document.getElementById("done").style.width = "100%";
-            } else {
-                document.getElementById("done").style.width = (number / lastLayer) * 100 + "%";
-                document.getElementById("progressText").textContent = `(Step 2 of 3) Generating XML Files (${number}/${lastLayer})`;
-            }
-        }
+// TODO: If stuff gets printed to stderr, should get thrown. Figure out why non-errors are currently being printed to stderr.
+// TODO: Actual time format is XX:XX<XX:XX; I extract first, I think, but that's actually the TIME ELAPSED, not time left estimate
+function processStderr(chunk) {
+    throw new Error("ERROR: " + chunk.toString("utf8"));
+}
+function processStdout(chunk) {
+    const str = chunk.toString("utf8");
+    console.log("stdout str: ", str);
+
+    // Only do anything with it if it matches TQDM progress bar
+    const match = str.match(tqdmRegex);
+    if (match) {
+        const label = match[1];
+        const percent = match[2];
+        const eta = match[3];
+        document.getElementById("progressText").textContent = label + " | " + percent + " | ETA: " + eta;
+        document.getElementById("done").style.width = match[1];
     }
 }
 
@@ -251,13 +235,15 @@ function spawnProcess(styles, profiles) {
             JSON.stringify(fields),
             JSON.stringify(FOLDERS_TO_ADD_TO_PYTHONPATH),
         ], // Serialize the data and feed it in as a command line argument],
-        { cwd: paths.GetBackendPath() }
-    ); // Python interpreter needs run from the other directory b/c relative paths
+        {
+            cwd: paths.GetBackendPath(), // Python interpreter needs run from the other directory b/c relative paths
+        }
+    );
     child.stdout.on("data", (chunk) => {
-        parseStdout(chunk);
+        processStdout(chunk);
     });
     child.stderr.on("data", (chunk) => {
-        parseStderr(chunk);
+        processStderr(chunk);
     });
     child.on("close", (code) => {
         running = false;
