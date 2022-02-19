@@ -38,7 +38,7 @@ function startAnimation() {
     for (const segment of getCurrentBuild().segments) {
         segment.animated = false;
         const velocity = getVelocityOfSegment(segment);
-        currentTime += ((300 / velocity) * 100) / speed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation
+        currentTime += 100 / velocity / speed; // Largely just a best-guess scaling factor
         queuedSegments.push(setTimeout(animateSegment, currentTime, segment));
     }
 }
@@ -82,7 +82,7 @@ function unpauseAnimation() {
     for (const segment of getCurrentBuild().segments) {
         if (segment.animated) continue; // Skip if already drawn on the screen
         const velocity = getVelocityOfSegment(segment);
-        currentTime += ((300 / velocity) * 100) / speed; // Add time; 100 is completely a guess, but is intended as a "middling" velocity that's a medium-speed animation
+        currentTime += 300 / velocity / speed; // Largely just a best-guess scaling factor
         queuedSegments.push(setTimeout(animateSegment, currentTime, segment));
     }
 }

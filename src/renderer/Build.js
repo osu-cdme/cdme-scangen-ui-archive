@@ -18,7 +18,6 @@ async function getBuildFromLayerNum(layerNum) {
     // If we have a build cached, simply load that object and assume it already has every field necessary
     if (fs.existsSync(path.join(paths.GetUIPath(), "xml", `${layerNum}.json`))) {
         const build = JSON.parse(fs.readFileSync(path.join(paths.GetUIPath(), "xml", `${layerNum}.json`), "utf8"));
-        console.log("found cached build: ", build);
         return build;
     }
 
@@ -26,7 +25,6 @@ async function getBuildFromLayerNum(layerNum) {
     const response = await fetch(path.join(paths.GetUIPath(), "xml", `${layerNum}.xml`));
     const text = await response.text();
     const build = LoadXML(text);
-    console.log("otherwise, build: ", build);
 
     // 1. Calculate minimum and maximum traveler powers, which simplifies thermal drawing
     build.powerMin = 99999999;

@@ -1,5 +1,6 @@
 // This file handles backend file i/o
 const fs = require("fs");
+const glob = require("glob");
 const path = require("path");
 const paths = require("./paths");
 const ipc = require("electron").ipcMain;
@@ -12,6 +13,7 @@ module.exports.Setup = () => {
 
     // Exports
     SetupSCNExport();
+    SetupHDF5Export();
 };
 
 function SetupSCNImport() {
@@ -37,25 +39,28 @@ function SetupSCNImport() {
                 .then((fileSelection) => {
                     // Verify they didn't cancel
                     if (fileSelection.canceled) {
-                        return reject("User canceled import.");
+                        return reject(); // By personal convention, empty reject means we shouldn't alert user
                     }
 
                     // Unzip, wipe `xml` dir, then copy all files over
                     const filePath = fileSelection.filePaths[0];
                     fs.readFile(filePath, async (err, data) => {
                         if (err) {
-                            return reject("Unable to read file.");
+                            return reject(new Error("Unable to read file."));
                         }
 
                         // Load zip (that we already verified existed before wiping)
                         await JSZip.loadAsync(data).then((zip) => {
                             const keys = Object.keys(zip.files);
+                            if (!keys.length) {
+                                return reject("ERROR: Tried to import empty .SCN file!");
+                            }
                             let promises = [];
                             keys.forEach((key) => {
                                 promises.push(
                                     new Promise(async (resolve, reject) => {
                                         const data = await zip.files[key].async("string");
-                                        promises.push(data);
+                                        console.log("Writing file: " + key);
                                         let layerNum = parseInt(key.match(/\d+.xml/)[0].match(/\d+/)[0]);
                                         fs.writeFileSync(path.join(paths.GetUIPath(), "xml", layerNum + ".xml"), data);
                                         resolve();
@@ -108,6 +113,8 @@ function SetupSTLImport() {
     });
 }
 
+function SetupHDF5Export() {}
+
 function SetupSCNExport() {
     const JSZip = require("jszip");
     const fs = require("fs");
@@ -124,10 +131,15 @@ function SetupSCNExport() {
                 // 1: zip up everything in the LayerFiles directory
                 const zip = new JSZip();
                 console.debug("Adding files to .zip.");
-                const files = fs.readdirSync(path.join(paths.GetUIPath(), "xml"));
+
+                const files = glob.sync(path.join(paths.GetUIPath(), "xml", "*.xml"));
+                if (!files.length) {
+                    e.reply("alert", "ERROR: No layers to export! Please generate or import them first.");
+                    return;
+                }
                 files.forEach((file) => {
-                    const data = fs.readFileSync(path.join(paths.GetUIPath(), "xml", file));
-                    zip.file(file, data);
+                    const data = fs.readFileSync(file);
+                    zip.file(path.basename(file), data);
                 });
 
                 // 2: Actually save it
@@ -137,7 +149,9 @@ function SetupSCNExport() {
                         console.log("SCN file written.");
                         e.reply("alert", "SCN file successfully exported!");
                     })
-                    .on("error", alert(err));
+                    .on("error", (err) => {
+                        throw err;
+                    });
             });
     });
 }

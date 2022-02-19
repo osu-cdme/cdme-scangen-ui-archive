@@ -13,14 +13,12 @@ document.getElementById("stlImport").addEventListener("click", (e) => {
 document.getElementById("scnImport").addEventListener("click", async (e) => {
     e.preventDefault();
     console.log("Sending import-scn signal to main process.");
-    const result = await ipc.invoke("import-scn"); // Promise that we explicitly wait for a response for
-    console.log("Result: ", result);
-    if (!result) {
-        alert("Error importing .SCN file!");
-        throw new Error("Error importing .SCN file!");
-    }
+    const result = await ipc.invoke("import-scn").catch((errMsg) => {
+        if (!err) return;
+        alert(errMsg);
+    });
+    if (result === undefined) return;
 
-    // TODO: Essentially duplicate code of generate.html; source them from one place
     let numDone = 0;
     const glob = require("glob");
     const xmlFiles = glob.sync(path.join(paths.GetUIPath(), "xml", "*.xml"));
@@ -47,6 +45,12 @@ document.getElementById("scnExport").addEventListener("click", (e) => {
     e.preventDefault();
     ipc.send("export-scn");
     console.log("Sent export-scn signal to main process..");
+});
+
+document.getElementById("hdf5Export").addEventListener("click", (e) => {
+    e.preventDefault();
+    ipc.send("export-hdf5");
+    console.log("Sent export-hdf5 signal to main process..");
 });
 
 // Generic feedback handler that takes message from `main` process and displays it in the UI

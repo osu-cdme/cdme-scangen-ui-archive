@@ -167,7 +167,7 @@ const FOLDERS_TO_ADD_TO_PYTHONPATH = [
 // Matches TQDM progress bar,
 // using capture groups to "save" each section's value so we don't have to do another regex to extract it
 // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/match if you're confused
-const tqdmRegex = /(\(Step \d+\/\d+\) .*): *(\d+%).*(\d+:\d+)/;
+const tqdmRegex = /(.*): *(\d+%).*(\d+\/\d+) +\[(\d+:\d+)<(\d+:\d+), +(\d+.\d+.*\/s)\]/;
 
 // TODO: If stuff gets printed to stderr, should get thrown. Figure out why non-errors are currently being printed to stderr.
 // TODO: Actual time format is XX:XX<XX:XX; I extract first, I think, but that's actually the TIME ELAPSED, not time left estimate
@@ -183,8 +183,11 @@ function processStdout(chunk) {
     if (match) {
         const label = match[1];
         const percent = match[2];
-        const eta = match[3];
-        document.getElementById("progressText").textContent = label + " | " + percent + " | ETA: " + eta;
+        const count = match[3]; // Only the percent and label are really "necessary" - these are still available for easy addition in the future
+        const elapsed = match[4];
+        const left = match[5];
+        const rate = match[6];
+        document.getElementById("progressText").textContent = `${label}: ${percent} (${elapsed} elapsed, ${left} left, ${rate})`;
         document.getElementById("done").style.width = match[1];
     }
 }
@@ -287,7 +290,7 @@ function spawnProcess(styles, profiles) {
         // Cache builds and thumbnails
         // Using Promise.all() would make this more readable, but we use a counter and invididual callbacks, which lets us keep a progress bar
         const xmlFiles = glob.sync(path.join(paths.GetUIPath(), "xml", "*.xml"));
-        document.getElementById("progressText").textContent = `(Step 3 of 3) Caching Thumbnails & 'Build' Objects (0/${xmlFiles.length})`;
+        document.getElementById("progressText").textContent = `Caching Thumbnails & 'Build' Objects (0/${xmlFiles.length})`;
         document.getElementById("done").style.width = "0%";
         let numDone = 0;
         for (const file of xmlFiles) {
@@ -296,9 +299,7 @@ function spawnProcess(styles, profiles) {
 
                 // General case
                 if (numDone < xmlFiles.length) {
-                    document.getElementById(
-                        "progressText"
-                    ).textContent = `(Step 3 of 3) Caching Thumbnails & 'Build' Objects (${numDone}/${xmlFiles.length})`;
+                    document.getElementById("progressText").textContent = `Caching Thumbnails & 'Build' Objects (${numDone}/${xmlFiles.length})`;
                     document.getElementById("done").style.width = `${(numDone / xmlFiles.length) * 100}%`;
                 }
 
