@@ -35,10 +35,18 @@ function startAnimation() {
 
     d3.select("#animate").text("Stop");
     let currentTime = 0;
+
+    // TODO: Ideally, we don't duplicate this code across "start" and "resume" functionality
+    const drawHatches = document.getElementById("drawHatches").checked;
+    const drawContours = document.getElementById("drawContours").checked;
+    const drawJumps = document.getElementById("drawJumps").checked;
     for (const segment of getCurrentBuild().segments) {
         segment.animated = false;
+        if (segment.type === "hatch" && !drawHatches) continue;
+        if (segment.type === "contour" && !drawContours) continue;
+        if (segment.type === "jump" && !drawJumps) continue;
         const velocity = getVelocityOfSegment(segment);
-        currentTime += 100 / velocity / speed; // Largely just a best-guess scaling factor
+        currentTime += (100 * 100) / velocity / speed; // Largely just a best-guess scaling factor
         queuedSegments.push(setTimeout(animateSegment, currentTime, segment));
     }
 }
@@ -52,6 +60,9 @@ function stopAnimation() {
         clearTimeout(timeout);
     }
     queuedSegments.length = 0; // Clear the array
+    for (const segment of getCurrentBuild().segments) {
+        segment.animated = false;
+    }
     drawBuild(getCurrentBuild(), "mainsvg");
 }
 
@@ -79,10 +90,16 @@ function unpauseAnimation() {
     d3.select("#pause").text("Pause");
     let currentTime = 0;
     const speed = parseFloat(d3.select("#animationSpeed").property("value"));
+    const drawHatches = document.getElementById("drawHatches").checked;
+    const drawContours = document.getElementById("drawContours").checked;
+    const drawJumps = document.getElementById("drawJumps").checked;
     for (const segment of getCurrentBuild().segments) {
         if (segment.animated) continue; // Skip if already drawn on the screen
+        if (segment.type === "hatch" && !drawHatches) continue;
+        if (segment.type === "contour" && !drawContours) continue;
+        if (segment.type === "jump" && !drawJumps) continue;
         const velocity = getVelocityOfSegment(segment);
-        currentTime += 300 / velocity / speed; // Largely just a best-guess scaling factor
+        currentTime += (100 * 100) / velocity / speed; // Largely just a best-guess scaling factor
         queuedSegments.push(setTimeout(animateSegment, currentTime, segment));
     }
 }

@@ -3,6 +3,8 @@ const { cache } = require("../../caching");
 const { getLayerFromFilePath } = require("../../Build");
 const glob = require("glob");
 
+// TODO: Probably better to iterate through each layer, going through the pyslm -> xml conversion -> caching one layer at a time, rather than doing all pyslm -> all xml -> all caching, which makes for a better user experience if they're watching the progress bar. It's also much more generalizable.
+
 // Load data; requires cdme-scangen repository to be in parallel folder to cdme-scangen-ui, for now
 const optionsData = require("./optionsdata");
 

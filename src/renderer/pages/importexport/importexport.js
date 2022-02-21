@@ -13,6 +13,8 @@ document.getElementById("stlImport").addEventListener("click", (e) => {
 document.getElementById("scnImport").addEventListener("click", async (e) => {
     e.preventDefault();
     console.log("Sending import-scn signal to main process.");
+    document.getElementById("progressText").textContent = `Unzipping & Copying. Wait a moment...`;
+    document.getElementById("done").style.width = `0%`;
     const result = await ipc.invoke("import-scn").catch((errMsg) => {
         if (!err) return;
         alert(errMsg);
@@ -29,6 +31,7 @@ document.getElementById("scnImport").addEventListener("click", async (e) => {
             // General case
             if (numDone < xmlFiles.length) {
                 document.getElementById("progressText").textContent = `Caching Thumbnails & 'Build' Objects (${numDone}/${xmlFiles.length})`;
+                document.getElementById("done").style.width = `${(numDone / xmlFiles.length) * 100}%`;
             }
 
             // All done

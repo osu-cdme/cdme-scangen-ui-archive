@@ -61,7 +61,6 @@ function SetupSCNImport() {
                                 promises.push(
                                     new Promise(async (resolve, reject) => {
                                         const data = await zip.files[key].async("string");
-                                        console.log("Writing file: " + key);
                                         let layerNum = parseInt(key.match(/\d+.xml/)[0].match(/\d+/)[0]);
                                         fs.writeFileSync(path.join(paths.GetUIPath(), "xml", layerNum + ".xml"), data);
                                         resolve();
