@@ -97,7 +97,7 @@ function getOptionHTML(data) {
 }
 
 // Handles generating UI inputs for the rest, which is generalizable
-const specialElements = new Set(["Segment Styles", "Velocity Profiles", "Strategy Specific"]);
+const specialElements = new Set(["Segment Styles", "Velocity Profiles", "Strategy Specific", "Output"]);
 function generateRemainingDOM() {
     const preDiv = document.getElementById("pre-options");
     const postDiv = document.getElementById("post-options");
@@ -188,7 +188,7 @@ function processStdout(chunk) {
         const left = match[5];
         const rate = match[6];
         document.getElementById("progressText").textContent = `${label}: ${percent} (${elapsed} elapsed, ${left} left, ${rate})`;
-        document.getElementById("done").style.width = match[1];
+        document.getElementById("done").style.width = percent;
     }
 }
 
@@ -225,6 +225,7 @@ function spawnProcess(styles, profiles) {
     }
     fields["Segment Styles"] = styles;
     fields["Velocity Profiles"] = profiles;
+    fields["Output .HDF5"] = false;
 
     console.log("Passing as first cmd line parameter: ", fields);
     console.log("Passing as second cmd line parameter: ", FOLDERS_TO_ADD_TO_PYTHONPATH);

@@ -57,3 +57,26 @@ document.getElementById("hdf5Export").addEventListener("click", (e) => {
 ipc.on("alert", (e, arg) => {
     window.alert(arg);
 });
+
+const progressTextElem = document.getElementById("progressText");
+const doneElem = document.getElementById("done");
+const tqdmRegex = /(.*): *(\d+%).*(\d+\/\d+) +\[(\d+:\d+)<(\d+:\d+), +(\d+.\d+.*\/s)\]/;
+ipc.on("progress", (e, arg) => {
+    if (!progressText) {
+        const msg = "Progress reported, but no display element found!";
+        alert(msg);
+        throw new Error(msg);
+    }
+
+    const match = arg.match(tqdmRegex);
+    if (match) {
+        const label = match[1];
+        const percent = match[2];
+        const count = match[3]; // Only the percent and label are really "necessary" - these are still available for easy addition in the future
+        const elapsed = match[4];
+        const left = match[5];
+        const rate = match[6];
+        progressTextElem.textContent = `${label}: ${percent} (${elapsed} elapsed, ${left} left, ${rate})`;
+        doneElem.style.width = percent;
+    }
+});

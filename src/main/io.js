@@ -1,4 +1,5 @@
 // This file handles backend file i/o
+const { spawn } = require("child_process");
 const fs = require("fs");
 const glob = require("glob");
 const path = require("path");
@@ -113,7 +114,47 @@ function SetupSTLImport() {
     });
 }
 
-function SetupHDF5Export() {}
+// HDF5 export is not
+function SetupHDF5Export() {
+    ipc.on("export-hdf5", (e) => {
+        dialog
+            .showSaveDialog({
+                title: "Specify .HDF5 file location and name.",
+                filters: [{ name: ".hdf5 File", extensions: ["hdf5"] }],
+                defaultPath: "build",
+            })
+            .then((fileSelection) => {
+                if (fileSelection.canceled) return;
+                const filePath = fileSelection.filePath;
+
+                // Launch child process, feeding in directories, and wait for it to finish
+                const pythonPath = path.join(paths.GetUIPath(), "python", "python.exe");
+                let child = spawn(
+                    pythonPath,
+                    [
+                        "-u", // Don't buffer output
+                        path.join(paths.GetBackendPath(), "outputhdf5.py"), // Actual script to run
+                        path.join(paths.GetUIPath(), "xml"), // First arg is path to xml folder
+                        path.join(filePath), // Second arg is path to .scn file
+                    ],
+                    {
+                        cwd: paths.GetBackendPath(),
+                    }
+                );
+                child.stdout.on("data", (chunk) => {
+                    console.log("chunk: " + chunk.toString());
+                    e.reply("progress", chunk.toString());
+                });
+                child.stderr.on("data", (chunk) => {
+                    e.reply("alert", chunk.toString());
+                });
+                child.on("close", (code) => {
+                    if (code !== 0) e.reply("alert", "Error exporting HDF5 file.");
+                    else e.reply("alert", "HDF5 file successfully exported!");
+                });
+            });
+    });
+}
 
 function SetupSCNExport() {
     const JSZip = require("jszip");
